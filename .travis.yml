@@ -1,0 +1,22 @@
+---
+language: ruby
+cache: bundler
+
+# to provide the cracklib-check
+sudo: required
+before_install:
+    - sudo apt-get update -qq
+    - sudo apt-get install -y libcrack2
+
+rvm:
+  - 1.9.3
+  - 2.0.0
+
+env:
+  - SIMP_SKIP_NON_SIMPOS_TESTS=1
+
+
+script:
+  - 'bundle exec rake spec'
+
+
