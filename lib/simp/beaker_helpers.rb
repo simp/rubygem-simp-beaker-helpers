@@ -1,7 +1,7 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.0.0'
+  VERSION = '1.0.1'
 
   # Locates .fixture.yml in or above this directory.
   def fixtures_yml_path
@@ -116,7 +116,7 @@ module Simp::BeakerHelpers
   # The directory structure is:
   #
   # HOST_PKI_DIR/
-  #         cacerts/cacert.pem
+  #         cacerts/cacerts.pem
   #         public/fdqn.pub
   #         private/fdqn.pem
   def copy_pki_to(sut, local_pki_dir, sut_pki_dir = '/etc/pki/simp-testing')
@@ -128,7 +128,8 @@ module Simp::BeakerHelpers
       scp_to(sut, "#{local_host_pki_tree}/#{fqdn}.pem",   "#{sut_pki_dir}/private/")
       scp_to(sut, "#{local_host_pki_tree}/#{fqdn}.pub",   "#{sut_pki_dir}/public/")
       ###scp_to(sut, local_cacert_pki_tree, sut_pki_dir)
-      scp_to(sut, local_cacert, "#{sut_pki_dir}/cacerts/")
+      # NOTE: to match pki::copy, 'cacert.pem' is renamed to 'cacerts.pem'
+      scp_to(sut, local_cacert, "#{sut_pki_dir}/cacerts/cacerts.pem")
   end
 
 
