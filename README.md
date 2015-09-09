@@ -71,7 +71,7 @@ Copy a single SUT's PKI certs (with cacerts) onto an SUT.  This simulates the re
 The directory structure copied to the SUT is:
 ```
   HOST_PKI_DIR/
-          cacerts/cacert.pem
+          cacerts/cacerts.pem
           public/fdqn.pub
           private/fdqn.pem
 
