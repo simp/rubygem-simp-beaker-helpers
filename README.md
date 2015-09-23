@@ -12,6 +12,8 @@ Methods to assist beaker acceptance tests for SIMP.
     * [`run_fake_pki_ca_on`](#run_fake_pki_ca_on)
     * [`copy_pki_to`](#copy_pki_to)
     * [`copy_keydist_to`](#copy_keydist_to)
+    * [`set_hieradata_on`](#set_hieradata_on)
+    * [`clear_temp_hieradata`](#clear_temp_hieradata)
 4. [Examples](#examples)
     * [Prep OS, Generate and copy PKI certs to each SUT](#prep-os-generate-and-copy-pki-certs-to-each-sut)
 5. [License](#license)
@@ -82,11 +84,30 @@ The directory structure copied to the SUT is:
 
 #### `copy_keydist_to`
 
- Copy a CA keydist/ directory of CA+host certs into an SUT
+Copy a CA keydist/ directory of CA+host certs into an SUT
 
 This simulates the output of FakeCA's `gencerts_nopass.sh` into `keydist/` and is useful for constructing a Puppet master SUT that will distribute PKI keys via agent runs.
 
 `def copy_keydist_to( ca_sut = master )`
+
+
+#### `set_hieradata_on`
+
+Set the hiera data file on the provided host to the passed data structure
+
+**NOTE**: This is authoritative; you cannot mix this with other hieradata copies
+
+`set_hieradata_on(host, hieradata, data_file='default')`
+
+ -  **host**      = _(Array,String,Symbol)_ One or more hosts to act upon
+ -  **hieradata** = _(Hash)_ The full hiera data structure to write to the system
+ -  **data_file** = _(String)_ The filename (not path) of the hiera data
+
+####  `clear_temp_hieradata`
+
+Clean up all temporary hiera data files; meant to be called from `after(:all)`
+
+`clear_temp_hieradata`
 
 
 ## Examples
