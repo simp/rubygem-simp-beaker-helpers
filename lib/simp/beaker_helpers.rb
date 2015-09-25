@@ -68,6 +68,11 @@ module Simp::BeakerHelpers
 
   # Apply known OS fixes we need to run Beaker on each SUT
   def fix_errata_on( suts = hosts )
+    # SIMP uses structured facts, therefore stringify_facts must be disabled
+    unless ENV['BEAKER_stringify_facts'] == 'yes'
+      on suts, 'puppet config set stringify_facts false'
+    end
+
     suts.each do |sut|
       # net-tools required for netstat utility being used by be_listening
       if fact_on(sut, 'osfamily') == 'RedHat' && fact_on(sut, 'operatingsystemmajrelease') == '7'
