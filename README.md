@@ -14,9 +14,14 @@ Methods to assist beaker acceptance tests for SIMP.
     * [`copy_keydist_to`](#copy_keydist_to)
     * [`set_hieradata_on`](#set_hieradata_on)
     * [`clear_temp_hieradata`](#clear_temp_hieradata)
-4. [Examples](#examples)
+4. [Environment variables](#environment-variables)
+    * [`BEAKER_fips`](#beaker_fips)
+    * [`BEAKER_spec_prep`](#beaker_spec_prep)
+    * [`BEAKER_stringify_facts`](#beaker_stringify_facts)
+    * [`BEAKER_use_fixtures_dir_for_modules`](#beaker_use_fixtures_dir_for_modules)
+5. [Examples](#examples)
     * [Prep OS, Generate and copy PKI certs to each SUT](#prep-os-generate-and-copy-pki-certs-to-each-sut)
-5. [License](#license)
+6. [License](#license)
 
 ## Overview
 
@@ -108,6 +113,21 @@ Set the hiera data file on the provided host to the passed data structure
 Clean up all temporary hiera data files; meant to be called from `after(:all)`
 
 `clear_temp_hieradata`
+
+
+## Environment variables
+#### `BEAKER_fips`
+
+SIMP acceptance tests enable [FIPS mode](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Security_Guide/sect-Security_Guide-Federal_Standards_And_Regulations-Federal_Information_Processing_Standard.html) on all SUTs by default.  Acceptance tests can be run without FIPS mode when `BEAKER_fips` is set to `no`
+
+**NOTE:** FIPS mode is only enabled on RedHat family hosts
+
+#### `BEAKER_spec_prep`
+#
+
+
+#### `BEAKER_stringify_facts`
+#### `BEAKER_use_fixtures_dir_for_modules`
 
 
 ## Examples

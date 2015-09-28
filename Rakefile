@@ -66,7 +66,8 @@ namespace :pkg do
   task :gem => :chmod do
     Dir.chdir @rakefile_dir
     Dir['*.gemspec'].each do |spec_file|
-      cmd = %Q{SIMP_RPM_BUILD=1 bundle exec gem build "#{spec_file}"}
+      rpm_build = ENV.fetch('SIMP_RPM_BUILD', '1')
+      cmd = %Q{SIMP_RPM_BUILD=#{rpm_build} bundle exec gem build "#{spec_file}"}
       sh cmd
       FileUtils.mkdir_p 'dist'
       FileUtils.mv Dir.glob("#{@package}*.gem"), 'dist/'

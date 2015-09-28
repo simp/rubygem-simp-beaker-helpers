@@ -1,7 +1,7 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.0.2'
+  VERSION = '1.0.3'
 
   # Locates .fixture.yml in or above this directory.
   def fixtures_yml_path
@@ -35,6 +35,7 @@ module Simp::BeakerHelpers
   def ensure_fixture_modules
     unless ENV['BEAKER_spec_prep'] == 'no'
       puts "== checking prepped modules from .fixtures.yml"
+      puts "  -- (use BEAKER_spec_prep=no to disable)"
       missing_modules = []
       pupmods_in_fixtures_yml.each do |pupmod|
         mod_root = File.expand_path( "spec/fixtures/modules/#{pupmod}", File.dirname( fixtures_yml_path ))
@@ -66,6 +67,53 @@ module Simp::BeakerHelpers
   end
 
 
+  # Configure and reboot SUTs into FIPS mode
+  def enable_fips_mode_on( suts = hosts )
+    puts '== configuring FIPS mode on SUTs'
+    puts '  -- (use BEAKER_fips=no to disable)'
+    suts.each do |sut|
+      puts "  -- enabling FIPS on '#{sut}'"
+      if fact_on(sut, 'osfamily') == 'RedHat'
+        pp = <<-EOS
+        # This is necessary to prevent a kernel panic after rebooting into FIPS
+        # (last checked: 20150928)
+          package { ['kernel'] : ensure => 'latest' }
+
+          package { ['grubby'] : ensure => 'latest' }
+          ~>
+          exec{ 'setup_fips':
+            command     => '/bin/bash /root/setup_fips.sh',
+            refreshonly => true,
+          }
+
+          file{ '/root/setup_fips.sh':
+            ensure  => 'file',
+            owner   => 'root',
+            group   => 'root',
+            mode    => '0700',
+            content => "#!/bin/bash
+
+# FIPS
+if [ -e /sys/firmware/efi ]; then
+  BOOTDEV=`df /boot/efi | tail -1 | cut -f1 -d' '`
+else
+  BOOTDEV=`df /boot | tail -1 | cut -f1 -d' '`
+fi
+# In case you need a working fallback
+DEFAULT_KERNEL_INFO=`/sbin/grubby --default-kernel`
+DEFAULT_INITRD=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep initrd | cut -f2 -d'='`
+DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 title | cut -f2 -d'='`
+/sbin/grubby --copy-default --make-default --args=\\\"boot=\\\${BOOTDEV} fips=1\\\" --add-kernel=`/sbin/grubby --default-kernel` --initrd=\\\${DEFAULT_INITRD} --title=\\\"FIPS \\\${DEFAULT_KERNEL_TITLE}\\\"
+",
+            notify => Exec['setup_fips']
+          }
+        EOS
+        apply_manifest_on(sut, pp, :catch_failures => false)
+        on( sut, 'shutdown -r now', { :expect_connection_failure => true } )
+      end
+    end
+  end
+
   # Apply known OS fixes we need to run Beaker on each SUT
   def fix_errata_on( suts = hosts )
     # SIMP uses structured facts, therefore stringify_facts must be disabled
@@ -74,13 +122,20 @@ module Simp::BeakerHelpers
     end
 
     suts.each do |sut|
-      # net-tools required for netstat utility being used by be_listening
-      if fact_on(sut, 'osfamily') == 'RedHat' && fact_on(sut, 'operatingsystemmajrelease') == '7'
-        pp = <<-EOS
-          package { 'net-tools': ensure => installed }
-        EOS
-        apply_manifest_on(sut, pp, :catch_failures => false)
+      if fact_on(sut, 'osfamily') == 'RedHat'
+        # net-tools required for netstat utility being used by be_listening
+        if fact_on(sut, 'operatingsystemmajrelease') == '7'
+          pp = <<-EOS
+            package { 'net-tools': ensure => installed }
+          EOS
+          apply_manifest_on(sut, pp, :catch_failures => false)
+        end
       end
+    end
+
+    # Configure and reboot SUTs into FIPS mode
+    unless ENV['BEAKER_fips'] == 'no'
+      enable_fips_mode_on(suts)
     end
   end
 
