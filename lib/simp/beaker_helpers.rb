@@ -1,7 +1,7 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.0.3'
+  VERSION = '1.0.4'
 
   # Locates .fixture.yml in or above this directory.
   def fixtures_yml_path
@@ -175,19 +175,21 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
   #
   # The directory structure is:
   #
-  # HOST_PKI_DIR/
-  #         cacerts/cacerts.pem
-  #         public/fdqn.pub
-  #         private/fdqn.pem
-  def copy_pki_to(sut, local_pki_dir, sut_pki_dir = '/etc/pki/simp-testing')
-      fqdn = fact_on(sut, 'fqdn')
-      local_host_pki_tree   = File.join(local_pki_dir,'pki','keydist',fqdn)
-      ###local_cacert_pki_tree = File.join(local_pki_dir,'pki','keydist','cacerts')
+  # SUT_BASE_DIR/
+  #             pki/
+  #                 cacerts/cacerts.pem
+  #                 public/fdqn.pub
+  #                 private/fdqn.pem
+  def copy_pki_to(sut, local_pki_dir, sut_base_dir = '/etc/pki/simp-testing')
+      fqdn                = fact_on(sut, 'fqdn')
+      sut_pki_dir         = File.join( sut_base_dir, 'pki' )
+      local_host_pki_tree = File.join(local_pki_dir,'pki','keydist',fqdn)
       local_cacert = File.join(local_pki_dir,'pki','demoCA','cacert.pem')
+
       on sut, %Q(mkdir -p "#{sut_pki_dir}/public" "#{sut_pki_dir}/private" "#{sut_pki_dir}/cacerts")
       scp_to(sut, "#{local_host_pki_tree}/#{fqdn}.pem",   "#{sut_pki_dir}/private/")
       scp_to(sut, "#{local_host_pki_tree}/#{fqdn}.pub",   "#{sut_pki_dir}/public/")
-      ###scp_to(sut, local_cacert_pki_tree, sut_pki_dir)
+
       # NOTE: to match pki::copy, 'cacert.pem' is renamed to 'cacerts.pem'
       scp_to(sut, local_cacert, "#{sut_pki_dir}/cacerts/cacerts.pem")
   end
