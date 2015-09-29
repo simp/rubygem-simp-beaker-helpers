@@ -77,14 +77,15 @@ Copy a single SUT's PKI certs (with cacerts) onto an SUT.  This simulates the re
 
 The directory structure copied to the SUT is:
 ```
-  HOST_PKI_DIR/
-          cacerts/cacerts.pem
-          public/fdqn.pub
-          private/fdqn.pem
+  SUT_BASE_DIR/
+              pki/
+                  cacerts/cacerts.pem
+                  public/fdqn.pub
+                  private/fdqn.pem
 
 ```
 
-`copy_pki_to(sut, local_pki_dir, sut_pki_dir = '/etc/pki/simp-testing')`
+`copy_pki_to(sut, local_pki_dir, sut_base_dir = '/etc/pki/simp-testing')`
 
 
 #### `copy_keydist_to`
