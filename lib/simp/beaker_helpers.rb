@@ -1,7 +1,7 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.0.4'
+  VERSION = '1.0.5'
 
   # Locates .fixture.yml in or above this directory.
   def fixtures_yml_path
@@ -254,6 +254,14 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
     fh = File.open(File.join(data_dir,"#{data_file}.yaml"),'w')
     fh.puts(hieradata.to_yaml)
     fh.close
+
+    # If there is already a directory on the system, the SCP below will
+    # add the local directory to the existing directory instead of
+    # replacing the contents.
+    apply_manifest_on(
+      host,
+      "file { '#{hiera_datadir(host)}': ensure => 'absent', force => true, recurse => true }"
+    )
 
     copy_hiera_data_to(host, data_dir)
     write_hiera_config_on(host, Array(data_file))
