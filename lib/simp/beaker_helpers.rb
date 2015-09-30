@@ -253,6 +253,14 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
     fh.puts(hieradata.to_yaml)
     fh.close
 
+    # If there is already a directory on the system, the SCP below will
+    # add the local directory to the existing directory instead of
+    # replacing the contents.
+    apply_manifest_on(
+      host,
+      "file { '#{hiera_datadir(host)}': ensure => 'absent', force => true, recurse => true }"
+    ) 
+
     copy_hiera_data_to(host, data_dir)
     write_hiera_config_on(host, Array(data_file))
   end
