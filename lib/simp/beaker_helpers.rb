@@ -1,7 +1,7 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.0.5'
+  VERSION = '1.0.6'
 
   # Locates .fixture.yml in or above this directory.
   def fixtures_yml_path
