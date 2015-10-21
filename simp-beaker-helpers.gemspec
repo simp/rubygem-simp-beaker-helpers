@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   EOF
   s.version     = Simp::BeakerHelpers::VERSION
   s.license     = 'Apache-2.0'
-  s.authors     = ['Chris Tessmer']
+  s.authors     = ['Chris Tessmer','Trevor Vaughan']
   s.email       = 'simp@simp-project.org'
   s.homepage    = 'https://github.com/simp/rubygem-simp-beaker-helpers'
   s.metadata = {
