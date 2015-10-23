@@ -12,6 +12,7 @@ Methods to assist beaker acceptance tests for SIMP.
     * [`run_fake_pki_ca_on`](#run_fake_pki_ca_on)
     * [`copy_pki_to`](#copy_pki_to)
     * [`copy_keydist_to`](#copy_keydist_to)
+    * [`pluginsync_on`](#pluginsync_on)
     * [`set_hieradata_on`](#set_hieradata_on)
     * [`clear_temp_hieradata`](#clear_temp_hieradata)
 4. [Environment variables](#environment-variables)
@@ -94,7 +95,14 @@ Copy a CA keydist/ directory of CA+host certs into an SUT
 
 This simulates the output of FakeCA's `gencerts_nopass.sh` into `keydist/` and is useful for constructing a Puppet master SUT that will distribute PKI keys via agent runs.
 
-`def copy_keydist_to( ca_sut = master )`
+`copy_keydist_to( ca_sut = master )`
+
+
+#### `pluginsync_on`
+
+Simulates a custom fact pluginsync on given SUTs
+
+`pluginsync_on( suts = hosts )`
 
 
 #### `set_hieradata_on`

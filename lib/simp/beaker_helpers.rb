@@ -1,7 +1,7 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.0.5'
+  VERSION = '1.0.6'
 
   # Locates .fixture.yml in or above this directory.
   def fixtures_yml_path
@@ -276,6 +276,18 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
         if File.exists?(data_dir)
           FileUtils.rm_r(data_dir)
         end
+      end
+    end
+  end
+
+  # pluginsync custom facts for all modules
+  def pluginsync_on( suts = hosts )
+    suts.each do |sut|
+      fact_path = on(sut, %q(puppet config print factpath)).output.strip.split(':').first
+      on(sut, %q(puppet config print modulepath)).output.strip.split(':').each do |mod_path|
+        on(sut, %Q(mkdir -p #{fact_path}))
+        next if on(sut, "ls #{mod_path}/*/lib/facter 2>/dev/null ", :accept_all_exit_codes => true).exit_code != 0
+        on(sut, %Q(find #{mod_path}/*/lib/facter -type f -name '*.rb' -exec cp -a {} '#{fact_path}/' \\; ))
       end
     end
   end
