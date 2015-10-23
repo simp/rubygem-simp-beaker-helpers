@@ -16,6 +16,24 @@
       "revId": "6a2df15aeac1d3a420e6fa89dddac0c3973e4fd0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ab29df4_08d15cfb",
+        "filename": "lib/simp/rake/beaker.rb",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1004834
+      },
+      "writtenOn": "2015-10-23T14:25:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9ab29df4_632cc04b",
+      "revId": "6a2df15aeac1d3a420e6fa89dddac0c3973e4fd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
