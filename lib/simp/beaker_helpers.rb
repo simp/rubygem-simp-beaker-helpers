@@ -1,30 +1,36 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.0.6'
+  VERSION = '1.0.9'
 
   # Locates .fixture.yml in or above this directory.
   def fixtures_yml_path
+    STDERR.puts '  ** fixtures_yml_path' if ENV['BEAKER_helpers_verbose']
     fixtures_yml = ''
     dir          = '.'
     while( fixtures_yml.empty? && File.expand_path(dir) != '/' ) do
       file = File.expand_path( '.fixtures.yml', dir )
+      STDERR.puts "  ** fixtures_yml_path: #{file}" if ENV['BEAKER_helpers_verbose']
       if File.exists? file
         fixtures_yml = file
         break
       end
+      dir = "#{dir}/.."
     end
     raise 'ERROR: cannot locate .fixtures.yml!' if fixtures_yml.empty?
+    STDERR.puts "  ** fixtures_yml_path:finished (file: '#{file}')" if ENV['BEAKER_helpers_verbose']
     fixtures_yml
   end
 
 
   # returns an Array of puppet modules declared in .fixtures.yml
   def pupmods_in_fixtures_yml
+    STDERR.puts '  ** pupmods_in_fixtures_yml' if ENV['BEAKER_helpers_verbose']
     fixtures_yml = fixtures_yml_path
     data         = YAML.load_file( fixtures_yml )
     repos        = data.fetch('fixtures').fetch('repositories', {}).keys || []
     symlinks     = data.fetch('fixtures').fetch('symlinks', {}).keys     || []
+    STDERR.puts '  ** pupmods_in_fixtures_yml: finished' if ENV['BEAKER_helpers_verbose']
     (repos + symlinks)
   end
 
@@ -33,11 +39,13 @@ module Simp::BeakerHelpers
   # if any fixture modules are missing, run 'rake spec_prep' to populate the
   # fixtures/modules
   def ensure_fixture_modules
+    STDERR.puts "  ** ensure_fixture_modules" if ENV['BEAKER_helpers_verbose']
     unless ENV['BEAKER_spec_prep'] == 'no'
       puts "== checking prepped modules from .fixtures.yml"
       puts "  -- (use BEAKER_spec_prep=no to disable)"
       missing_modules = []
       pupmods_in_fixtures_yml.each do |pupmod|
+        STDERR.puts "  **  -- ensure_fixture_modules: '#{pupmod}'" if ENV['BEAKER_helpers_verbose']
         mod_root = File.expand_path( "spec/fixtures/modules/#{pupmod}", File.dirname( fixtures_yml_path ))
         missing_modules << pupmod unless File.directory? mod_root
       end
@@ -50,20 +58,30 @@ module Simp::BeakerHelpers
         puts "  == all fixture modules present"
       end
     end
+    STDERR.puts "  **  -- ensure_fixture_modules: finished" if ENV['BEAKER_helpers_verbose']
   end
 
+
   # Copy the local fixture modules (under `spec/fixtures/modules`) onto each SUT
-  def copy_fixture_modules_to( suts = hosts )
+  def copy_fixture_modules_to( suts = hosts, pluginsync = true )
+    STDERR.puts '  ** copy_fixture_modules_to' if ENV['BEAKER_helpers_verbose']
     ensure_fixture_modules
+
     suts.each do |sut|
+      STDERR.puts "  ** copy_fixture_modules_to: '#{sut}'" if ENV['BEAKER_helpers_verbose']
       # allow spec_prep to provide modules (to support isolated networks)
       unless ENV['BEAKER_use_fixtures_dir_for_modules'] == 'no'
         pupmods_in_fixtures_yml.each do |pupmod|
+          STDERR.puts "  ** copy_fixture_modules_to: '#{sut}': '#{pupmod}'" if ENV['BEAKER_helpers_verbose']
           mod_root = File.expand_path( "spec/fixtures/modules/#{pupmod}", File.dirname( fixtures_yml_path ))
           copy_module_to( sut, {:source => mod_root, :module_name => pupmod} )
         end
       end
+      STDERR.puts '  ** copy_fixture_modules_to: finished' if ENV['BEAKER_helpers_verbose']
     end
+
+    # sync custom facts from the new modules to each SUT's factpath
+    pluginsync_on(suts) if pluginsync
   end
 
 
@@ -113,6 +131,7 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
       end
     end
   end
+
 
   # Apply known OS fixes we need to run Beaker on each SUT
   def fix_errata_on( suts = hosts )
@@ -165,7 +184,11 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
       on ca_sut, "cd #{host_dir}; cat #{host_dir}/pki.hosts | xargs bash make.sh"
     end
 
-    scp_from( ca_sut, host_dir, local_dir ) unless local_dir.empty?
+    # if a local_dir was provided, copy everything down to it
+    unless local_dir.empty?
+      FileUtils.mkdir_p local_dir
+      scp_from( ca_sut, host_dir, local_dir )
+    end
   end
 
 
@@ -198,14 +221,17 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
   # Copy a CA keydist/ directory of CA+host certs into an SUT
   #
   # This simulates the output of FakeCA's gencerts_nopass.sh to keydist/
-  #
-  # FIXME: update keydist to use a more flexible path
-  def copy_keydist_to( ca_sut = master )
-    modulepath = on(ca_sut, 'puppet config print  modulepath --environment production' ).output.chomp.split(':')
-    on ca_sut, "rm -rf #{modulepath.first}/pki/files/keydist/*"
-    on ca_sut, "cp -a /root/pki/keydist/ #{modulepath.first}/pki/files/"
-    on ca_sut, "chgrp -R puppet #{modulepath.first}/pki/files/keydist"
+  def copy_keydist_to( ca_sut = master, host_keydist_dir = nil  )
+    if !host_keydist_dir
+      modulepath = on(ca_sut, 'puppet config print modulepath --environment production' ).output.chomp.split(':')
+      host_keydist_dir = "#{modulepath.first}/pki/files/keydist"
+    end
+    on ca_sut, "rm -rf #{host_keydist_dir}/*"
+    on ca_sut, "mkdir -p #{host_keydist_dir}/"
+    on ca_sut, "cp -pR /root/pki/keydist/. #{host_keydist_dir}/"
+    on ca_sut, "chgrp -R puppet #{host_keydist_dir}"
   end
+
 
   ## Inline Hiera Helpers ##
   ## These will be integrated into core Beaker at some point ##
@@ -224,6 +250,7 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
       clear_temp_hieradata
     end
   end
+
 
   # Set the hiera data file on the provided host to the passed data structure
   #
@@ -267,6 +294,7 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
     write_hiera_config_on(host, Array(data_file))
   end
 
+
   # Clean up all temporary hiera data files.
   #
   # Meant to be called from after(:all)
@@ -279,6 +307,7 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
       end
     end
   end
+
 
   # pluginsync custom facts for all modules
   def pluginsync_on( suts = hosts )

@@ -9,7 +9,6 @@ CAKEY=./cakey.pem
 CACERT=./cacert.pem
 CASERIAL=`uuidgen | cut -f1 -d'-'`
 
-
 keydist=keydist
 
 # start clean
@@ -17,16 +16,16 @@ bash clean.sh
 
 mkdir -p working  "${keydist}" "${keydist}/cacerts"
 
-# Create new CA
+# Create new CA if necessary
 # ------------------------------------------------------------------------------
-dd if=/dev/urandom status=none bs=60 count=1 | openssl base64 -e -nopad | tr -d '\n' > cacertkey
-echo '' >> cacertkey
-mkdir ${CATOP}
-mkdir ${CATOP}/certs
-mkdir ${CATOP}/crl
-mkdir ${CATOP}/newcerts
-mkdir ${CATOP}/private
-echo "01" > ${CATOP}/serial
+mkdir -p ${CATOP} ${CATOP}/certs ${CATOP}/crl ${CATOP}/newcerts ${CATOP}/private
+if [ ! -f cacertkey ]; then
+  dd if=/dev/urandom status=none bs=60 count=1 | openssl base64 -e -nopad | tr -d '\n' > cacertkey
+  echo '' >> cacertkey
+fi
+if [ ! -f ${CATOP}/serial ]; then
+  echo "01" > ${CATOP}/serial
+fi
 touch ${CATOP}/index.txt
 
 echo "== Making CA certificate ..."

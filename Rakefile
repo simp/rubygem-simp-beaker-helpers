@@ -4,6 +4,13 @@ require 'rubygems'
 require 'rake/clean'
 require 'fileutils'
 require 'find'
+require 'rspec/core/rake_task'
+require 'puppetlabs_spec_helper/rake_tasks'
+
+
+['spec','syntax','syntax:hiera','syntax:manifests','syntax:templates','lint','metadata'].each do |task|
+  Rake::Task[task].clear
+end
 
 @package='simp-beaker-helpers'
 @rakefile_dir=File.dirname(__FILE__)
@@ -39,14 +46,19 @@ SIMP_RPM_BUILD     when set, alters the gem produced by pkg:gem to be RPM-safe.
   }
 end
 
-desc 'run all RSpec tests'
-task :spec do
-  Dir.chdir @rakefile_dir
-  sh 'bundle exec rspec spec'
-end
+#desc 'run all RSpec tests'
+#task :spec do
+#  Dir.chdir @rakefile_dir
+#  sh 'bundle exec rspec spec'
+#end
 
 desc %q{run all RSpec tests (alias of 'spec')}
 task :test => :spec
+
+desc "Run acceptance tests"
+RSpec::Core::RakeTask.new(:acceptance) do |t|
+  t.pattern = 'spec/acceptance'
+end
 
 namespace :pkg do
   @specfile_template = "rubygem-#{@package}.spec.template"
