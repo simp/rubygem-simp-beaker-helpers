@@ -46,12 +46,6 @@ SIMP_RPM_BUILD     when set, alters the gem produced by pkg:gem to be RPM-safe.
   }
 end
 
-#desc 'run all RSpec tests'
-#task :spec do
-#  Dir.chdir @rakefile_dir
-#  sh 'bundle exec rspec spec'
-#end
-
 desc %q{run all RSpec tests (alias of 'spec')}
 task :test => :spec
 

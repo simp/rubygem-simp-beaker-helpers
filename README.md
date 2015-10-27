@@ -9,12 +9,16 @@ Methods to assist beaker acceptance tests for SIMP.
 3. [Methods](#methods)
     * [`copy_fixture_modules_to`](#copy_fixture_modules_to)
     * [`fix_errata_on`](#fix_errata_on)
-    * [`run_fake_pki_ca_on`](#run_fake_pki_ca_on)
-    * [`copy_pki_to`](#copy_pki_to)
-    * [`copy_keydist_to`](#copy_keydist_to)
-    * [`pluginsync_on`](#pluginsync_on)
-    * [`set_hieradata_on`](#set_hieradata_on)
-    * [`clear_temp_hieradata`](#clear_temp_hieradata)
+    * PKI
+      * [`run_fake_pki_ca_on`](#run_fake_pki_ca_on)
+      * [`copy_pki_to`](#copy_pki_to)
+      * [`copy_keydist_to`](#copy_keydist_to)
+    * Custom facts
+      * [`pfact_on`](#pfact_on)
+      * [`pluginsync_on`](#pluginsync_on)
+    * Hiera
+      * [`set_hieradata_on`](#set_hieradata_on)
+      * [`clear_temp_hieradata`](#clear_temp_hieradata)
 4. [Environment variables](#environment-variables)
     * [`BEAKER_fips`](#beaker_fips)
     * [`BEAKER_spec_prep`](#beaker_spec_prep)
@@ -48,6 +52,7 @@ include Simp::BeakerHelpers
 
 Copies the local fixture modules (under `spec/fixtures/modules`) onto a list of SUTs
 `copy_fixture_modules_to( suts = hosts )`
+
 
 
 #### `fix_errata_on`
@@ -94,6 +99,13 @@ Copy a CA keydist/ directory of CA+host certs into an SUT
 This simulates the output of FakeCA's `gencerts_nopass.sh` into `keydist/` and is useful for constructing a Puppet master SUT that will distribute PKI keys via agent runs.
 
 `copy_keydist_to( ca_sut = master )`
+
+
+#### `pfact_on`
+
+Look up a face on a given SUT's using the `puppet fact` face.  This honors whatever facter-related settings the SUT's Puppet has been configured to use (i.e., `factpath`, `stringify_facts`, etc).
+
+`pfact_on( sut, fact_name )`
 
 
 #### `pluginsync_on`

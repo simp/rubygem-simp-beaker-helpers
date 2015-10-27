@@ -3,8 +3,6 @@ require 'tmpdir'
 
 
 context 'PKI operations' do
-#test_name 'SIMP beaker helper PKI operations'
-begin
 
   context 'after run_fake_pki_ca_on(master,hosts)' do
     before(:all) do
@@ -64,7 +62,4 @@ begin
     end
   end
 
-rescue Exception => e
-  require 'pry'; binding.pry
-end
 end

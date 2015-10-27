@@ -3,6 +3,14 @@ module Simp; end
 module Simp::BeakerHelpers
   VERSION = '1.0.10'
 
+  # use the `puppet fact` face to look up facts on an SUT
+  def pfact_on(sut, fact_name)
+    facts_json = on(sut,'puppet facts find xxx').output
+    facts      = JSON.parse(facts_json).fetch( 'values' )
+    facts.fetch(fact_name)
+  end
+
+
   # Locates .fixture.yml in or above this directory.
   def fixtures_yml_path
     STDERR.puts '  ** fixtures_yml_path' if ENV['BEAKER_helpers_verbose']
