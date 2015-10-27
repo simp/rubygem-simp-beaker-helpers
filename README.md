@@ -38,11 +38,9 @@ gem 'simp-beaker-helpers'
 
 Add this to your project's `spec/spec_helper_acceptance.rb`:
 ```ruby
-require 'simp-beaker-helpers'
-include SIMP::BeakerHelpers
+require 'simp/beaker_helpers'
+include Simp::BeakerHelpers
 ```
-
-
 
 ## Methods
 

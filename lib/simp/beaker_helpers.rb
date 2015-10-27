@@ -1,7 +1,7 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.0.9'
+  VERSION = '1.0.10'
 
   # Locates .fixture.yml in or above this directory.
   def fixtures_yml_path
@@ -91,6 +91,18 @@ module Simp::BeakerHelpers
     puts '  -- (use BEAKER_fips=no to disable)'
     suts.each do |sut|
       puts "  -- enabling FIPS on '#{sut}'"
+
+      # We need to use FIPS compliant algorithms and keylengths as per the FIPS
+      # certification.
+      on(sut, 'puppet config set digest_algorithm sha256')
+      on(sut, 'puppet config set keylength 2048')
+
+      # We need to be able to get back into our system!
+      # Make these safe for all systems, even old ones.
+      fips_ssh_ciphers = [ 'aes256-cbc','aes192-cbc','aes128-cbc']
+      on(sut, %(sed -i '/Ciphers /d' /etc/ssh/sshd_config))
+      on(sut, %(echo 'Ciphers #{fips_ssh_ciphers.join(',')}' >> /etc/ssh/sshd_config))
+
       if fact_on(sut, 'osfamily') == 'RedHat'
         pp = <<-EOS
         # This is necessary to prevent a kernel panic after rebooting into FIPS
@@ -155,6 +167,11 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
     # Configure and reboot SUTs into FIPS mode
     unless ENV['BEAKER_fips'] == 'no'
       enable_fips_mode_on(suts)
+    end
+
+    suts.each do |sut|
+      # Clean up YUM prior to starting our test runs.
+      on( sut, 'yum clean all' )
     end
   end
 
