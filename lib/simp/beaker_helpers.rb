@@ -1,7 +1,7 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.0.10'
+  VERSION = '1.0.11'
 
   # use the `puppet fact` face to look up facts on an SUT
   def pfact_on(sut, fact_name)
@@ -75,18 +75,20 @@ module Simp::BeakerHelpers
     STDERR.puts '  ** copy_fixture_modules_to' if ENV['BEAKER_helpers_verbose']
     ensure_fixture_modules
 
-    suts.each do |sut|
-      STDERR.puts "  ** copy_fixture_modules_to: '#{sut}'" if ENV['BEAKER_helpers_verbose']
-      # allow spec_prep to provide modules (to support isolated networks)
-      unless ENV['BEAKER_use_fixtures_dir_for_modules'] == 'no'
-        pupmods_in_fixtures_yml.each do |pupmod|
-          STDERR.puts "  ** copy_fixture_modules_to: '#{sut}': '#{pupmod}'" if ENV['BEAKER_helpers_verbose']
-          mod_root = File.expand_path( "spec/fixtures/modules/#{pupmod}", File.dirname( fixtures_yml_path ))
-          copy_module_to( sut, {:source => mod_root, :module_name => pupmod} )
+    unless ENV['BEAKER_copy_fixtures'] == 'no'
+      suts.each do |sut|
+        STDERR.puts "  ** copy_fixture_modules_to: '#{sut}'" if ENV['BEAKER_helpers_verbose']
+        # allow spec_prep to provide modules (to support isolated networks)
+        unless ENV['BEAKER_use_fixtures_dir_for_modules'] == 'no'
+          pupmods_in_fixtures_yml.each do |pupmod|
+            STDERR.puts "  ** copy_fixture_modules_to: '#{sut}': '#{pupmod}'" if ENV['BEAKER_helpers_verbose']
+            mod_root = File.expand_path( "spec/fixtures/modules/#{pupmod}", File.dirname( fixtures_yml_path ))
+            copy_module_to( sut, {:source => mod_root, :module_name => pupmod} )
+          end
         end
       end
-      STDERR.puts '  ** copy_fixture_modules_to: finished' if ENV['BEAKER_helpers_verbose']
     end
+    STDERR.puts '  ** copy_fixture_modules_to: finished' if ENV['BEAKER_helpers_verbose']
 
     # sync custom facts from the new modules to each SUT's factpath
     pluginsync_on(suts) if pluginsync
@@ -155,12 +157,21 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
 
   # Apply known OS fixes we need to run Beaker on each SUT
   def fix_errata_on( suts = hosts )
-    # SIMP uses structured facts, therefore stringify_facts must be disabled
-    unless ENV['BEAKER_stringify_facts'] == 'yes'
-      on suts, 'puppet config set stringify_facts false'
-    end
 
     suts.each do |sut|
+      # SIMP uses structured facts, therefore stringify_facts must be disabled
+      unless ENV['BEAKER_stringify_facts'] == 'yes'
+        on sut, 'puppet config set stringify_facts false'
+      end
+
+      # Occasionally we run across something similar to BKR-561, so to ensure we
+      # at least have the host defaults:
+      #
+      # :hieradatadir is used as a canary here; it isn't the only missing key
+      unless sut.host_hash.key? :hieradatadir 
+        configure_type_defaults_on(sut)
+      end
+
       if fact_on(sut, 'osfamily') == 'RedHat'
         # net-tools required for netstat utility being used by be_listening
         if fact_on(sut, 'operatingsystemmajrelease') == '7'
@@ -170,6 +181,7 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
           apply_manifest_on(sut, pp, :catch_failures => false)
         end
       end
+
     end
 
     # Configure and reboot SUTs into FIPS mode
@@ -177,10 +189,8 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
       enable_fips_mode_on(suts)
     end
 
-    suts.each do |sut|
-      # Clean up YUM prior to starting our test runs.
-      on( sut, 'yum clean all' )
-    end
+    # Clean up YUM prior to starting our test runs.
+    on(suts, 'yum clean all')
   end
 
 
@@ -281,17 +291,17 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
   #
   # Note: This is authoritative, you cannot mix this with other hieradata copies
   #
-  # @param[Host, Array<Host>, String, Symbol] One or more hosts to act upon.
+  # @param[sut, Array<Host>, String, Symbol] One or more hosts to act upon.
   #
-  # @param[Hieradata, Hash] The full hiera data structure to write to the system.
+  # @param[heradata, Hash || String] The full hiera data structure to write to the system.
   #
-  # @param[Data_file, String] The filename (not path) of the hiera data
+  # @param[data_file, String] The filename (not path) of the hiera data
   #                           YAML file to write to the system.
   #
-  # @param[Hiera_config, Array<String>] The hiera config array to write
+  # @param[hiera_config, Array<String>] The hiera config array to write
   #                                     to the system. Must contain the
   #                                     Data_file name as one element.
-  def set_hieradata_on(host, hieradata, data_file='default')
+  def set_hieradata_on(sut, hieradata, data_file='default')
     # Keep a record of all temporary directories that are created
     #
     # Should be cleaned by calling `clear_temp_hiera data` in after(:all)
@@ -304,19 +314,24 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
     @temp_hieradata_dirs << data_dir
 
     fh = File.open(File.join(data_dir,"#{data_file}.yaml"),'w')
-    fh.puts(hieradata.to_yaml)
+    if hieradata.kind_of? String
+      fh.puts(hieradata)
+    else
+      fh.puts(hieradata.to_yaml)
+    end
+
     fh.close
 
     # If there is already a directory on the system, the SCP below will
     # add the local directory to the existing directory instead of
     # replacing the contents.
     apply_manifest_on(
-      host,
-      "file { '#{hiera_datadir(host)}': ensure => 'absent', force => true, recurse => true }"
+      sut,
+      "file { '#{hiera_datadir(sut)}': ensure => 'absent', force => true, recurse => true }"
     )
 
-    copy_hiera_data_to(host, data_dir)
-    write_hiera_config_on(host, Array(data_file))
+    copy_hiera_data_to(sut, data_dir)
+    write_hiera_config_on(sut, Array(data_file))
   end
 
 
