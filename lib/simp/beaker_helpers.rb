@@ -206,6 +206,9 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
           EOS
           apply_manifest_on(sut, pp, :catch_failures => false)
         end
+
+        # Clean up YUM prior to starting our test runs.
+        on(sut, 'yum clean all')
       end
     end
 
@@ -213,9 +216,6 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
     unless ENV['BEAKER_fips'] == 'no'
       enable_fips_mode_on(suts)
     end
-
-    # Clean up YUM prior to starting our test runs.
-    on(suts, 'yum clean all')
   end
 
 
