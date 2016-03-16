@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a6ff13c_b3e8cd7d",
+        "filename": "lib/simp/beaker_helpers.rb",
+        "patchSetId": 1
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1004834
+      },
+      "writtenOn": "2016-03-16T15:54:09Z",
+      "side": 1,
+      "message": "This should be opts[:pluginsync]",
+      "revId": "71ccea806995b9d1be68a8782f5f3416ad7b21b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
