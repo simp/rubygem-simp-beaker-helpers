@@ -78,6 +78,8 @@ module Simp::BeakerHelpers
     # choosing a sane default for target_module_path.  In the event that BKR-723 is fixed, then the default
     # specified here should be removed.
 
+    suts.is_a?( String ) and suts = [ suts ]
+
     STDERR.puts '  ** copy_fixture_modules_to' if ENV['BEAKER_helpers_verbose']
     ensure_fixture_modules
 
