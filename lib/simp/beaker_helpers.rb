@@ -71,7 +71,13 @@ module Simp::BeakerHelpers
 
 
   # Copy the local fixture modules (under `spec/fixtures/modules`) onto each SUT
-  def copy_fixture_modules_to( suts = hosts, pluginsync = true )
+  def copy_fixture_modules_to( suts = hosts, opts = {:pluginsync => true,
+                                                     :target_module_path => '/opt/puppetlabs/code/modules'} )
+
+    # FIXME: As a result of BKR-723, which does not look easy to fix, we cannot rely on copy_module_to()
+    # choosing a sane default for target_module_path.  In the event that BKR-723 is fixed, then the default
+    # specified here should be removed.
+
     STDERR.puts '  ** copy_fixture_modules_to' if ENV['BEAKER_helpers_verbose']
     ensure_fixture_modules
 
@@ -83,7 +89,9 @@ module Simp::BeakerHelpers
           pupmods_in_fixtures_yml.each do |pupmod|
             STDERR.puts "  ** copy_fixture_modules_to: '#{sut}': '#{pupmod}'" if ENV['BEAKER_helpers_verbose']
             mod_root = File.expand_path( "spec/fixtures/modules/#{pupmod}", File.dirname( fixtures_yml_path ))
-            copy_module_to( sut, {:source => mod_root, :module_name => pupmod} )
+            opts = {:source => mod_root,
+                    :module_name => pupmod}.merge(opts)
+            copy_module_to( sut, opts )
           end
         end
       end
@@ -91,7 +99,7 @@ module Simp::BeakerHelpers
     STDERR.puts '  ** copy_fixture_modules_to: finished' if ENV['BEAKER_helpers_verbose']
 
     # sync custom facts from the new modules to each SUT's factpath
-    pluginsync_on(suts) if pluginsync
+    pluginsync_on(suts) if opts['pluginsync']
   end
 
 
