@@ -1,7 +1,7 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.0.11'
+  VERSION = '1.2.0'
 
   # use the `puppet fact` face to look up facts on an SUT
   def pfact_on(sut, fact_name)
@@ -155,6 +155,30 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
   end
 
 
+  # Collect all 'yum_repos' entries from the host nodeset.
+  # The acceptable format is as follows:
+  # yum_repos:
+  #   <repo_name>:
+  #     url: <URL>
+  #     gpgkeys:
+  #       - <URL to GPGKEY1>
+  #       - <URL to GPGKEY2>
+  def enable_yum_repos_on( suts = hosts )
+    suts.each do |sut|
+      if sut['yum_repos']
+        sut['yum_repos'].each_pair do |repo, metadata|
+          repo_manifest = <<-EOS
+            yumrepo { #{repo}:
+              baseurl => '#{metadata[:url]}',
+              gpgkey => '#{metadata[:gpgkeys].join(" ")}'
+            }
+          EOS
+          apply_manifest_on(sut, repo_manifest, :catch_failures => true)
+        end
+      end
+    end
+  end
+
   # Apply known OS fixes we need to run Beaker on each SUT
   def fix_errata_on( suts = hosts )
 
@@ -168,11 +192,13 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
       # at least have the host defaults:
       #
       # :hieradatadir is used as a canary here; it isn't the only missing key
-      unless sut.host_hash.key? :hieradatadir 
+      unless sut.host_hash.key? :hieradatadir
         configure_type_defaults_on(sut)
       end
 
       if fact_on(sut, 'osfamily') == 'RedHat'
+        enable_yum_repos_on(sut)
+
         # net-tools required for netstat utility being used by be_listening
         if fact_on(sut, 'operatingsystemmajrelease') == '7'
           pp = <<-EOS
@@ -181,7 +207,6 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
           apply_manifest_on(sut, pp, :catch_failures => false)
         end
       end
-
     end
 
     # Configure and reboot SUTs into FIPS mode
