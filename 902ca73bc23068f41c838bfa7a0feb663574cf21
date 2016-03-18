@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a6ff13c_8e9c836b",
+        "filename": "lib/simp/beaker_helpers.rb",
+        "patchSetId": 1
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1005194
+      },
+      "writtenOn": "2016-03-18T12:49:56Z",
+      "side": 1,
+      "message": "This needs to be called on suts, not a particular sut",
+      "range": {
+        "startLine": 200,
+        "startChar": 8,
+        "endLine": 200,
+        "endChar": 32
+      },
+      "revId": "902ca73bc23068f41c838bfa7a0feb663574cf21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
