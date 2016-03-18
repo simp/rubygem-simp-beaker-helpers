@@ -6,7 +6,9 @@ Methods to assist beaker acceptance tests for SIMP.
 1. [Overview](#overview)
 2. [Setup](#setup)
     * [Beginning with simp-beaker-helpers](#beginning-with-simp-beaker-helpers)
-3. [Methods](#methods)
+3. [Nodeset Enhancements](#nodeset-enhancements)
+    * [YUM Repo Support](#yum_repo_support)
+4. [Methods](#methods)
     * [`copy_fixture_modules_to`](#copy_fixture_modules_to)
     * [`fix_errata_on`](#fix_errata_on)
     * PKI
@@ -19,14 +21,14 @@ Methods to assist beaker acceptance tests for SIMP.
     * Hiera
       * [`set_hieradata_on`](#set_hieradata_on)
       * [`clear_temp_hieradata`](#clear_temp_hieradata)
-4. [Environment variables](#environment-variables)
+5. [Environment variables](#environment-variables)
     * [`BEAKER_fips`](#beaker_fips)
     * [`BEAKER_spec_prep`](#beaker_spec_prep)
     * [`BEAKER_stringify_facts`](#beaker_stringify_facts)
     * [`BEAKER_use_fixtures_dir_for_modules`](#beaker_use_fixtures_dir_for_modules)
-5. [Examples](#examples)
+6. [Examples](#examples)
     * [Prep OS, Generate and copy PKI certs to each SUT](#prep-os-generate-and-copy-pki-certs-to-each-sut)
-6. [License](#license)
+7. [License](#license)
 
 ## Overview
 
@@ -44,6 +46,21 @@ Add this to your project's `spec/spec_helper_acceptance.rb`:
 ```ruby
 require 'simp/beaker_helpers'
 include Simp::BeakerHelpers
+```
+## Nodeset Enhancements
+
+### YUM Repo Support
+
+Nodes in your nodesets will create YUM repository entries according to the
+following Hash:
+
+```yaml
+yum_repos:
+   <repo_name>:
+     url: <URL>
+     gpgkeys:
+       - <URL to GPGKEY1>
+       - <URL to GPGKEY2>
 ```
 
 ## Methods
@@ -142,12 +159,8 @@ SIMP acceptance tests enable [FIPS mode](https://access.redhat.com/documentation
 **NOTE:** FIPS mode is only enabled on RedHat family hosts
 
 #### `BEAKER_spec_prep`
-#
-
-
 #### `BEAKER_stringify_facts`
 #### `BEAKER_use_fixtures_dir_for_modules`
-
 
 ## Examples
 
