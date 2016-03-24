@@ -1,7 +1,7 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.2.0'
+  VERSION = '1.2.1'
 
   # use the `puppet fact` face to look up facts on an SUT
   def pfact_on(sut, fact_name)
@@ -230,10 +230,10 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
     puts "== Fake PKI CA"
     pki_dir  = File.expand_path( "../../files/pki", File.dirname(__FILE__))
     host_dir = '/root/pki'
-    fqdns    = fact_on hosts, 'fqdn'
+    fqdns    = fact_on(hosts, 'fqdn')
 
     on ca_sut, %Q(mkdir -p "#{host_dir}")
-    Dir[ File.join(pki_dir, '*')].each {|f| scp_to( ca_sut, f, host_dir)}
+    Dir[ File.join(pki_dir, '*') ].each{|f| scp_to( ca_sut, f, host_dir)}
 
     # generate PKI certs for each SUT
     Dir.mktmpdir do |dir|
@@ -241,7 +241,7 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
       File.open(pki_hosts_file, 'w'){|fh| fqdns.each{|fqdn| fh.puts fqdn}}
       scp_to(ca_sut, pki_hosts_file, host_dir)
       # generate certs
-      on ca_sut, "cd #{host_dir}; cat #{host_dir}/pki.hosts | xargs bash make.sh"
+      on(ca_sut, "cd #{host_dir}; cat #{host_dir}/pki.hosts | xargs bash make.sh")
     end
 
     # if a local_dir was provided, copy everything down to it
@@ -273,10 +273,27 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
       scp_to(sut, "#{local_host_pki_tree}/#{fqdn}.pem",   "#{sut_pki_dir}/private/")
       scp_to(sut, "#{local_host_pki_tree}/#{fqdn}.pub",   "#{sut_pki_dir}/public/")
 
-      # NOTE: to match pki::copy, 'cacert.pem' is renamed to 'cacerts.pem'
+      # NOTE: to match pki::copy, 'cacert.pem' is copied to 'cacerts.pem'
       scp_to(sut, local_cacert, "#{sut_pki_dir}/cacerts/cacerts.pem")
-  end
 
+      # Need to hash all of the CA certificates so that apps can use them
+      # properly! This must happen on the host itself since it needs to match
+      # the native hashing algorithms.
+      hash_cmd = <<-EOM.strip
+cd #{sut_pki_dir}/cacerts; \
+for x in *; do \
+  if [ ! -h "$x" ]; then \
+    `openssl x509 -in $x >/dev/null 2>&1`; \
+    if [ $? -eq 0 ]; then \
+      hash=`openssl x509 -in $x -hash | head -1`; \
+      ln -sf $x $hash.0; \
+    fi; \
+   fi; \
+done
+      EOM
+
+      on(sut, hash_cmd)
+  end
 
   # Copy a CA keydist/ directory of CA+host certs into an SUT
   #
