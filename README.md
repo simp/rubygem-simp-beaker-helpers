@@ -6,9 +6,11 @@ Methods to assist beaker acceptance tests for SIMP.
 1. [Overview](#overview)
 2. [Setup](#setup)
     * [Beginning with simp-beaker-helpers](#beginning-with-simp-beaker-helpers)
-3. [Nodeset Enhancements](#nodeset-enhancements)
+3. [General Enhancements](#general-enhancements)
+    * [Suites](#suites)
+4. [Nodeset Enhancements](#nodeset-enhancements)
     * [YUM Repo Support](#yum_repo_support)
-4. [Methods](#methods)
+5. [Methods](#methods)
     * [`copy_fixture_modules_to`](#copy_fixture_modules_to)
     * [`fix_errata_on`](#fix_errata_on)
     * PKI
@@ -21,14 +23,14 @@ Methods to assist beaker acceptance tests for SIMP.
     * Hiera
       * [`set_hieradata_on`](#set_hieradata_on)
       * [`clear_temp_hieradata`](#clear_temp_hieradata)
-5. [Environment variables](#environment-variables)
+6. [Environment variables](#environment-variables)
     * [`BEAKER_fips`](#beaker_fips)
     * [`BEAKER_spec_prep`](#beaker_spec_prep)
     * [`BEAKER_stringify_facts`](#beaker_stringify_facts)
     * [`BEAKER_use_fixtures_dir_for_modules`](#beaker_use_fixtures_dir_for_modules)
-6. [Examples](#examples)
+7. [Examples](#examples)
     * [Prep OS, Generate and copy PKI certs to each SUT](#prep-os-generate-and-copy-pki-certs-to-each-sut)
-7. [License](#license)
+8. [License](#license)
 
 ## Overview
 
@@ -47,6 +49,66 @@ Add this to your project's `spec/spec_helper_acceptance.rb`:
 require 'simp/beaker_helpers'
 include Simp::BeakerHelpers
 ```
+## General Enhancements
+
+### Suites
+
+The 'beaker:suites' rake task provides the ability to run isolated test sets
+with a full reset of the Beaker environment.
+
+These are entirely isolated runs of Beaker and have been designed to be used
+for situations where you need to eliminate all of the cruft from your previous
+runs to perform a new type of test.
+
+#### Suite Execution
+
+By default the only suite that will be executed is `default`.  Since each suite
+is executed in a new environment, spin up can take a lot of time. Therefore,
+the default is to only run the default suite.
+
+If there is a suite where the metadata contains `default_run` set to the
+Boolean `true`, then that suite will be part of the default suite execution.
+
+You can run all suites by setting the passed suite name to `ALL` (case
+sensitive).
+
+#### Environment Variables
+
+* BEAKER_suite_runall
+  * Run all Suites
+
+* BEAKER_suite_basedir
+  * The base directory where suites will be defined
+  * Default: spec/acceptance
+
+#### Global Suite Configuration
+
+A file `config.yml` can be placed in the `suites` directory to control certain
+aspects of the suite run.
+
+##### Supported Config:
+
+```yaml
+---
+# Fail the entire suite at the first failure
+'fail_fast' : <true|false> => Default: true
+```
+
+#### Individual Suite Configuration
+
+Each suite may contain a YAML file, metadata.yml, which will be used to provide
+information to the suite of tests.
+
+##### Supported Config:
+
+```yaml
+---
+'name' : '<User friendly name for the suite>'
+
+# Run this suite by default
+'default_run' : <true|false> => Default: false
+```
+
 ## Nodeset Enhancements
 
 ### YUM Repo Support
