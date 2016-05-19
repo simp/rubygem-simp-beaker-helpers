@@ -130,9 +130,18 @@ yum_repos:
 #### `copy_fixture_modules_to`
 
 Copies the local fixture modules (under `spec/fixtures/modules`) onto a list of SUTs
-`copy_fixture_modules_to( suts = hosts )`
+```ruby
+copy_fixture_modules_to( suts = hosts, opts = {:pluginsync => true,
+                                               :target_module_dir => '/etc/puppetlabs/code/modules'} )
+```
 
+If you need to use a non-default module path:
 
+```ruby
+copy_fixture_modules_to( hosts, {
+   :target_module_dir => '/path/to/my/modules',
+})
+```
 
 #### `fix_errata_on`
 
