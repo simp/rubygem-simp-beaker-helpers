@@ -1,7 +1,7 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.3.1'
+  VERSION = '1.4.0'
 
   # use the `puppet fact` face to look up facts on an SUT
   def pfact_on(sut, fact_name)
@@ -71,29 +71,42 @@ module Simp::BeakerHelpers
 
 
   # Copy the local fixture modules (under `spec/fixtures/modules`) onto each SUT
-  def copy_fixture_modules_to( suts = hosts, opts = {:pluginsync => true,
-                                                     :target_module_path => '/etc/puppetlabs/code/modules'} )
-
-    # FIXME: As a result of BKR-723, which does not look easy to fix, we cannot rely on copy_module_to()
-    # choosing a sane default for target_module_path.  In the event that BKR-723 is fixed, then the default
-    # specified here should be removed.
-
-    !suts.is_a?( Array ) and suts = Array(suts)
-
-    STDERR.puts '  ** copy_fixture_modules_to' if ENV['BEAKER_helpers_verbose']
+  def copy_fixture_modules_to( suts = hosts, opts = {})
     ensure_fixture_modules
 
+    opts[:pluginsync] = opts.fetch(:pluginsync, true)
+
     unless ENV['BEAKER_copy_fixtures'] == 'no'
-      suts.each do |sut|
+      Array(suts).each do |sut|
         STDERR.puts "  ** copy_fixture_modules_to: '#{sut}'" if ENV['BEAKER_helpers_verbose']
-        # allow spec_prep to provide modules (to support isolated networks)
+
+        # Use spec_prep to provide modules (this supports isolated networks)
         unless ENV['BEAKER_use_fixtures_dir_for_modules'] == 'no'
+
+          # NOTE: As a result of BKR-723, which does not look easy to fix, we
+          # cannot rely on `copy_module_to()` to choose a sane default for
+          # `target_module_path`.  This workaround queries each SUT's
+          # `modulepath` and targets the first one.
+          target_module_path = on(
+            sut, 'puppet config print modulepath --environment production'
+          ).output.chomp.split(':').first
+
+
           pupmods_in_fixtures_yml.each do |pupmod|
             STDERR.puts "  ** copy_fixture_modules_to: '#{sut}': '#{pupmod}'" if ENV['BEAKER_helpers_verbose']
             mod_root = File.expand_path( "spec/fixtures/modules/#{pupmod}", File.dirname( fixtures_yml_path ))
-            opts = opts.merge({:source => mod_root,
-                               :module_name => pupmod})
-            copy_module_to( sut, opts )
+            # These options can be overridden by `opt`
+            _opts = {
+                      :target_module_path => target_module_path,
+                    }.merge(opts)
+
+            # These options always override `opt`
+            _opts = _opts.merge({
+                                :source      => mod_root,
+                                :module_name => pupmod,
+                               })
+
+            copy_module_to( sut, _opts )
           end
         end
       end
@@ -223,7 +236,7 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
     end
 
     # Configure and reboot SUTs into FIPS mode
-    unless ENV['BEAKER_fips'] == 'no'
+    if ENV['BEAKER_fips'] == 'yes'
       enable_fips_mode_on(suts)
     end
   end
@@ -403,7 +416,9 @@ done
 
   # pluginsync custom facts for all modules
   def pluginsync_on( suts = hosts )
+    puts "== pluginsync_on'" if ENV['BEAKER_helpers_verbose']
     suts.each do |sut|
+      puts "  ** pluginsync_on: '#{sut}'" if ENV['BEAKER_helpers_verbose']
       fact_path = on(sut, %q(puppet config print factpath)).output.strip.split(':').first
       on(sut, %q(puppet config print modulepath)).output.strip.split(':').each do |mod_path|
         on(sut, %Q(mkdir -p #{fact_path}))

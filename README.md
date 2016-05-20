@@ -129,17 +129,32 @@ yum_repos:
 
 #### `copy_fixture_modules_to`
 
-Copies the local fixture modules (under `spec/fixtures/modules`) onto a list of SUTs
+Copies the local fixture modules (under `spec/fixtures/modules`) onto a list of
+SUTs.
+
 ```ruby
-copy_fixture_modules_to( suts = hosts, opts = {:pluginsync => true,
-                                               :target_module_dir => '/etc/puppetlabs/code/modules'} )
+copy_fixture_modules_to( suts = hosts, opts = {} )
 ```
+  - **`suts`**   = _(Array,String)_ list of SUTs to copy modules to
+  - **`opts`**   = _(Hash)_ Options passed on to `copy_module_to()` for each SUT
+
+By default, this will copy modules to the first path listed in each SUT's
+`modulepath` and simulate a pluginsync so the Beaker DSL's `facter_on` will
+still work.
 
 If you need to use a non-default module path:
-
 ```ruby
+# WARNING: this will use the same :target_module_dir for each SUT
 copy_fixture_modules_to( hosts, {
    :target_module_dir => '/path/to/my/modules',
+})
+```
+
+If you want to disable pluginsync:
+```ruby
+# WARNING: `fact_on` will not see custom facts
+copy_fixture_modules_to( hosts, {
+   :pluginsync => false
 })
 ```
 
@@ -159,13 +174,13 @@ SUT will have the appropriate openssl in its environment.
 
 `run_fake_pki_ca_on( ca_sut = master, suts = hosts, local_dir = '' )`
 
- -  **ca_sut**    = the SUT to generate the CA & certs on
- -  **suts**      = list of SUTs to generate certs for
- -  **local_dir** = local path where the CA+cert directory tree should copied back to
+ - **`ca_sut`**    = the SUT to generate the CA & certs on
+ - **`suts`**      = list of SUTs to generate certs for
+ - **`local_dir`** = local path where the CA+cert directory tree should copied back to
 
 #### `copy_pki_to`
 
-Copy a single SUT's PKI certs (with cacerts) onto an SUT.  This simulates the result of `pki::copy` without requiring a full master and `simp-pki` module.
+Copy a single SUT's PKI certs (with cacerts) onto the SUT.  This simulates the result of `pki::copy` without requiring a full master and `simp-pki` module.
 
 The directory structure copied to the SUT is:
 ```
@@ -182,7 +197,7 @@ The directory structure copied to the SUT is:
 
 #### `copy_keydist_to`
 
-Copy a CA keydist/ directory of CA+host certs into an SUT
+Copy a CA keydist/ directory of CA+host certs into an SUT.
 
 This simulates the output of FakeCA's `gencerts_nopass.sh` into `keydist/` and is useful for constructing a Puppet master SUT that will distribute PKI keys via agent runs.
 
@@ -191,14 +206,14 @@ This simulates the output of FakeCA's `gencerts_nopass.sh` into `keydist/` and i
 
 #### `pfact_on`
 
-Look up a face on a given SUT's using the `puppet fact` face.  This honors whatever facter-related settings the SUT's Puppet has been configured to use (i.e., `factpath`, `stringify_facts`, etc).
+Look up a fact on a given SUT using the `puppet fact` face.  This honors whatever facter-related settings the SUT's Puppet installation has been configured to use (i.e., `factpath`, `stringify_facts`, etc).
 
 `pfact_on( sut, fact_name )`
 
 
 #### `pluginsync_on`
 
-Simulates a custom fact pluginsync on given SUTs
+Simulates a `pluginsync` (useful for deploying custom facts) on given SUTs.
 
 `pluginsync_on( suts = hosts )`
 
@@ -211,9 +226,9 @@ Set the hiera data file on the provided host to the passed data structure
 
 `set_hieradata_on(host, hieradata, data_file='default')`
 
- -  **host**      = _(Array,String,Symbol)_ One or more hosts to act upon
- -  **hieradata** = _(Hash)_ The full hiera data structure to write to the system
- -  **data_file** = _(String)_ The filename (not path) of the hiera data
+ - **`host`**      = _(Array,String,Symbol)_ One or more hosts to act upon
+ - **`hieradata`** = _(Hash)_ The full hiera data structure to write to the system
+ - **`data_file`** = _(String)_ The filename (not path) of the hiera data
 
 ####  `clear_temp_hieradata`
 
@@ -225,11 +240,19 @@ Clean up all temporary hiera data files; meant to be called from `after(:all)`
 ## Environment variables
 #### `BEAKER_fips`
 
-SIMP acceptance tests enable [FIPS mode](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Security_Guide/sect-Security_Guide-Federal_Standards_And_Regulations-Federal_Information_Processing_Standard.html) on all SUTs by default.  Acceptance tests can be run without FIPS mode when `BEAKER_fips` is set to `no`
+_(Default: `no`)_ When set to `yes`, Beaker will enable [FIPS mode](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Security_Guide/sect-Security_Guide-Federal_Standards_And_Regulations-Federal_Information_Processing_Standard.html) on all SUTs before running tests.
 
-**NOTE:** FIPS mode is only enabled on RedHat family hosts
+**NOTE:** FIPS mode is only enabled on RedHat family hosts.
 
 #### `BEAKER_spec_prep`
+
+_(Default: `yes`)_  Ensures that each fixture module is present under
+`spec/fixtures/modules`.  If any fixture modules are missing, it will run `rake
+spec_prep` to populate the missing modules using `.fixtures.yml`.  Note that
+this will _not_ update modules that are already present under
+`spec/fixtures/modules`.
+
+
 #### `BEAKER_stringify_facts`
 #### `BEAKER_use_fixtures_dir_for_modules`
 
