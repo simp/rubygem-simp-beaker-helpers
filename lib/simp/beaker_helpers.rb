@@ -1,7 +1,7 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.4.0'
+  VERSION = '1.5.0'
 
   # use the `puppet fact` face to look up facts on an SUT
   def pfact_on(sut, fact_name)
@@ -187,15 +187,73 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
   #       - <URL to GPGKEY1>
   #       - <URL to GPGKEY2>
   def enable_yum_repos_on( suts = hosts )
+    repo_attrs = [
+      :assumeyes,
+      :bandwidth,
+      :cost,
+      :deltarpm_metadata_percentage,
+      :deltarpm_percentage,
+      :descr,
+      :enabled,
+      :enablegroups,
+      :exclude,
+      :failovermethod,
+      :gpgcakey,
+      :gpgcheck,
+      :http_caching,
+      :include,
+      :includepkgs,
+      :keepalive,
+      :metadata_expire,
+      :metalink,
+      :mirrorlist,
+      :mirrorlist_expire,
+      :priority,
+      :protect,
+      :provider,
+      :proxy,
+      :proxy_password,
+      :proxy_username,
+      :repo_gpgcheck,
+      :retries,
+      :s3_enabled,
+      :skip_if_unavailable,
+      :sslcacert,
+      :sslclientcert,
+      :sslclientkey,
+      :sslverify,
+      :target,
+      :throttle,
+      :timeout
+    ]
+
     Array(suts).each do |sut|
       if sut['yum_repos']
         sut['yum_repos'].each_pair do |repo, metadata|
-          repo_manifest = <<-EOS
-            yumrepo { #{repo}:
-              baseurl => '#{metadata[:url]}',
-              gpgkey => '#{metadata[:gpgkeys].join(" ")}'
-            }
-          EOS
+          repo_manifest = %(yumrepo { #{repo}:)
+
+          repo_manifest_opts = []
+
+          # Legacy Support
+          urls = !metadata[:url].nil? ? metadata[:url] : metadata[:baseurl]
+          if urls
+            repo_manifest_opts << 'baseurl => ' + '"' + Array(urls).flatten.join('\n        ').gsub('$','\$') + '"'
+          end
+
+          # Legacy Support
+          gpgkeys = !metadata[:gpgkeys].nil? ? metadata[:gpgkeys] : metadata[:gpgkey]
+          if gpgkeys
+            repo_manifest_opts << 'gpgkey => ' + '"' + Array(gpgkeys).flatten.join('\n       ').gsub('$','\$') + '"'
+          end
+
+          repo_attrs.each do |attr|
+            if metadata[attr]
+              repo_manifest_opts << "#{attr} => '#{metadata[attr]}'"
+            end
+          end
+
+          repo_manifest = repo_manifest + %(\n#{repo_manifest_opts.join(",\n")}) + "\n}"
+
           apply_manifest_on(sut, repo_manifest, :catch_failures => true)
         end
       end
