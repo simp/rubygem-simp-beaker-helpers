@@ -117,12 +117,27 @@ Nodes in your nodesets will create YUM repository entries according to the
 following Hash:
 
 ```yaml
+---
 yum_repos:
    <repo_name>:
-     url: <URL>
-     gpgkeys:
-       - <URL to GPGKEY1>
-       - <URL to GPGKEY2>
+     <yum_resource_parameter>: <value>
+```
+
+The `baseurl` and `gpgkey` parameters can also take an Array if you need to
+point at more than one location.
+
+This would look like the following:
+
+```yaml
+---
+yum_repos:
+   <repo_name>:
+     baseurl:
+       - http://some.random.host
+       - https://some.other.random.host
+     gpgkey:
+       - https://my.gpg.host
+       - https://my.other.gpg.host
 ```
 
 ## Methods
