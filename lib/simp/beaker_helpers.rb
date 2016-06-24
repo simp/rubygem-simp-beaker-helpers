@@ -1,7 +1,7 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.5.0'
+  VERSION = '1.5.1'
 
   # use the `puppet fact` face to look up facts on an SUT
   def pfact_on(sut, fact_name)
@@ -91,23 +91,34 @@ module Simp::BeakerHelpers
             sut, 'puppet config print modulepath --environment production'
           ).output.chomp.split(':').first
 
+          mod_root = File.expand_path( "spec/fixtures/modules", File.dirname( fixtures_yml_path ))
 
           pupmods_in_fixtures_yml.each do |pupmod|
             STDERR.puts "  ** copy_fixture_modules_to: '#{sut}': '#{pupmod}'" if ENV['BEAKER_helpers_verbose']
-            mod_root = File.expand_path( "spec/fixtures/modules/#{pupmod}", File.dirname( fixtures_yml_path ))
-            # These options can be overridden by `opt`
-            _opts = {
-                      :target_module_path => target_module_path,
-                    }.merge(opts)
 
-            # These options always override `opt`
-            _opts = _opts.merge({
-                                :source      => mod_root,
-                                :module_name => pupmod,
-                               })
+            pupmod_root = File.join(mod_root, pupmod)
 
-            copy_module_to( sut, _opts )
+            if File.symlink?(pupmod_root)
+              _opts = {
+                :target_module_path => target_module_path,
+              }.merge(opts)
+
+              _opts = _opts.merge({
+                :source => pupmod_root,
+                :module_name => pupmod
+              })
+
+              copy_module_to(sut, _opts)
+            end
           end
+
+          _opts = {
+            :ignore_list => PUPPET_MODULE_INSTALL_IGNORE
+          }.merge(opts)
+
+          _opts[:ignore] = build_ignore_list(_opts)
+
+          scp_to(sut, mod_root, File.dirname(target_module_path), _opts)
         end
       end
     end
