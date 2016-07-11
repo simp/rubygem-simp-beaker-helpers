@@ -116,15 +116,17 @@ module Simp::Rake
 
           raise("Error: Suites Directory at '#{suite_basedir}'!") unless File.directory?(suite_basedir)
 
-          unless File.directory?(File.join(suite_basedir, suite))
-            STDERR.puts("Error: Could not find suite '#{suite}'")
-            STDERR.puts("Available Suites:")
-            STDERR.puts('  * ' + Dir.glob(
-              File.join(suite_basedir, '*')).sort.map{ |x|
-                File.basename(x)
-              }.join("\n  * ")
-            )
-            exit(1)
+          if suite
+            unless File.directory?(File.join(suite_basedir, suite))
+              STDERR.puts("Error: Could not find suite '#{suite}'")
+              STDERR.puts("Available Suites:")
+              STDERR.puts('  * ' + Dir.glob(
+                File.join(suite_basedir, '*')).sort.map{ |x|
+                  File.basename(x)
+                }.join("\n  * ")
+              )
+              exit(1)
+            end
           end
 
           suite_config = {
