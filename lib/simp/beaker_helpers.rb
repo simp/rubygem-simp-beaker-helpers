@@ -1,7 +1,7 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.5.3'
+  VERSION = '1.5.4'
 
   # use the `puppet fact` face to look up facts on an SUT
   def pfact_on(sut, fact_name)
@@ -10,6 +10,20 @@ module Simp::BeakerHelpers
     facts.fetch(fact_name)
   end
 
+  # Return the path to the 'spec/fixtures' directory
+  def fixtures_path
+    STDERR.puts '  ** fixtures_path' if ENV['BEAKER_helpers_verbose']
+    dir = RSpec.configuration.default_path
+    dir = File.join('.', 'spec') unless dir
+
+    dir = File.join(File.expand_path(dir), 'fixtures')
+
+    if File.directory?(dir)
+      return dir
+    else
+      raise("Could not find fixtures directory at '#{dir}'")
+    end
+  end
 
   # Locates .fixture.yml in or above this directory.
   def fixtures_yml_path
