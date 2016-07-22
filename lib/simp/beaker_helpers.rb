@@ -420,6 +420,37 @@ done
     end
   end
 
+  # Writes a YAML file in the Hiera :datadir of a Beaker::Host.
+  #
+  # @note This is useless unless Hiera is configured to use the data file.
+  #   @see `Beaker::DSL::Helpers::Hiera#write_hiera_config_on`
+  #
+  # @param sut  [Array<Host>, String, Symbol] One or more hosts to act upon.
+  #
+  # @param heradata [Hash, String] The full hiera data structure to write to
+  #   the system.
+  #
+  # @param terminus [String] The basename of the YAML file minus the extension
+  #   to write to the system.
+  #
+  # @return [Nil]
+  #
+  # @note This creates a tempdir on the host machine which should be removed
+  #   using `#clear_temp_hieradata` in the `after(:all)` hook.  It may also be
+  #   retained for debugging purposes.
+  #
+  def write_hieradata_to(sut, hieradata, terminus = 'default')
+    @temp_hieradata_dirs ||= []
+    data_dir = Dir.mktmpdir('hieradata')
+    @temp_hieradata_dirs << data_dir
+
+    fh = File.open(File.join(data_dir, "#{terminus}.yaml"), 'w')
+    hieradata.is_a?(String) ? fh.puts(hieradata) : fh.puts(hieradata.to_yaml)
+    fh.close
+
+    apply_manifest_on sut, "file { '#{hiera_datadir(sut)}': ensure => 'directory', force => true }"
+    copy_hiera_data_to sut, File.join(data_dir, "#{terminus}.yaml")
+  end
 
   # Set the hiera data file on the provided host to the passed data structure
   #
