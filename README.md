@@ -21,6 +21,7 @@ Methods to assist beaker acceptance tests for SIMP.
       * [`pfact_on`](#pfact_on)
       * [`pluginsync_on`](#pluginsync_on)
     * Hiera
+      * [`write_hieradata_to`](#write_hieradata_to)
       * [`set_hieradata_on`](#set_hieradata_on)
       * [`clear_temp_hieradata`](#clear_temp_hieradata)
 6. [Environment variables](#environment-variables)
@@ -232,6 +233,16 @@ Simulates a `pluginsync` (useful for deploying custom facts) on given SUTs.
 
 `pluginsync_on( suts = hosts )`
 
+#### `write_hieradata_to`
+
+Writes a YAML file in the Hiera :datadir of a Beaker::Host.
+
+**NOTE**: This is useless unless Hiera is configured to use the data file.
+`Beaker::DSL::Helpers::Hiera#write_hiera_config_on` from [beaker-hiera](https://github.com/puppetlabs/beaker-hiera) may be used to configure Hiera.
+
+ - **`host`**      = _(Array,String,Symbol)_ One or more hosts to act upon
+ - **`hieradata`** = _(Hash)_ The full hiera data structure to write to the system
+ - **`terminus`**  = _(String)_ The file basename minus the file extension in which to write the Hiera data
 
 #### `set_hieradata_on`
 
