@@ -1,7 +1,7 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.5.4'
+  VERSION = '1.5.5'
 
   # use the `puppet fact` face to look up facts on an SUT
   def pfact_on(sut, fact_name)
@@ -367,6 +367,9 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
   # SUT_BASE_DIR/
   #             pki/
   #                 cacerts/cacerts.pem
+  #                 # This is a copy of cacerts.pem since cacerts.pem is a
+  #                 # collection of the CA certificates in pupmod-simp-pki
+  #                 cacerts/simp_auto_ca.pem
   #                 public/fdqn.pub
   #                 private/fdqn.pem
   def copy_pki_to(sut, local_pki_dir, sut_base_dir = '/etc/pki/simp-testing')
@@ -378,6 +381,8 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
       on sut, %Q(mkdir -p "#{sut_pki_dir}/public" "#{sut_pki_dir}/private" "#{sut_pki_dir}/cacerts")
       scp_to(sut, "#{local_host_pki_tree}/#{fqdn}.pem",   "#{sut_pki_dir}/private/")
       scp_to(sut, "#{local_host_pki_tree}/#{fqdn}.pub",   "#{sut_pki_dir}/public/")
+
+      scp_to(sut, local_cacert, "#{sut_pki_dir}/cacerts/simp_auto_ca.pem")
 
       # NOTE: to match pki::copy, 'cacert.pem' is copied to 'cacerts.pem'
       scp_to(sut, local_cacert, "#{sut_pki_dir}/cacerts/cacerts.pem")
