@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "baa041b7_3d0ac179",
+        "filename": "lib/simp/beaker_helpers.rb",
+        "patchSetId": 1
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1005143
+      },
+      "writtenOn": "2016-08-01T21:09:42Z",
+      "side": 1,
+      "message": "Thanks for cleaning the YARD!  ᕕ(ᐛ)ᕗ",
+      "revId": "9604dc9501fa25fb73b6e575ce05b2de0be20532",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "baa041b7_dd3cf530",
+        "filename": "lib/simp/beaker_helpers.rb",
+        "patchSetId": 1
+      },
+      "lineNbr": 452,
+      "author": {
+        "id": 1005143
+      },
+      "writtenOn": "2016-08-01T21:09:42Z",
+      "side": 1,
+      "message": "(This is just an informational comment, because Ruby):\n\nThe `||\u003d` syntax is fine for this particular assignment, but it\u0027s important not to consider it as a safe (or even thread-safe) substitute for the more conservative `@x\u003d@x||y` syntax it has replaced.  \n\nSee these links for examples:\n  - http://www.rubyinside.com/what-rubys-double-pipe-or-equals-really-does-5488.html\n  - https://allenan.com/ruby-or-equals-operator-default-booleans/#threadsafetyand",
+      "revId": "9604dc9501fa25fb73b6e575ce05b2de0be20532",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "baa041b7_9dbd4db3",
+        "filename": "lib/simp/beaker_helpers.rb",
+        "patchSetId": 1
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1005143
+      },
+      "writtenOn": "2016-08-01T21:09:42Z",
+      "side": 1,
+      "message": "Please expand this into an explicit `if`/`else`/`end` block.\n\nThis is an instance where SIMP coding conventions differ from https://github.com/bbatsov/ruby-style-guide and https://github.com/styleguide/ruby/syntax (we probably  _should_ write a style guide at some point).  \n\nTernary operators are needlessly opaque to many Ruby novices and should be avoided except in very trivial assignments (e.g., variable sanitization, explicit return values).",
+      "range": {
+        "startLine": 457,
+        "startChar": 28,
+        "endLine": 457,
+        "endChar": 77
+      },
+      "revId": "9604dc9501fa25fb73b6e575ce05b2de0be20532",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
