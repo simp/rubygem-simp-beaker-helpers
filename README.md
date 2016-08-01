@@ -235,15 +235,17 @@ Simulates a `pluginsync` (useful for deploying custom facts) on given SUTs.
 
 #### `set_hieradata_on`
 
-Set the hiera data file on the provided host to the passed data structure
+Write a YAML file in the Hiera :datadir of a Beaker::Host and optionally sets the :hierarchy.
 
-**NOTE**: This is authoritative; you cannot mix this with other hieradata copies
+**NOTE**: By default this is authoritative and may not be mixed with other Hiera data sources.  This behavior may be disabled by setting the `:manage_config` option to `false`.
 
-`set_hieradata_on(host, hieradata, data_file='default')`
+`set_hieradata_on(host, hieradata, terminus = 'default', opts = {})`
 
  - **`host`**      = _(Array,String,Symbol)_ One or more hosts to act upon
  - **`hieradata`** = _(Hash)_ The full hiera data structure to write to the system
- - **`data_file`** = _(String)_ The filename (not path) of the hiera data
+ - **`terminus`**  = _(String)_ The filename (not path) of the hiera data
+ - **`options`**   = _(Hash)_ Options hash.
+    - **`:manage_config`** = _(Bool)_ Whether or not to manage the `hiera.yaml` configuration file.  Defaults to `true`.
 
 ####  `clear_temp_hieradata`
 
