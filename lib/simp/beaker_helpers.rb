@@ -435,51 +435,58 @@ done
   end
 
 
-  # Set the hiera data file on the provided host to the passed data structure
+  # Writes a YAML file in the Hiera :datadir of a Beaker::Host.
   #
-  # Note: This is authoritative, you cannot mix this with other hieradata copies
+  # @note This is useless unless Hiera is configured to use the data file.
+  #   @see `Beaker::DSL::Helpers::Hiera#write_hiera_config_on`
   #
-  # @param[sut, Array<Host>, String, Symbol] One or more hosts to act upon.
+  # @param sut  [Array<Host>, String, Symbol] One or more hosts to act upon.
   #
-  # @param[heradata, Hash || String] The full hiera data structure to write to the system.
+  # @param heradata [Hash, String] The full hiera data structure to write to
+  #   the system.
   #
-  # @param[data_file, String] The filename (not path) of the hiera data
-  #                           YAML file to write to the system.
+  # @param terminus [String] The basename of the YAML file minus the extension
+  #   to write to the system.
   #
-  # @param[hiera_config, Array<String>] The hiera config array to write
-  #                                     to the system. Must contain the
-  #                                     Data_file name as one element.
-  def set_hieradata_on(sut, hieradata, data_file='default')
-    # Keep a record of all temporary directories that are created
-    #
-    # Should be cleaned by calling `clear_temp_hiera data` in after(:all)
-    #
-    # Omit this call to be able to delve into the hiera data that is
-    # being created
-    @temp_hieradata_dirs = @temp_hieradata_dirs || []
-
+  # @return [Nil]
+  #
+  # @note This creates a tempdir on the host machine which should be removed
+  #   using `#clear_temp_hieradata` in the `after(:all)` hook.  It may also be
+  #   retained for debugging purposes.
+  #
+  def write_hieradata_to(sut, hieradata, terminus = 'default')
+    @temp_hieradata_dirs ||= []
     data_dir = Dir.mktmpdir('hieradata')
     @temp_hieradata_dirs << data_dir
 
-    fh = File.open(File.join(data_dir,"#{data_file}.yaml"),'w')
-    if hieradata.kind_of? String
-      fh.puts(hieradata)
-    else
-      fh.puts(hieradata.to_yaml)
-    end
-
+    fh = File.open(File.join(data_dir, "#{terminus}.yaml"), 'w')
+    if hieradata.is_a?(String) then fh.puts(hieradata) else fh.puts(hieradata.to_yaml) end
     fh.close
 
-    # If there is already a directory on the system, the SCP below will
-    # add the local directory to the existing directory instead of
-    # replacing the contents.
-    apply_manifest_on(
-      sut,
-      "file { '#{hiera_datadir(sut)}': ensure => 'absent', force => true, recurse => true }"
-    )
+    apply_manifest_on sut, "file { '#{hiera_datadir(sut)}': ensure => 'directory', force => true }"
+    copy_hiera_data_to sut, File.join(data_dir, "#{terminus}.yaml")
+  end
 
-    copy_hiera_data_to(sut, data_dir)
-    write_hiera_config_on(sut, Array(data_file))
+
+  # Write the provided data structure to Hiera's :datadir and configure Hiera to
+  # use that data exclusively.
+  #
+  # @note This is authoritative.  It manages both Hiera data and configuration,
+  #   so it may not be used with other Hiera data sources.
+  #
+  # @param sut  [Array<Host>, String, Symbol] One or more hosts to act upon.
+  #
+  # @param heradata [Hash, String] The full hiera data structure to write to
+  #   the system.
+  #
+  # @param terminus [String] The basename of the YAML file minus the extension
+  #   to write to the system.
+  #
+  # @return [Nil]
+  #
+  def set_hieradata_on(sut, hieradata, terminus = 'default')
+    write_hieradata_to sut, hieradata, terminus
+    write_hiera_config_on sut, Array(terminus)
   end
 
 
