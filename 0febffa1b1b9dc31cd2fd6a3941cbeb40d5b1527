@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "baa041b7_05a302b3",
+        "filename": "lib/simp/beaker_helpers.rb",
+        "patchSetId": 5
+      },
+      "lineNbr": 449,
+      "author": {
+        "id": 1005143
+      },
+      "writtenOn": "2016-08-12T04:26:39Z",
+      "side": 1,
+      "message": "`if/else/end` should be a block, not a one-liner",
+      "revId": "0febffa1b1b9dc31cd2fd6a3941cbeb40d5b1527",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
