@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "baa041b7_85ddd2e1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1005143
+      },
+      "writtenOn": "2016-08-12T05:49:22Z",
+      "side": 1,
+      "message": "This description is pretty dense, and it\u0027s easy to lose track of what the value this patch actually is.\n\nIt might make things be easier to use the \"without this patch...why that\u0027s a problem...what this patch does\" commit message format described at https://github.com/puppetlabs/puppet/blob/master/CONTRIBUTING.md#making-changes",
+      "range": {
+        "startLine": 9,
+        "startChar": 1,
+        "endLine": 13,
+        "endChar": 35
+      },
+      "revId": "d2bc34e614e9612204f3ddb7ac55d7bcba4fe2d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
