@@ -1,7 +1,7 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.5.5'
+  VERSION = '1.5.6'
 
   # use the `puppet fact` face to look up facts on an SUT
   def pfact_on(sut, fact_name)
@@ -289,6 +289,10 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
   def fix_errata_on( suts = hosts )
 
     suts.each do |sut|
+      # We need to be able to flip between server and client without issue
+      on sut, 'puppet resource group puppet gid=52'
+      on sut, 'puppet resource user puppet comment="Puppet" gid="52" uid="52" home="/var/lib/puppet" managehome=true'
+
       # SIMP uses structured facts, therefore stringify_facts must be disabled
       unless ENV['BEAKER_stringify_facts'] == 'yes'
         on sut, 'puppet config set stringify_facts false'
