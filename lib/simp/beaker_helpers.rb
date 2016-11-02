@@ -1,7 +1,11 @@
+require 'beaker/host_prebuilt_steps'
+
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.5.5'
+  VERSION = '1.5.6'
+
+  include Beaker::HostPrebuiltSteps
 
   # use the `puppet fact` face to look up facts on an SUT
   def pfact_on(sut, fact_name)
@@ -285,10 +289,50 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
     end
   end
 
+  # Sets the domain on each SUT for Facter
+  # Required for broken DHCP systems
+  def set_domain_on( suts=hosts, domain='beaker.auto.local' )
+    Array(suts).each do |sut|
+      hostname = sut[:vmhostname] || sut.name
+      current_domain = fact_on(sut, 'domain').strip
+
+      on sut, "hostname #{hostname}.#{domain}"
+      on sut, "echo #{hostname}.#{domain} > /etc/hostname"
+
+      unless (current_domain.empty? || (domain == current_domain))
+        on sut, "sed -i s/#{current_domain.gsub('.','\.')}/#{domain}/ /etc/hosts"
+        on sut, "sed -i s/#{current_domain.gsub('.','\.')}/#{domain}/ /etc/resolv.conf"
+      end
+
+      resolv = on(sut, "cat /etc/resolv.conf").output.strip
+
+      unless (resolv =~ /^domain/m)
+        on sut, "echo 'domain #{domain}' >> /etc/resolv.conf"
+      end
+    end
+  end
+
   # Apply known OS fixes we need to run Beaker on each SUT
   def fix_errata_on( suts = hosts )
-
     suts.each do |sut|
+      # If we don't currently have a domain, we need to set one
+      # Alternatively, if one is set in the config file, set it to that
+      if sut[:domain]
+        set_domain_on(sut, sut[:domain])
+      else
+        domain = fact_on(sut, 'domain')
+
+        if domain.strip.empty?
+          set_domain_on(sut)
+        else
+          set_domain_on(sut, domain)
+        end
+      end
+
+      # We need to be able to flip between server and client without issue
+      on sut, 'puppet resource group puppet gid=52'
+      on sut, 'puppet resource user puppet comment="Puppet" gid="52" uid="52" home="/var/lib/puppet" managehome=true'
+
       # SIMP uses structured facts, therefore stringify_facts must be disabled
       unless ENV['BEAKER_stringify_facts'] == 'yes'
         on sut, 'puppet config set stringify_facts false'
