@@ -1,7 +1,7 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.5.5'
+  VERSION = '1.5.6'
 
   # use the `puppet fact` face to look up facts on an SUT
   def pfact_on(sut, fact_name)
@@ -432,6 +432,21 @@ done
   RSpec.configure do |c|
     c.before(:all) do
       @temp_hieradata_dirs = @temp_hieradata_dirs || []
+    end
+
+    # We can't guarantee that the upstream vendor isn't disabling interfaces so
+    # we need to turn them on at each context run
+    c.before(:context) do
+      hosts.each do |host|
+        interfaces = fact_on(host, 'interfaces').strip.split(',')
+        interfaces.delete_if { |x| x =~ /^lo/ }
+
+        interfaces.each do |iface|
+          if fact_on(host, "ipaddress_#{iface}").strip.empty?
+            on(host, "ifup #{iface}", :accept_all_exit_codes => true)
+          end
+        end
+      end
     end
 
     c.after(:all) do
