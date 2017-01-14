@@ -1,6 +1,6 @@
 # -*- encoding: utf-8 -*-
 $LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
-require 'simp/beaker_helpers.rb'
+require 'simp/beaker_helpers/version'
 require 'date'
 
 Gem::Specification.new do |s|
