@@ -4,7 +4,6 @@ cache: bundler
 
 rvm:
   - 2.1.9
-  - 2.0.0
 
 env:
   - SIMP_SKIP_NON_SIMPOS_TESTS=1
