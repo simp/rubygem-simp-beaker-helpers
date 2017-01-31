@@ -1,7 +1,7 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.5.7'
+  require 'simp/beaker_helpers/version'
 
   # use the `puppet fact` face to look up facts on an SUT
   def pfact_on(sut, fact_name)
