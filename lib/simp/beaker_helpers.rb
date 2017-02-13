@@ -2,6 +2,7 @@ module Simp; end
 
 module Simp::BeakerHelpers
   require 'simp/beaker_helpers/version'
+  DEFAULT_PUPPET_AGENT_VERSION = '1.8.3'
 
   # use the `puppet fact` face to look up facts on an SUT
   def pfact_on(sut, fact_name)
@@ -545,4 +546,42 @@ done
       end
     end
   end
+
+
+  # Looks up latest `puppet-agent` version by the version of its `puppet` gem
+  #
+  # @param puppet_version [String] target Puppet gem version.  Works with
+  #   Gemfile comparison syntax (e.g., '4.0', '= 4.2', '~> 4.3.1')
+  #
+  # @return [String,Nil] the `puppet-agent` version or nil
+  #
+  def latest_puppet_agent_version_for( puppet_version )
+    return nil if puppet_version.nil?
+    require 'rubygems/requirement'
+    require 'rubygems/version'
+    require 'yaml'
+    @agent_version_table ||= YAML.load_file(
+                               File.expand_path(
+                                 '../../files/puppet-agent-versions.yaml',
+                                 File.dirname(__FILE__)
+                             )).fetch('version_mappings')
+    _pair = @agent_version_table.find do |k,v|
+      Gem::Requirement.new(puppet_version).satisfied_by?(Gem::Version.new(k))
+    end
+    result = _pair ? _pair.last : nil
+  end
+
+
+  # Replacement for `install_puppet` in spec_helper_acceptance.rb
+  def install_puppet
+    puppet_install_type = ENV.fetch('PUPPET_INSTALL_TYPE', 'agent')
+    puppet_agent_version = (
+      ENV.fetch('PUPPET_INSTALL_VERSION', nil) ||
+      latest_puppet_agent_version_for(ENV.fetch('PUPPET_VERSION',nil)) ||
+      DEFAULT_PUPPET_AGENT_VERSION
+    )
+    require 'beaker/puppet_install_helper'
+    run_puppet_install_helper(puppet_install_type,  puppet_agent_version)
+  end
+
 end
