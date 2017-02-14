@@ -29,8 +29,10 @@ Methods to assist beaker acceptance tests for SIMP.
     * [`BEAKER_spec_prep`](#beaker_spec_prep)
     * [`BEAKER_stringify_facts`](#beaker_stringify_facts)
     * [`BEAKER_use_fixtures_dir_for_modules`](#beaker_use_fixtures_dir_for_modules)
+    * [`PUPPET_VERSION`](#puppet_version)
 7. [Examples](#examples)
     * [Prep OS, Generate and copy PKI certs to each SUT](#prep-os-generate-and-copy-pki-certs-to-each-sut)
+    * [Specify the version of Puppet to run in the SUTs](#specify-the-version-of-puppet-to-run-in-the-suts)
 8. [License](#license)
 
 ## Overview
@@ -284,7 +286,14 @@ this will _not_ update modules that are already present under
 #### `BEAKER_stringify_facts`
 #### `BEAKER_use_fixtures_dir_for_modules`
 
+#### PUPPET_VERSION
+
+The `PUPPET_VERSION` environment variable will install the latest
+`puppet-agent` package that provides that version of Puppet.  This honors
+`Gemfile`-style expressions like `"~> 4.8.0"`
+
 ## Examples
+
 
 ### Prep OS, Generate and copy PKI certs to each SUT
 This pattern serves to prepare component modules that use PKI
@@ -329,6 +338,19 @@ RSpec.configure do |c|
     end
   end
 end
+```
+
+### Specify the version of Puppet to run in the SUTs
+
+```bash
+# puppet-agent 1.8.3 will be installed in VMs
+PUPPET_VERSION="~> 4.8.0" bundle exec rake beaker:suites
+
+# puppet-agent 1.9.2 will be installed in VMs
+PUPPET_INSTALL_VERSION=1.9.2 bundle exec rake beaker:suites
+
+# puppet-agent 1.8.3 will be installed in VMs
+bundle exec rake beaker:suites
 ```
 
 ## License

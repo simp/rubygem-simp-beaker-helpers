@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
                  'issue_tracker' => 'https://simp-project.atlassian.net'
                }
   s.add_runtime_dependency 'beaker', '~> 2'
+  s.add_runtime_dependency 'beaker-puppet_install_helper', '~> 0.6'
 
   ### s.files = Dir['Rakefile', '{bin,lib,spec}/**/*', 'README*', 'LICENSE*'] & `git ls-files -z .`.split("\0")
   s.files       = `git ls-files`.split("\n")
