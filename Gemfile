@@ -19,7 +19,7 @@ group :system_tests do
   gem 'beaker-rspec'
   # NOTE: Workaround because net-ssh 2.10 is busting beaker
   # lib/ruby/1.9.1/socket.rb:251:in `tcp': wrong number of arguments (5 for 4) (ArgumentError)
-  gem 'net-ssh', '~> 2.9.0'
+  gem 'net-ssh'
   gem 'puppetlabs_spec_helper'
   gem 'puppet', puppetversion
 
