@@ -47,9 +47,9 @@ module Simp::BeakerHelpers
 
 
   # returns an Array of puppet modules declared in .fixtures.yml
-  def pupmods_in_fixtures_yml
+  def pupmods_in_fixtures_yml( fixtures_yml = nil )
     STDERR.puts '  ** pupmods_in_fixtures_yml' if ENV['BEAKER_helpers_verbose']
-    fixtures_yml = fixtures_yml_path
+    fixtures_yml = fixtures_yml_path if fixtures_yml.nil?
     data         = YAML.load_file( fixtures_yml )
     repos        = data.fetch('fixtures').fetch('repositories', {}).keys || []
     symlinks     = data.fetch('fixtures').fetch('symlinks', {}).keys     || []
@@ -61,22 +61,28 @@ module Simp::BeakerHelpers
   # Ensures that the fixture modules (under `spec/fixtures/modules`) exists.
   # if any fixture modules are missing, run 'rake spec_prep' to populate the
   # fixtures/modules
-  def ensure_fixture_modules
+  def ensure_fixture_modules( fixtures_yml = nil )
     STDERR.puts "  ** ensure_fixture_modules" if ENV['BEAKER_helpers_verbose']
     unless ENV['BEAKER_spec_prep'] == 'no'
-      puts "== checking prepped modules from .fixtures.yml"
+      puts "== checking prepped modules from #{fixtures_yml}"
       puts "  -- (use BEAKER_spec_prep=no to disable)"
       missing_modules = []
-      pupmods_in_fixtures_yml.each do |pupmod|
+      pupmods_in_fixtures_yml(fixtures_yml).each do |pupmod|
         STDERR.puts "  **  -- ensure_fixture_modules: '#{pupmod}'" if ENV['BEAKER_helpers_verbose']
         mod_root = File.expand_path( "spec/fixtures/modules/#{pupmod}", File.dirname( fixtures_yml_path ))
         missing_modules << pupmod unless File.directory? mod_root
       end
       puts "  -- #{missing_modules.size} modules need to be prepped"
       unless missing_modules.empty?
+        # This is janky, but puppetlabs spec_prep only takes an environment
+        # variable to specify an alternate fixtures file.
+        old_env = ENV['FIXTURES_YML']
+        ENV['FIXTURES_YML'] = fixtures_yml if not fixtures_yml.nil?
         cmd = 'bundle exec rake spec_prep'
         puts "  -- running spec_prep: '#{cmd}'"
         %x(#{cmd})
+        # restore previous setting
+        ENV['FIXTURES_YML'] = old_env
       else
         puts "  == all fixture modules present"
       end
@@ -86,8 +92,8 @@ module Simp::BeakerHelpers
 
 
   # Copy the local fixture modules (under `spec/fixtures/modules`) onto each SUT
-  def copy_fixture_modules_to( suts = hosts, opts = {})
-    ensure_fixture_modules
+  def copy_fixture_modules_to( suts = hosts, fixtures_yml = nil, opts = {})
+    ensure_fixture_modules(fixtures_yml)
 
     opts[:pluginsync] = opts.fetch(:pluginsync, true)
 
