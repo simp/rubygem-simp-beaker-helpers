@@ -11,6 +11,13 @@ module Simp::BeakerHelpers
     facts.fetch(fact_name)
   end
 
+  # Returns the modulepath on the SUT, as an Array
+  def puppet_modulepath_on(sut, environment='production')
+    on(
+      sut, "puppet config print modulepath --environment #{environment}"
+    ).output.lines.last.strip.split(':')
+  end
+
   # Return the path to the 'spec/fixtures' directory
   def fixtures_path
     STDERR.puts '  ** fixtures_path' if ENV['BEAKER_helpers_verbose']
@@ -102,9 +109,7 @@ module Simp::BeakerHelpers
           # cannot rely on `copy_module_to()` to choose a sane default for
           # `target_module_path`.  This workaround queries each SUT's
           # `modulepath` and targets the first one.
-          target_module_path = on(
-            sut, 'puppet config print modulepath --environment production'
-          ).output.chomp.split(':').first
+          target_module_path = puppet_modulepath_on(sut).first
 
           mod_root = File.expand_path( "spec/fixtures/modules", File.dirname( fixtures_yml_path ))
 
@@ -416,7 +421,8 @@ done
   # This simulates the output of FakeCA's gencerts_nopass.sh to keydist/
   def copy_keydist_to( ca_sut = master, host_keydist_dir = nil  )
     if !host_keydist_dir
-      modulepath = on(ca_sut, 'puppet config print modulepath --environment production' ).output.chomp.split(':')
+      modulepath = puppet_modulepath_on(ca_sut)
+
       host_keydist_dir = "#{modulepath.first}/pki/files/keydist"
     end
     on ca_sut, "rm -rf #{host_keydist_dir}/*"
