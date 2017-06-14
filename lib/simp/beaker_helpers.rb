@@ -173,6 +173,13 @@ module Simp::BeakerHelpers
         # (last checked: 20150928)
           package { ['kernel'] : ensure => 'latest' }
 
+          package { ['dracut-fips'] : ensure => 'latest' }
+          ~>
+          exec { 'Always run dracut after installing dracut-fips':
+            command => '/usr/bin/dracut -f',
+            refreshonly => true
+          }
+
           package { ['grubby'] : ensure => 'latest' }
           ~>
           exec{ 'setup_fips':

@@ -28,8 +28,8 @@ context 'PKI operations' do
     end
 
     describe 'a Fake CA under /root' do
-      @tmp_keydist_dir = Dir.mktmpdir 'simp-beaker-helpers__pki-tests'
-      run_fake_pki_ca_on( master, hosts, @tmp_keydist_dir  )
+      tmp_keydist_dir = Dir.mktmpdir 'simp-beaker-helpers__pki-tests'
+      run_fake_pki_ca_on( master, hosts, tmp_keydist_dir  )
 
       it 'should create /root/pki' do
         on(master, 'test -d /root/pki')
@@ -37,16 +37,10 @@ context 'PKI operations' do
 
       it_behaves_like 'a correctly copied keydist/ tree', '/root/pki/keydist'
 
-      ### TODO: fix scoping issues
-      ### it "copied keydist back to local directory '#{@tmp_keydist_dir}'" do
-      ###   require 'pry'; binding.pry
-      ###   expect( File.directory? @tmp_keydist_dir ).to be_truthy
-      ### end
     end
 
-
     describe 'after copy_keydist_to' do
-      test_dir = '/etc/puppet/modules/pki/files/keydist'
+      test_dir = '/etc/puppetlabs/code/environments/production/modules/pki/files/keydist'
       copy_keydist_to(master)
       it_behaves_like 'a correctly copied keydist/ tree', test_dir
     end
@@ -57,9 +51,5 @@ context 'PKI operations' do
       it_behaves_like 'a correctly copied keydist/ tree', test_dir
     end
 
-    after( :all ) do
-      FileUtils.remove_entry_secure( @tmp_keydist_dir )
-    end
   end
-
 end
