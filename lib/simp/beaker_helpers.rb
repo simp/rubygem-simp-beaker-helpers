@@ -5,7 +5,7 @@ module Simp::BeakerHelpers
   require 'simp/beaker_helpers/inspec'
   require 'simp/beaker_helpers/ssg'
 
-  DEFAULT_PUPPET_AGENT_VERSION = '1.8.3'
+  DEFAULT_PUPPET_AGENT_VERSION = '1.7.2'
 
   # use the `puppet fact` face to look up facts on an SUT
   def pfact_on(sut, fact_name)
