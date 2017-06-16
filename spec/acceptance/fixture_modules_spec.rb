@@ -13,13 +13,6 @@ context 'after copy_fixture_modules_to( hosts )' do
     end
   end
 
-  describe "fact_on(master,'root_home', {:puppet => nil})" do
-    it 'should return value of `root_home`' do
-      puts fact = fact_on(master, 'root_home', {:puppet => nil} )
-      expect( fact ).to eq '/root'
-    end
-  end
-
   describe "pfact_on(master,'root_home')" do
     it 'should return value of `root_home`' do
       puts fact = pfact_on(master, 'root_home')
