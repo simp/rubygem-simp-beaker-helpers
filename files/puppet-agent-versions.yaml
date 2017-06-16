@@ -4,6 +4,7 @@
 #   - https://docs.puppet.com/puppet/latest/about_agent.html
 #
 version_mappings:
+  '4.10.3': '1.10.3'
   '4.10.2': '1.10.2'
   '4.10.1': '1.10.1'
   '4.10.0': '1.10.0'
