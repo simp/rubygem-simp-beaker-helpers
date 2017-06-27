@@ -2,8 +2,6 @@ module Simp::BeakerHelpers
 
   # Helpers for working with Inspec
   class Inspec
-    require 'highline'
-
     # Create a new Inspec helper for the specified host against the specified profile
     #
     # @param sut
@@ -95,6 +93,8 @@ module Simp::BeakerHelpers
     # @return [Hash] A Hash of statistics and a formatted report
     #
     def process_inspec_results
+      require 'highline'
+      
       HighLine.colorize_strings
 
       stats = {
