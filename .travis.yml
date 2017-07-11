@@ -29,7 +29,7 @@ deploy:
       rvm: 2.1.9
       gem: simp-rake-helpers
       condition: "($SKIP_PUBLISH != true)"
-  - provider: deploy
+  - provider: releases
     api_key:
       secure: "RoQepMSpEzpTLgSYP1apB8AcKNMoumqe/emNg9lIu4T55t7fCPVZFmoTL2/VCjpGpBY3SL6PijSRelY6B1bri+6SFz/hlWhCQ8t1hodrEX23ieFBwWyLI7TFvrCjVejkJwaj7N2nYUQBv8YxScbRp4daFaDhrPJMrfqKZUlBBQ2KEUvqienOn7Tdt4OQ7/ThRXlhBm8OGjZfaKyWDyJykef+yC1scJrl8HA71XRHxho/iojTRPqJJCKW1QNmomVWAwK6ZEvb2WrD27yZN60wEcygdbmzKxlAXrfp13Ho+ir2GjRXJr1VKNPecFTDe21fDFMLZ5VxZgOJ7TWnhz2UAQIPjDTLzEMuJci7DDvRCWMJ17pYurm0OGAeKPWZbtf5PLYouKvnjNsfY8vy+Ip6MqmhiXqqLSO9XN/jgEVFPHj8pOj0DDq6PtTB8dNJj7g60Ak0Uj5iole4/ef1DHv803/t9J6IVqULmYZREqeTg24KkZLfTSEbkhYMGjbCZGaSAGhAFLAAjEDTM19/k50TXnNt5smn31Mqt45PULcrHP4+t6hM+IsX9w05aOlcvfwWiBm9nPlBPeRn59wZ64+T729i5wgkhFcHmYE/2Ql1Hvz5FebyxJQziyw6eRvCVASTtFEkuT+Noy3v4u3G4fQl/S2OeCP4v6Fs0wlImzFE1lA="
     on:
