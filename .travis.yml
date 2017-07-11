@@ -1,15 +1,31 @@
 ---
 language: ruby
 cache: bundler
-
+sudo: false
+before_install:
+  - rm Gemfile.lock || true
+bundler_args: "--without development --path .vendor"
+notifications:
+  email: false
 rvm:
   - 2.1.9
-
+  - 2.3.3
 env:
   - SIMP_SKIP_NON_SIMPOS_TESTS=1
-
-
 script:
-  - 'bundle exec rake spec'
-
-
+  - bundle exec rake spec
+matrix:
+  fast_finish: true
+before_deploy:
+  - bundle exec rake clobber
+  - export GEM_VERSION=`ruby -r ./lib/simp/rake/helpers/version.rb -e 'puts Simp::Rake::Helpers::VERSION'`
+  - "[[ $TRAVIS_TAG =~ ^${GEM_VERSION}$ ]]"
+deploy:
+  provider: rubygems
+  on:
+    tags: true
+    rvm: 2.1.9
+    gem: simp-rake-helpers
+    condition: "($SKIP_PUBLISH != true)"
+  api_key:
+    secure: "p2uuO+Cdn+49DfynRBR3zmL6wKNQ7yr05NzKwt5dcgxQAiz2xN0BF1oFsH1c0bQJNKu6obSBlHB9ocPBvkCUasekG6jSrXx6Lw1znB90d9ZDt6KR5TU3z9vCEbIA7sHoH7QSVfxq+4cwdbFfNeSD80YAg4fYw+jM//9sOEJ2WdVWvX/ckfxhdJAUFm396sw9LBeDI3pxeJ4q/k1QT4ab8pg9YPKPSNKZ72putLEIO4gdK3HjaUYpMmkfO1ALDBX24hkm3LdqtWBdLawbonHxLf9C/JX89dZpyRZ+JMXpf+tjrGUDlqo4MRl6ws1U+ZBziE29ygFY5W0uSxsrFtwivYrstDxl3PT102NYigXLX/jLQRQAMETE9zhU7Q2Hucgsap4KQ9Ee/bEJQfCRMN+FthJgdqUCHiAHHfcm3j0+DrkcF0PwG5fjNlK8SXXIp05s/TLLzGc6vC8AgUw0JOTlQ8yeTIkKJnZCCmgxRbieyY5QJ4k9rozrUhGbcx72/qP2q31t5oDGeOs4p7LfU0kFskLYy9nppWxQFrPHpSJa4K6SW3TnbuHDuQ8W4lYS/a8sP44QyaAwn+A7UmPa5PilCVfbSdhbUHBZraPFLgOF2R6vGVK4NVwd3N0Mhydgx6mGKgmGGgj0ISSI3A5GyNj514wiW8egTqI+sXtXVF8IysE="
