@@ -2,6 +2,9 @@ module Simp; end
 
 module Simp::BeakerHelpers
   require 'simp/beaker_helpers/version'
+  require 'simp/beaker_helpers/inspec'
+  require 'simp/beaker_helpers/ssg'
+
   DEFAULT_PUPPET_AGENT_VERSION = '1.8.3'
 
   # use the `puppet fact` face to look up facts on an SUT
@@ -596,5 +599,4 @@ done
     require 'beaker/puppet_install_helper'
     run_puppet_install_helper(puppet_install_type,  puppet_agent_version)
   end
-
 end
