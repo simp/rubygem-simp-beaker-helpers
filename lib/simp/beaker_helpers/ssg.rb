@@ -21,15 +21,17 @@ module Simp::BeakerHelpers
         '6' => {
           'required_packages' => EL_PACKAGES,
           'ssg' => {
-            'target'     => 'rhel6',
-            'datastream' => 'ssg-rhel6-ds.xml'
+            'profile_target' => 'rhel6',
+            'build_target'   => 'rhel6',
+            'datastream'     => 'ssg-rhel6-ds.xml'
           }
         },
         '7' => {
           'required_packages' => EL_PACKAGES,
           'ssg' => {
-            'target'     => 'rhel7',
-            'datastream' => 'ssg-rhel7-ds.xml'
+            'profile_target' => 'rhel7',
+            'build_target'   => 'rhel7',
+            'datastream'     => 'ssg-rhel7-ds.xml'
           }
         }
       },
@@ -37,19 +39,23 @@ module Simp::BeakerHelpers
         '6' => {
           'required_packages' => EL_PACKAGES,
           'ssg' => {
-            'target'     => 'rhel6',
-            'datastream' => 'ssg-rhel6-ds.xml'
+            'profile_target' => 'rhel6',
+            'build_target'   => 'rhel6',
+            'datastream'     => 'ssg-rhel6-ds.xml'
           }
         },
         '7' => {
           'required_packages' => EL_PACKAGES,
           'ssg' => {
-            'target'     => 'centos7',
-            'datastream' => 'ssg-centos7-ds.xml'
+            'profile_target' => 'rhel7',
+            'build_target'   => 'centos7',
+            'datastream'     => 'ssg-centos7-ds.xml'
           }
         }
       }
     }
+
+    attr_accessor :scap_working_dir
 
     # Create a new SSG helper for the specified host
     #
@@ -61,6 +67,10 @@ module Simp::BeakerHelpers
 
       @os = fact_on(@sut, 'operatingsystem')
       @os_rel = fact_on(@sut, 'operatingsystemmajrelease')
+
+      sut.mkdir_p('scap_working_dir')
+
+      @scap_working_dir = on(sut, 'cd scap_working_dir && pwd').stdout.strip
 
       unless OS_INFO[@os]
         fail("Error: The '#{@os}' Operating System is not supported")
@@ -78,11 +88,12 @@ module Simp::BeakerHelpers
 
       @result_file = "#{@sut.hostname}-ssg-#{Time.now.to_i}"
 
+
       get_ssg_datastream
     end
 
-    def target
-      OS_INFO[@os][@os_rel]['ssg']['target']
+    def profile_target
+      OS_INFO[@os][@os_rel]['ssg']['profile_target']
     end
 
     def remediate(profile)
@@ -90,7 +101,7 @@ module Simp::BeakerHelpers
     end
 
     def evaluate(profile, remediate=false)
-      cmd = 'cd scap-security-guide && oscap xccdf eval'
+      cmd = "cd #{@scap_working_dir}; oscap xccdf eval"
 
       if remediate
         cmd += ' --remediate'
@@ -104,7 +115,7 @@ module Simp::BeakerHelpers
       on(@sut, cmd, :accept_all_exit_codes => true)
 
       ['xml', 'html'].each do |ext|
-        path = "scap-security-guide/#{@result_file}.#{ext}"
+        path = "#{@scap_working_dir}/#{@result_file}.#{ext}"
         scp_from(@sut, path, @output_dir)
 
         fail("Could not retrieve #{path} from #{@sut}") unless File.exist?(File.join(@output_dir, "#{@result_file}.#{ext}"))
@@ -121,12 +132,12 @@ module Simp::BeakerHelpers
       ssg_release ||= Dir.glob('spec/fixtures/ssg_releases/*.bz2').last
 
       if ssg_release
-        scp_to(@sut, ssg_release)
+        scp_to(@sut, ssg_release, @scap_working_dir)
 
-        on(@sut, %(mkdir -p scap-security-guide && tar -xj -C scap-security-guide --strip-components 1 -f #{ssg_release} && cp scap-security-guide/*ds.xml ~))
+        on(@sut, %(mkdir -p scap-security-guide && tar -xj -C scap-security-guide --strip-components 1 -f #{ssg_release} && cp scap-security-guide/*ds.xml #{@scap_working_dir}))
       else
         on(@sut, %(git clone #{GIT_REPO}))
-        on(@sut, %(cd scap-security-guide/build; cmake ../; make -j4 #{OS_INFO[@os][@os_rel]['ssg']['target']}-content && cp *ds.xml ~))
+        on(@sut, %(cd scap-security-guide/build; cmake ../; make -j4 #{OS_INFO[@os][@os_rel]['ssg']['build_target']}-content && cp *ds.xml #{@scap_working_dir}))
       end
     end
   end

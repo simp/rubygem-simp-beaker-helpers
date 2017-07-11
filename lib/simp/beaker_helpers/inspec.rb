@@ -94,7 +94,7 @@ module Simp::BeakerHelpers
     #
     def process_inspec_results
       require 'highline'
-      
+
       HighLine.colorize_strings
 
       stats = {
