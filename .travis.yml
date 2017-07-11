@@ -18,7 +18,7 @@ matrix:
   fast_finish: true
 before_deploy:
   - bundle exec rake clobber
-  - export GEM_VERSION=`ruby -r ./lib/simp/rake/helpers/version.rb -e 'puts Simp::Rake::Helpers::VERSION'`
+  - export GEM_VERSION=`ruby -r ${TRAVIS_BUILD_DIR}/lib/simp/rake/helpers/version.rb -e 'puts Simp::Rake::Helpers::VERSION'`
   - "[[ $TRAVIS_TAG =~ ^${GEM_VERSION}$ ]]"
 deploy:
   provider: rubygems
