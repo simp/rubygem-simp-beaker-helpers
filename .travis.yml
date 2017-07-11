@@ -22,12 +22,13 @@ before_deploy:
   - '[[ $TRAVIS_TAG =~ ^${GEM_VERSION}$ ]]'
 deploy:
   - provider: rubygems
+    gemspec: simp-beaker-helpers.gemspec
+    gem: simp-beaker-helpers
     api_key:
-      secure: "p2uuO+Cdn+49DfynRBR3zmL6wKNQ7yr05NzKwt5dcgxQAiz2xN0BF1oFsH1c0bQJNKu6obSBlHB9ocPBvkCUasekG6jSrXx6Lw1znB90d9ZDt6KR5TU3z9vCEbIA7sHoH7QSVfxq+4cwdbFfNeSD80YAg4fYw+jM//9sOEJ2WdVWvX/ckfxhdJAUFm396sw9LBeDI3pxeJ4q/k1QT4ab8pg9YPKPSNKZ72putLEIO4gdK3HjaUYpMmkfO1ALDBX24hkm3LdqtWBdLawbonHxLf9C/JX89dZpyRZ+JMXpf+tjrGUDlqo4MRl6ws1U+ZBziE29ygFY5W0uSxsrFtwivYrstDxl3PT102NYigXLX/jLQRQAMETE9zhU7Q2Hucgsap4KQ9Ee/bEJQfCRMN+FthJgdqUCHiAHHfcm3j0+DrkcF0PwG5fjNlK8SXXIp05s/TLLzGc6vC8AgUw0JOTlQ8yeTIkKJnZCCmgxRbieyY5QJ4k9rozrUhGbcx72/qP2q31t5oDGeOs4p7LfU0kFskLYy9nppWxQFrPHpSJa4K6SW3TnbuHDuQ8W4lYS/a8sP44QyaAwn+A7UmPa5PilCVfbSdhbUHBZraPFLgOF2R6vGVK4NVwd3N0Mhydgx6mGKgmGGgj0ISSI3A5GyNj514wiW8egTqI+sXtXVF8IysE="
+      secure: "AlnBx0dBSxn+S97n0h14ltKUOA+6v0bc7QZPIcwGJV9nnf1hKH3pf9La1TVknEx7XgpAcM9jusQJ7hBlqvSq8z8SFF0bZk1EgSRIKc1cuYPLiGyUM2O7+AFHyCy3iCnPvKeoQmE/BJb5O1dGnbmSbf4A0fqLxA7jiHG1j7z+cnmJB1i67wovDfl13TsOXyBfbespWBMMc0BKAw56FPs9XggAk2cNusS3hd5tqW1AZPT2/xwt+d8ngkmO96u8QcichYRFQ+w+XW4H0w935wNg/dWiskJlt7TIYVAh4Ko5s2DZKf52Tne8TugALSn0LhRatpp7sw1FTTpteCW8UqK8uwGC2hM4pZViAOv4P1YObz2IPOZPriBl+cCayJdMKnotkUJliAMnw5TLiSWKLou+S0Pdj2h3fJZWdOEwRPMzIVoJtsOHG3GdNcPL6f7iU0vP/wr6FeR3uWa+fA7NHRi2Du955O8JpogjdrW08ahcAEwhtI3A4mrA08wN09axsrwr093uDRm/5h4FHyAhExJ0YiA/6kcPpUvILcLStyHe0RQDICQMdsQo2DSbnL65w3QjFa2fML2Shf9cRwX06+ia2BxozWzFD/6p3RiRtPxphnbFiUdjYSGWcwCcUgbJx9SW04lSSxOhpyItuXgxZqiybkzstXd6riu5zwg1R8TWk34="
     on:
       tags: true
       rvm: 2.1.9
-      gem: simp-rake-helpers
       condition: "($SKIP_PUBLISH != true)"
   - provider: releases
     api_key:
