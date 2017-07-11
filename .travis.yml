@@ -21,11 +21,18 @@ before_deploy:
   - export GEM_VERSION=`ruby -r ${TRAVIS_BUILD_DIR}/lib/simp/rake/helpers/version.rb -e 'puts Simp::Rake::Helpers::VERSION'`
   - "[[ $TRAVIS_TAG =~ ^${GEM_VERSION}$ ]]"
 deploy:
-  provider: rubygems
-  on:
-    tags: true
-    rvm: 2.1.9
-    gem: simp-rake-helpers
-    condition: "($SKIP_PUBLISH != true)"
-  api_key:
-    secure: "p2uuO+Cdn+49DfynRBR3zmL6wKNQ7yr05NzKwt5dcgxQAiz2xN0BF1oFsH1c0bQJNKu6obSBlHB9ocPBvkCUasekG6jSrXx6Lw1znB90d9ZDt6KR5TU3z9vCEbIA7sHoH7QSVfxq+4cwdbFfNeSD80YAg4fYw+jM//9sOEJ2WdVWvX/ckfxhdJAUFm396sw9LBeDI3pxeJ4q/k1QT4ab8pg9YPKPSNKZ72putLEIO4gdK3HjaUYpMmkfO1ALDBX24hkm3LdqtWBdLawbonHxLf9C/JX89dZpyRZ+JMXpf+tjrGUDlqo4MRl6ws1U+ZBziE29ygFY5W0uSxsrFtwivYrstDxl3PT102NYigXLX/jLQRQAMETE9zhU7Q2Hucgsap4KQ9Ee/bEJQfCRMN+FthJgdqUCHiAHHfcm3j0+DrkcF0PwG5fjNlK8SXXIp05s/TLLzGc6vC8AgUw0JOTlQ8yeTIkKJnZCCmgxRbieyY5QJ4k9rozrUhGbcx72/qP2q31t5oDGeOs4p7LfU0kFskLYy9nppWxQFrPHpSJa4K6SW3TnbuHDuQ8W4lYS/a8sP44QyaAwn+A7UmPa5PilCVfbSdhbUHBZraPFLgOF2R6vGVK4NVwd3N0Mhydgx6mGKgmGGgj0ISSI3A5GyNj514wiW8egTqI+sXtXVF8IysE="
+  - provider: rubygems
+    api_key:
+      secure: "p2uuO+Cdn+49DfynRBR3zmL6wKNQ7yr05NzKwt5dcgxQAiz2xN0BF1oFsH1c0bQJNKu6obSBlHB9ocPBvkCUasekG6jSrXx6Lw1znB90d9ZDt6KR5TU3z9vCEbIA7sHoH7QSVfxq+4cwdbFfNeSD80YAg4fYw+jM//9sOEJ2WdVWvX/ckfxhdJAUFm396sw9LBeDI3pxeJ4q/k1QT4ab8pg9YPKPSNKZ72putLEIO4gdK3HjaUYpMmkfO1ALDBX24hkm3LdqtWBdLawbonHxLf9C/JX89dZpyRZ+JMXpf+tjrGUDlqo4MRl6ws1U+ZBziE29ygFY5W0uSxsrFtwivYrstDxl3PT102NYigXLX/jLQRQAMETE9zhU7Q2Hucgsap4KQ9Ee/bEJQfCRMN+FthJgdqUCHiAHHfcm3j0+DrkcF0PwG5fjNlK8SXXIp05s/TLLzGc6vC8AgUw0JOTlQ8yeTIkKJnZCCmgxRbieyY5QJ4k9rozrUhGbcx72/qP2q31t5oDGeOs4p7LfU0kFskLYy9nppWxQFrPHpSJa4K6SW3TnbuHDuQ8W4lYS/a8sP44QyaAwn+A7UmPa5PilCVfbSdhbUHBZraPFLgOF2R6vGVK4NVwd3N0Mhydgx6mGKgmGGgj0ISSI3A5GyNj514wiW8egTqI+sXtXVF8IysE="
+    on:
+      tags: true
+      rvm: 2.1.9
+      gem: simp-rake-helpers
+      condition: "($SKIP_PUBLISH != true)"
+  - provider: deploy
+    api_key:
+      secure: "RoQepMSpEzpTLgSYP1apB8AcKNMoumqe/emNg9lIu4T55t7fCPVZFmoTL2/VCjpGpBY3SL6PijSRelY6B1bri+6SFz/hlWhCQ8t1hodrEX23ieFBwWyLI7TFvrCjVejkJwaj7N2nYUQBv8YxScbRp4daFaDhrPJMrfqKZUlBBQ2KEUvqienOn7Tdt4OQ7/ThRXlhBm8OGjZfaKyWDyJykef+yC1scJrl8HA71XRHxho/iojTRPqJJCKW1QNmomVWAwK6ZEvb2WrD27yZN60wEcygdbmzKxlAXrfp13Ho+ir2GjRXJr1VKNPecFTDe21fDFMLZ5VxZgOJ7TWnhz2UAQIPjDTLzEMuJci7DDvRCWMJ17pYurm0OGAeKPWZbtf5PLYouKvnjNsfY8vy+Ip6MqmhiXqqLSO9XN/jgEVFPHj8pOj0DDq6PtTB8dNJj7g60Ak0Uj5iole4/ef1DHv803/t9J6IVqULmYZREqeTg24KkZLfTSEbkhYMGjbCZGaSAGhAFLAAjEDTM19/k50TXnNt5smn31Mqt45PULcrHP4+t6hM+IsX9w05aOlcvfwWiBm9nPlBPeRn59wZ64+T729i5wgkhFcHmYE/2Ql1Hvz5FebyxJQziyw6eRvCVASTtFEkuT+Noy3v4u3G4fQl/S2OeCP4v6Fs0wlImzFE1lA="
+    on:
+      tags: true
+      rvm: 2.1.9
+      condition: "($SKIP_PUBLISH != true)"
