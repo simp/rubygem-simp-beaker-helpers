@@ -463,14 +463,7 @@ done
     # we need to turn them on at each context run
     c.before(:context) do
       hosts.each do |host|
-        interfaces = fact_on(host, 'interfaces').strip.split(',')
-        interfaces.delete_if { |x| x =~ /^lo/ }
-
-        interfaces.each do |iface|
-          if fact_on(host, "ipaddress_#{iface}").strip.empty?
-            on(host, "ifup #{iface}", :accept_all_exit_codes => true)
-          end
-        end
+        # Commenting out for now
       end
     end
 
