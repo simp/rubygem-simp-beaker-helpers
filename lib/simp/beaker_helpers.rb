@@ -120,32 +120,21 @@ module Simp::BeakerHelpers
 
           mod_root = File.expand_path( "spec/fixtures/modules", File.dirname( fixtures_yml_path ))
 
-          pupmods_in_fixtures_yml.each do |pupmod|
-            STDERR.puts "  ** copy_fixture_modules_to: '#{sut}': '#{pupmod}'" if ENV['BEAKER_helpers_verbose']
+          Dir.chdir(mod_root) do
+            tarfile = Dir::Tmpname.make_tmpname(['beaker','.tar'],nil)
 
-            pupmod_root = File.join(mod_root, pupmod)
+            excludes = PUPPET_MODULE_INSTALL_IGNORE.map do |x|
+              x = "--exclude '*/#{x}'"
+            end.join(' ')
 
-            if File.symlink?(pupmod_root)
-              _opts = {
-                :target_module_path => target_module_path,
-              }.merge(opts)
+            %x(tar -ch #{excludes} -f #{tarfile} *)
 
-              _opts = _opts.merge({
-                :source => pupmod_root,
-                :module_name => pupmod
-              })
+            rsync_to(sut, tarfile, target_module_path)
 
-              copy_module_to(sut, _opts)
-            end
+            FileUtils.rm_f(tarfile)
+
+            on(sut, "cd #{target_module_path} && tar -xf #{File.basename(tarfile)}")
           end
-
-          _opts = {
-            :ignore_list => PUPPET_MODULE_INSTALL_IGNORE
-          }.merge(opts)
-
-          _opts[:ignore] = build_ignore_list(_opts)
-
-          scp_to(sut, mod_root, File.dirname(target_module_path), _opts)
         end
       end
     end
