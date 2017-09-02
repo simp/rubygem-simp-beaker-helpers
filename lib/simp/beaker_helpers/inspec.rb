@@ -37,15 +37,23 @@ module Simp::BeakerHelpers
         FileUtils.mkdir_p(output_dir)
       end
 
-      local_profiles = File.join(fixtures_path, 'inspec_profiles')
+      local_profile = File.join(fixtures_path, 'inspec_profiles', %(#{os}-#{os_rel}-#{profile}))
       local_deps = File.join(fixtures_path, 'inspec_deps')
 
       @result_file = File.join(output_dir, "#{@sut.hostname}-inspec-#{Time.now.to_i}")
 
-      scp_to(@sut, File.join(local_profiles, "#{os}-#{os_rel}-#{profile}"), @test_dir)
+      if @sut[:hypervisor] == 'docker'
+        %x(docker cp -L "#{local_profile}" "#{@sut.hostname}:#{@test_dir}")
+      else
+        scp_to(@sut, local_profile, @test_dir)
+      end
 
       if File.exist?(local_deps)
-        scp_to(@sut, local_deps, @deps_root)
+        if @sut[:hypervisor] == 'docker'
+          %x(docker cp -L "#{local_deps}" "#{@sut.hostname}:#{@deps_root}")
+        else
+          scp_to(@sut, local_deps, @deps_root)
+        end
       end
 
       # The results of the inspec scan in Hash form
@@ -62,7 +70,11 @@ module Simp::BeakerHelpers
       tmpdir = Dir.mktmpdir
       begin
         Dir.chdir(tmpdir) do
-          scp_from(@sut, sut_inspec_results, '.')
+          if @sut[:hypervisor] == 'docker'
+            %x(docker cp "#{@sut.hostname}:#{sut_inspec_results}" .)
+          else
+            scp_from(@sut, sut_inspec_results, '.')
+          end
 
           local_inspec_results = File.basename(sut_inspec_results)
 
@@ -128,6 +140,9 @@ module Simp::BeakerHelpers
 
         profile['controls'].each do |control|
           title = control['title']
+
+          # Skip auto-generated material
+          next unless title
 
           if title.length > 72
             title = title[0..71] + '(...)'
