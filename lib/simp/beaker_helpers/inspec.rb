@@ -2,6 +2,11 @@ module Simp::BeakerHelpers
 
   # Helpers for working with Inspec
   class Inspec
+
+    attr_reader :profile
+    attr_reader :profile_dir
+    attr_reader :deps_root
+
     # Create a new Inspec helper for the specified host against the specified profile
     #
     # @param sut
@@ -15,7 +20,16 @@ module Simp::BeakerHelpers
 
       @sut.install_package('inspec')
 
-      @sut_profile_dir = '/tmp/inspec_tests'
+      os = fact_on(@sut, 'operatingsystem')
+      os_rel = fact_on(@sut, 'operatingsystemmajrelease')
+
+      @profile = "#{os}-#{os_rel}-#{profile}"
+      @profile_dir = '/tmp/inspec/inspec_profiles'
+      @deps_root = '/tmp/inspec'
+
+      @test_dir = @profile_dir + "/#{@profile}"
+
+      sut.mkdir_p(@profile_dir)
 
       output_dir = File.absolute_path('sec_results/inspec')
 
@@ -23,23 +37,26 @@ module Simp::BeakerHelpers
         FileUtils.mkdir_p(output_dir)
       end
 
-      inspec_fixtures = File.join(fixtures_path, 'inspec_profiles')
-      os = fact_on(@sut, 'operatingsystem')
-      os_rel = fact_on(@sut, 'operatingsystemmajrelease')
+      local_profiles = File.join(fixtures_path, 'inspec_profiles')
+      local_deps = File.join(fixtures_path, 'inspec_deps')
 
-      @inspec_result_file = File.join(output_dir, "#{@sut.hostname}-inspec-#{Time.now.to_i}")
+      @result_file = File.join(output_dir, "#{@sut.hostname}-inspec-#{Time.now.to_i}")
 
-      scp_to(@sut, File.join(inspec_fixtures, "#{os}-#{os_rel}-#{profile}"), @sut_profile_dir)
+      scp_to(@sut, File.join(local_profiles, "#{os}-#{os_rel}-#{profile}"), @test_dir)
+
+      if File.exist?(local_deps)
+        scp_to(@sut, local_deps, @deps_root)
+      end
 
       # The results of the inspec scan in Hash form
-      @inspec_results = {}
+      @results = {}
     end
 
     # Run the inspec tests and record the results
     def run
       sut_inspec_results = '/tmp/inspec_results.json'
 
-      inspec_cmd = "inspec exec --format json #{@sut_profile_dir} > #{sut_inspec_results}"
+      inspec_cmd = "inspec exec --format json #{@test_dir} > #{sut_inspec_results}"
       result = on(@sut, inspec_cmd, :accept_all_exit_codes => true)
 
       tmpdir = Dir.mktmpdir
@@ -51,9 +68,9 @@ module Simp::BeakerHelpers
 
           if File.exist?(local_inspec_results)
             begin
-              @inspec_results = JSON.load(File.read(local_inspec_results))
+              @results = JSON.load(File.read(local_inspec_results))
             rescue JSON::ParserError, JSON::GeneratorError
-              @inspec_results = nil
+              @results = nil
             end
           end
         end
@@ -61,13 +78,13 @@ module Simp::BeakerHelpers
         FileUtils.remove_entry_secure tmpdir
       end
 
-      unless @inspec_results
-        File.open(@inspec_result_file + '.err', 'w') do |fh|
+      unless @results
+        File.open(@result_file + '.err', 'w') do |fh|
           fh.puts(result.stderr.strip)
         end
 
         err_msg = ["Error running inspec command #{inspec_cmd}"]
-        err_msg << "Error captured in #{@inspec_result_file}" + '.err'
+        err_msg << "Error captured in #{@result_file}" + '.err'
 
         fail(err_msg.join("\n"))
       end
@@ -79,11 +96,11 @@ module Simp::BeakerHelpers
     #   The inspec results Hash
     #
     def write_report(report)
-      File.open(@inspec_result_file + '.json', 'w') do |fh|
-        fh.puts(JSON.pretty_generate(@inspec_results))
+      File.open(@result_file + '.json', 'w') do |fh|
+        fh.puts(JSON.pretty_generate(@results))
       end
 
-      File.open(@inspec_result_file + '.report', 'w') do |fh|
+      File.open(@result_file + '.report', 'w') do |fh|
         fh.puts(report[:report].uncolor)
       end
     end
@@ -104,7 +121,7 @@ module Simp::BeakerHelpers
         :report  => []
       }
 
-      profiles = @inspec_results['profiles']
+      profiles = @results['profiles']
 
       profiles.each do |profile|
         stats[:report] << "Name: #{profile['name']}"
