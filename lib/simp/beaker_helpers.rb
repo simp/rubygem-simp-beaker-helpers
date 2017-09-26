@@ -32,7 +32,7 @@ module Simp::BeakerHelpers
       end
 
       %x(tar #{exclude_list.join(' ')} -hcf - -C "#{File.dirname(src)}" "#{File.basename(src)}" | docker exec -i "#{sut.hostname}" tar -C "#{dest}" -xf -)
-    elsif @@has_rsync
+    elsif @has_rsync
       rsync_to(sut, src, dest, opts)
     else
       scp_to(sut, src, dest, opts)
