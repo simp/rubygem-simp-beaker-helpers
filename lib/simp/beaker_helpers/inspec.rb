@@ -45,7 +45,7 @@ module Simp::BeakerHelpers
       copy_to(@sut, local_profile, @profile_dir)
 
       if File.exist?(local_deps)
-        copy_to(@sut, local_deps, @test_dir)
+        copy_to(@sut, local_deps, @deps_root)
       end
 
       # The results of the inspec scan in Hash form
