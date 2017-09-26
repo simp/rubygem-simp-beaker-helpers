@@ -11,6 +11,34 @@ module Simp::BeakerHelpers
   # oldest system that we support.
   DEFAULT_PUPPET_AGENT_VERSION = '1.7.1'
 
+  # Figure out the best method to copy files to a host and use it
+  #
+  # Will create the directories leading up to the target if they don't exist
+  def copy_to(sut, src, dest, opts={})
+    unless @has_rsync
+      %x{which rsync 2>/dev/null}.strip
+
+      @has_rsync = $?.success?
+    end
+
+    sut.mkdir_p(File.dirname(dest))
+
+    if sut[:hypervisor] == 'docker'
+      exclude_list = []
+      if opts.has_key?(:ignore) && !opts[:ignore].empty?
+        opts[:ignore].each do |value|
+          exclude_list << "--exclude '#{value}'"
+        end
+      end
+
+      %x(tar #{exclude_list.join(' ')} -hcf - -C "#{File.dirname(src)}" "#{File.basename(src)}" | docker exec -i "#{sut.hostname}" tar -C "#{dest}" -xf -)
+    elsif @@has_rsync
+      rsync_to(sut, src, dest, opts)
+    else
+      scp_to(sut, src, dest, opts)
+    end
+  end
+
   # use the `puppet fact` face to look up facts on an SUT
   def pfact_on(sut, fact_name)
     facts_json = on(sut,'puppet facts find xxx').output
@@ -121,19 +149,21 @@ module Simp::BeakerHelpers
           mod_root = File.expand_path( "spec/fixtures/modules", File.dirname( fixtures_yml_path ))
 
           Dir.chdir(mod_root) do
-            tarfile = Dir::Tmpname.make_tmpname(['beaker','.tar'],nil)
+            begin
+              tarfile = Dir::Tmpname.make_tmpname(['beaker','.tar'],nil)
 
-            excludes = PUPPET_MODULE_INSTALL_IGNORE.map do |x|
-              x = "--exclude '*/#{x}'"
-            end.join(' ')
+              excludes = PUPPET_MODULE_INSTALL_IGNORE.map do |x|
+                x = "--exclude '*/#{x}'"
+              end.join(' ')
 
-            %x(tar -ch #{excludes} -f #{tarfile} *)
+              %x(tar -ch #{excludes} -f #{tarfile} *)
 
-            rsync_to(sut, tarfile, target_module_path)
+              copy_to(sut, tarfile, target_module_path, opts)
 
-            FileUtils.rm_f(tarfile)
-
-            on(sut, "cd #{target_module_path} && tar -xf #{File.basename(tarfile)}")
+              on(sut, "cd #{target_module_path} && tar -xf #{File.basename(tarfile)}")
+            ensure
+              FileUtils.remove_entry(tarfile, true)
+            end
           end
         end
       end
@@ -351,14 +381,14 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
     host_dir = '/root/pki'
     fqdns    = fact_on(hosts, 'fqdn')
 
-    on ca_sut, %Q(mkdir -p "#{host_dir}")
-    Dir[ File.join(pki_dir, '*') ].each{|f| scp_to( ca_sut, f, host_dir)}
+    ca_sut.mkdir_p(host_dir)
+    Dir[ File.join(pki_dir, '*') ].each{|f| copy_to( ca_sut, f, host_dir)}
 
     # generate PKI certs for each SUT
     Dir.mktmpdir do |dir|
       pki_hosts_file = File.join(dir, 'pki.hosts')
       File.open(pki_hosts_file, 'w'){|fh| fqdns.each{|fqdn| fh.puts fqdn}}
-      scp_to(ca_sut, pki_hosts_file, host_dir)
+      copy_to(ca_sut, pki_hosts_file, host_dir)
       # generate certs
       on(ca_sut, "cd #{host_dir}; cat #{host_dir}/pki.hosts | xargs bash make.sh")
     end
@@ -391,14 +421,16 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
       local_host_pki_tree = File.join(local_pki_dir,'pki','keydist',fqdn)
       local_cacert = File.join(local_pki_dir,'pki','demoCA','cacert.pem')
 
-      on sut, %Q(mkdir -p "#{sut_pki_dir}/public" "#{sut_pki_dir}/private" "#{sut_pki_dir}/cacerts")
-      scp_to(sut, "#{local_host_pki_tree}/#{fqdn}.pem",   "#{sut_pki_dir}/private/")
-      scp_to(sut, "#{local_host_pki_tree}/#{fqdn}.pub",   "#{sut_pki_dir}/public/")
+      sut.mkdir_p("#{sut_pki_dir}/public")
+      sut.mkdir_p("#{sut_pki_dir}/private")
+      sut.mkdir_p("#{sut_pki_dir}/cacerts")
+      copy_to(sut, "#{local_host_pki_tree}/#{fqdn}.pem",   "#{sut_pki_dir}/private/")
+      copy_to(sut, "#{local_host_pki_tree}/#{fqdn}.pub",   "#{sut_pki_dir}/public/")
 
-      scp_to(sut, local_cacert, "#{sut_pki_dir}/cacerts/simp_auto_ca.pem")
+      copy_to(sut, local_cacert, "#{sut_pki_dir}/cacerts/simp_auto_ca.pem")
 
       # NOTE: to match pki::copy, 'cacert.pem' is copied to 'cacerts.pem'
-      scp_to(sut, local_cacert, "#{sut_pki_dir}/cacerts/cacerts.pem")
+      copy_to(sut, local_cacert, "#{sut_pki_dir}/cacerts/cacerts.pem")
 
       # Need to hash all of the CA certificates so that apps can use them
       # properly! This must happen on the host itself since it needs to match
@@ -429,7 +461,7 @@ done
       host_keydist_dir = "#{modulepath.first}/pki/files/keydist"
     end
     on ca_sut, "rm -rf #{host_keydist_dir}/*"
-    on ca_sut, "mkdir -p #{host_keydist_dir}/"
+    ca_sut.mkdir_p(host_keydist_dir)
     on ca_sut, "cp -pR /root/pki/keydist/. #{host_keydist_dir}/"
     on ca_sut, "chgrp -R puppet #{host_keydist_dir}"
   end
@@ -549,7 +581,7 @@ done
       puts "  ** pluginsync_on: '#{sut}'" if ENV['BEAKER_helpers_verbose']
       fact_path = on(sut, %q(puppet config print factpath)).output.strip.split(':').first
       on(sut, %q(puppet config print modulepath)).output.strip.split(':').each do |mod_path|
-        on(sut, %Q(mkdir -p #{fact_path}))
+        sut.mkdir_p(fact_path)
         next if on(sut, "ls #{mod_path}/*/lib/facter 2>/dev/null ", :accept_all_exit_codes => true).exit_code != 0
         on(sut, %Q(find #{mod_path}/*/lib/facter -type f -name '*.rb' -exec cp -a {} '#{fact_path}/' \\; ))
       end

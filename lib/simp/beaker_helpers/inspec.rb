@@ -42,18 +42,10 @@ module Simp::BeakerHelpers
 
       @result_file = File.join(output_dir, "#{@sut.hostname}-inspec-#{Time.now.to_i}")
 
-      if @sut[:hypervisor] == 'docker'
-        %x(docker cp -L "#{local_profile}" "#{@sut.hostname}:#{@test_dir}")
-      else
-        scp_to(@sut, local_profile, @test_dir)
-      end
+      copy_to(@sut, local_profile, @profile_dir)
 
       if File.exist?(local_deps)
-        if @sut[:hypervisor] == 'docker'
-          %x(docker cp -L "#{local_deps}" "#{@sut.hostname}:#{@deps_root}")
-        else
-          scp_to(@sut, local_deps, @deps_root)
-        end
+        copy_to(@sut, local_deps, @test_dir)
       end
 
       # The results of the inspec scan in Hash form

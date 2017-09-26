@@ -132,7 +132,7 @@ module Simp::BeakerHelpers
       ssg_release ||= Dir.glob('spec/fixtures/ssg_releases/*.bz2').last
 
       if ssg_release
-        scp_to(@sut, ssg_release, @scap_working_dir)
+        copy_to(@sut, ssg_release, @scap_working_dir)
 
         on(@sut, %(mkdir -p scap-security-guide && tar -xj -C scap-security-guide --strip-components 1 -f #{ssg_release} && cp scap-security-guide/*ds.xml #{@scap_working_dir}))
       else
