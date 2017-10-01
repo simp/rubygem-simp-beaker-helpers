@@ -102,7 +102,7 @@ module Simp::Rake
               'default_run' : <true|false> => Default: false
               ```
         EOM
-        task :suites, [:suite, :nodeset] do |t,args|
+        task :suites, [:suite, :nodeset] => ['spec_prep'] do |t,args|
           suite = args[:suite]
           nodeset = args[:nodeset]
 

@@ -72,7 +72,15 @@ module Simp::BeakerHelpers
 
           if File.exist?(local_inspec_results)
             begin
-              @results = JSON.load(File.read(local_inspec_results))
+              # The output is occasionally broken from past experience. Need to
+              # fetch the line that actually looks like JSON
+              inspec_json = File.read(local_inspec_results).lines.find do |line|
+                line.strip!
+
+                line.start_with?('{') && line.end_with?('}')
+              end
+
+              @results = JSON.load(inspec_json) if inspec_json
             rescue JSON::ParserError, JSON::GeneratorError
               @results = nil
             end

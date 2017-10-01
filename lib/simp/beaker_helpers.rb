@@ -33,6 +33,16 @@ module Simp::BeakerHelpers
 
       %x(tar #{exclude_list.join(' ')} -hcf - -C "#{File.dirname(src)}" "#{File.basename(src)}" | docker exec -i "#{sut.hostname}" tar -C "#{dest}" -xf -)
     elsif @has_rsync
+      # This makes rsync_to work like beaker and scp usually do
+      exclude_hack = %(__GARBAge__' -L --exclude '__GARBAge__)
+      opts[:ignore] ||= []
+      opts[:ignore] << exclude_hack
+
+      dest = File.join(dest, File.basename(src)) if File.directory?(src)
+      # End rsync hackery
+
+      sut.mkdir_p(dest)
+
       rsync_to(sut, src, dest, opts)
     else
       scp_to(sut, src, dest, opts)
