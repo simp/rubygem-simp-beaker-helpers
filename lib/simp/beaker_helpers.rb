@@ -32,11 +32,16 @@ module Simp::BeakerHelpers
       end
 
       %x(tar #{exclude_list.join(' ')} -hcf - -C "#{File.dirname(src)}" "#{File.basename(src)}" | docker exec -i "#{sut.hostname}" tar -C "#{dest}" -xf -)
-    elsif @has_rsync
+    elsif @has_rsync && sut.check_for_command('rsync')
       # This makes rsync_to work like beaker and scp usually do
       exclude_hack = %(__-__' -L --exclude '__-__)
-      opts[:ignore] ||= []
-      opts[:ignore] << exclude_hack
+
+      # There appears to be a single copy of 'opts' that gets passed around
+      # through all of the different hosts so we're going to make a local deep
+      # copy so that we don't destroy the world accidentally.
+      _opts = Marshal.load(Marshal.dump(opts))
+      _opts[:ignore] ||= []
+      _opts[:ignore] << exclude_hack
 
       if File.directory?(src)
         dest = File.join(dest, File.basename(src)) if File.directory?(src)
@@ -45,7 +50,7 @@ module Simp::BeakerHelpers
 
       # End rsync hackery
 
-      rsync_to(sut, src, dest, opts)
+      rsync_to(sut, src, dest, _opts)
     else
       scp_to(sut, src, dest, opts)
     end
@@ -170,7 +175,11 @@ module Simp::BeakerHelpers
 
               %x(tar -ch #{excludes} -f #{tarfile} *)
 
-              copy_to(sut, tarfile, target_module_path, opts)
+              if File.exist?(tarfile)
+                copy_to(sut, tarfile, target_module_path, opts)
+              else
+                fail("Error: module tar file '#{tarfile}' could not be created at #{mod_root}")
+              end
 
               on(sut, "cd #{target_module_path} && tar -xf #{File.basename(tarfile)}")
             ensure

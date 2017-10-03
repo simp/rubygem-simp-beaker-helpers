@@ -12,6 +12,7 @@ Methods to assist beaker acceptance tests for SIMP.
     * [YUM Repo Support](#yum_repo_support)
 5. [Methods](#methods)
     * [`copy_fixture_modules_to`](#copy_fixture_modules_to)
+    * [`copy_to`](#copy_to)
     * [`fix_errata_on`](#fix_errata_on)
     * PKI
       * [`run_fake_pki_ca_on`](#run_fake_pki_ca_on)
@@ -144,6 +145,17 @@ yum_repos:
 ```
 
 ## Methods
+
+#### `copy_to`
+
+Abstracts copying files and directories in the most efficient manner possible.
+
+* If your system is a ``docker`` container it uses ``docker cp``
+* If your system is anything else:
+  * Attempts to use ``rsync`` if it is present on both sides
+  * Falls back to ``scp``
+
+All copy semantics are consistent with what you would expect from ``scp_to``
 
 #### `copy_fixture_modules_to`
 
