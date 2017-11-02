@@ -223,7 +223,8 @@ module Simp::BeakerHelpers
           package { ['dracut-fips'] : ensure => 'latest' }
           ~>
           exec { 'Always run dracut after installing dracut-fips':
-            command => '/usr/bin/dracut -f',
+            path        => ['/usr/bin', '/sbin'],
+            command     => 'dracut -f',
             refreshonly => true
           }
 
