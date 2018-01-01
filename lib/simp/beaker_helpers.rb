@@ -401,15 +401,58 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
     puts "== Fake PKI CA"
     pki_dir  = File.expand_path( "../../files/pki", File.dirname(__FILE__))
     host_dir = '/root/pki'
-    fqdns    = fact_on(hosts, 'fqdn')
 
     ca_sut.mkdir_p(host_dir)
     Dir[ File.join(pki_dir, '*') ].each{|f| copy_to( ca_sut, f, host_dir)}
 
+    # Collect network information from all SUTs
+    #
+    # We need this so that we don't insert any common IP addresses into certs
+    suts_network_info = {}
+
+    hosts.each do |host|
+      fqdn = fact_on(host, 'fqdn').strip
+
+      host_entry = { fqdn => [] }
+
+      # Gather the IP Addresses for the host to embed in the cert
+      interfaces = fact_on(host, 'interfaces').strip.split(',')
+      interfaces.each do |interface|
+        ipaddress = fact_on(host, "ipaddress_#{interface}")
+
+        next if ipaddress.nil? || ipaddress.empty? || ipaddress.start_with?('127.')
+
+        host_entry[fqdn] << ipaddress.strip
+
+        unless host_entry[fqdn].empty?
+          suts_network_info[fqdn] = host_entry[fqdn]
+        end
+      end
+    end
+
+    # Get all of the repeated SUT IP addresses:
+    #   1. Create a hash of elements that have a key that is the value and
+    #      elements that are the same value
+    #   2. Grab all elements that have more than one value (therefore, were
+    #      repeated)
+    #   3. Pull out an Array of all of the common element keys for future
+    #      comparison
+    common_ip_addresses = suts_network_info
+      .values.flatten
+      .group_by{ |x| x }
+      .select{|k,v| v.size > 1}
+      .keys
+
     # generate PKI certs for each SUT
     Dir.mktmpdir do |dir|
       pki_hosts_file = File.join(dir, 'pki.hosts')
-      File.open(pki_hosts_file, 'w'){|fh| fqdns.each{|fqdn| fh.puts fqdn}}
+
+      File.open(pki_hosts_file, 'w') do |fh|
+        suts_network_info.each do |fqdn, ipaddresses|
+          fh.puts ([fqdn] + (ipaddresses - common_ip_addresses)) .join(',')
+        end
+      end
+
       copy_to(ca_sut, pki_hosts_file, host_dir)
       # generate certs
       on(ca_sut, "cd #{host_dir}; cat #{host_dir}/pki.hosts | xargs bash make.sh")
