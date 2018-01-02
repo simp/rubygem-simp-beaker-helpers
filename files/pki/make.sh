@@ -1,8 +1,6 @@
 # For ruby
 export PATH=/opt/puppetlabs/puppet/bin:$PATH
 
-export OPENSSL_CONF=ca.cnf
-
 DAYS="-days 365"
 REQ="openssl req $SSLEAY_CONFIG"
 CA="openssl ca $SSLEAY_CONFIG"
@@ -35,6 +33,8 @@ touch ${CATOP}/index.txt
 
 echo "== Making CA certificate ..."
 sed "s/^\([[:space:]]*commonName_default\).*/\1 \t\t= Fake Org Fake CA - ${CASERIAL}/" template_ca.cnf > ca.cnf
+
+export OPENSSL_CONF=ca.cnf
 
 $REQ -verbose -batch -passout file:cacertkey -new -x509 -keyout ${CATOP}/private/$CAKEY -out ${CATOP}/$CACERT $DAYS
 
