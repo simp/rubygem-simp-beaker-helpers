@@ -415,6 +415,9 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
 
       host_entry = { fqdn => [] }
 
+      # Ensure that all interfaces are active prior to collecting data
+      activate_interfaces(host)
+
       # Gather the IP Addresses for the host to embed in the cert
       interfaces = fact_on(host, 'interfaces').strip.split(',')
       interfaces.each do |interface|
@@ -532,6 +535,26 @@ done
   end
 
 
+  # Activate all network interfaces on the target system
+  #
+  # This is generally needed if the upstream vendor does not activate all
+  # interfaces by default (EL7 for example)
+  #
+  # Can be passed any number of hosts either singly or as an Array
+  def activate_interfaces(hosts)
+    Array(hosts).each do |host|
+      interfaces = fact_on(host, 'interfaces').strip.split(',')
+      interfaces.delete_if { |x| x =~ /^lo/ }
+
+      interfaces.each do |iface|
+        if fact_on(host, "ipaddress_#{iface}").strip.empty?
+          on(host, "ifup #{iface}", :accept_all_exit_codes => true)
+        end
+      end
+    end
+  end
+
+
   ## Inline Hiera Helpers ##
   ## These will be integrated into core Beaker at some point ##
 
@@ -548,16 +571,7 @@ done
     # We can't guarantee that the upstream vendor isn't disabling interfaces so
     # we need to turn them on at each context run
     c.before(:context) do
-      hosts.each do |host|
-        interfaces = fact_on(host, 'interfaces').strip.split(',')
-        interfaces.delete_if { |x| x =~ /^lo/ }
-
-        interfaces.each do |iface|
-          if fact_on(host, "ipaddress_#{iface}").strip.empty?
-            on(host, "ifup #{iface}", :accept_all_exit_codes => true)
-          end
-        end
-      end
+      activate_interfaces(hosts)
     end
 
     c.after(:all) do
