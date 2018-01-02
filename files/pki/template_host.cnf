@@ -198,6 +198,7 @@ authorityKeyIdentifier=keyid,issuer:always
 # An alternative to produce certificates that aren't
 # deprecated according to PKIX.
 # subjectAltName=email:move
+# subjectAltName = #ALTNAMES#
 
 # Copy subject details
 # issuerAltName=issuer:copy
