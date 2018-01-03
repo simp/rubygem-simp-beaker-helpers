@@ -117,7 +117,7 @@ module Simp::Rake
 
           raise("Error: Suites Directory at '#{suite_basedir}'!") unless File.directory?(suite_basedir)
 
-          if suite
+          if suite && (suite != 'ALL')
             unless File.directory?(File.join(suite_basedir, suite))
               STDERR.puts("Error: Could not find suite '#{suite}'")
               STDERR.puts("Available Suites:")
@@ -139,7 +139,8 @@ module Simp::Rake
           end
 
           suites = Hash.new
-          if suite
+
+          if suite && (suite != 'ALL')
             suites[suite] = Hash.new
             # If a suite was set, make sure it runs.
             suites[suite]['default_run'] = true
@@ -147,6 +148,10 @@ module Simp::Rake
             Dir.glob(File.join(suite_basedir,'*')) do |file|
               if File.directory?(file)
                 suites[File.basename(file)] = Hash.new
+
+                if suite == 'ALL'
+                  suites[File.basename(file)]['default_run'] = true
+                end
               end
             end
           end

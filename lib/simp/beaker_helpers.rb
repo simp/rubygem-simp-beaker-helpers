@@ -695,12 +695,22 @@ done
   # Replacement for `install_puppet` in spec_helper_acceptance.rb
   def install_puppet
     puppet_install_type = ENV.fetch('PUPPET_INSTALL_TYPE', 'agent')
-    puppet_agent_version = (
-      ENV.fetch('PUPPET_INSTALL_VERSION', nil) ||
-      latest_puppet_agent_version_for(ENV.fetch('PUPPET_VERSION',nil)) ||
-      DEFAULT_PUPPET_AGENT_VERSION
-    )
+
+    puppet_agent_version = ENV.fetch('PUPPET_INSTALL_VERSION', nil)
+
+    unless puppet_agent_version
+      if host.options['puppet_collection'] && host.options['puppet_collection'] =~ /puppet(\d+)/
+        puppet_agent_version = latest_puppet_agent_version_for($1)
+      else
+        puppet_agent_version = (
+          latest_puppet_agent_version_for(ENV.fetch('PUPPET_VERSION',nil)) ||
+          DEFAULT_PUPPET_AGENT_VERSION
+        )
+      end
+    end
+
     require 'beaker/puppet_install_helper'
+
     run_puppet_install_helper(puppet_install_type,  puppet_agent_version)
   end
 end
