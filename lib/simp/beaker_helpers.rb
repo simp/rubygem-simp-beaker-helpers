@@ -11,14 +11,22 @@ module Simp::BeakerHelpers
   # oldest system that we support.
   DEFAULT_PUPPET_AGENT_VERSION = '1.7.1'
 
+  # We can't cache this because it may change during a run
+  def fips_enabled(sut)
+    return on( sut,
+              'cat /proc/sys/crypto/fips_enabled 2>/dev/null',
+              :accept_all_exit_codes => true
+             ).output.strip == '1'
+  end
+
   # Figure out the best method to copy files to a host and use it
   #
   # Will create the directories leading up to the target if they don't exist
   def copy_to(sut, src, dest, opts={})
-    unless @has_rsync
+    unless fips_enabled(sut) || @has_rsync
       %x{which rsync 2>/dev/null}.strip
 
-      @has_rsync = $?.success?
+      @has_rsync = !$?.nil? && $?.success?
     end
 
     sut.mkdir_p(File.dirname(dest))
