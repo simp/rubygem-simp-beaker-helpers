@@ -1,3 +1,8 @@
+### 1.10.1 / 2018-01-23
+* Ensure that `rsync` is not used once `fips` is enabled on the SUT
+  * If `fips` is enabled on the SUT, but not the running host, rsync
+    connections have a high likelihood of failing
+
 ### 1.10.0 / 2018-01-03
 * Add support for Puppet 5
   * Note: you need to set 'puppet_collection' to 'puppet5' to test Puppet 5 and
