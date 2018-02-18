@@ -1,3 +1,7 @@
+### 1.10.1 / 2018-02-13
+* Updated the Puppet version mapping list for Puppet 5
+* Fixed a bug in the way that the latest Puppet 5 version was being determined
+
 ### 1.10.0 / 2018-01-23
 * Add support for Puppet 5
   * Note: you need to set 'puppet_collection' to 'puppet5' to test Puppet 5 and

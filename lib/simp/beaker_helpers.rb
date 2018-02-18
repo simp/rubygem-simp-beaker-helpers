@@ -697,6 +697,8 @@ done
       Gem::Requirement.new(puppet_version).satisfied_by?(Gem::Version.new(k))
     end
     result = _pair ? _pair.last : nil
+
+    return result
   end
 
 
@@ -708,7 +710,7 @@ done
 
     unless puppet_agent_version
       if host.options['puppet_collection'] && host.options['puppet_collection'] =~ /puppet(\d+)/
-        puppet_agent_version = latest_puppet_agent_version_for($1)
+        puppet_agent_version = latest_puppet_agent_version_for("~> #{$1}")
       else
         puppet_agent_version = (
           latest_puppet_agent_version_for(ENV.fetch('PUPPET_VERSION',nil)) ||
