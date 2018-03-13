@@ -1,3 +1,10 @@
+### 1.10.2 / 2018-03-04
+* Reimplemented `pluginsync_on` with a Puppet manifest to completely mimic
+  a native pluginsync
+  - Syncs _all_ assets (e.g., augeas lenses) instead of just the facts
+  - Simpler
+  - Much faster, especially with many modules or SUTs
+
 ### 1.10.1 / 2018-02-13
 * Updated the Puppet version mapping list for Puppet 5
 * Fixed a bug in the way that the latest Puppet 5 version was being determined
