@@ -74,7 +74,7 @@ module Simp::BeakerHelpers
   # Returns the modulepath on the SUT, as an Array
   def puppet_modulepath_on(sut, environment='production')
     on(
-      sut, "puppet config print modulepath --environment #{environment}"
+      sut, "puppet config print --section main modulepath --environment #{environment} 2>/dev/null"
     ).output.lines.last.strip.split(':')
   end
 
