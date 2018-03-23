@@ -1,3 +1,6 @@
+### 1.10.3 / 2018-03-23
+* Avoid warnings when using `puppet config print`
+
 ### 1.10.2 / 2018-03-04
 * Reimplemented `pluginsync_on` with a Puppet manifest to completely mimic
   a native pluginsync
