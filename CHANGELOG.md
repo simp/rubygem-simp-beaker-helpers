@@ -1,3 +1,8 @@
+### 1.10.4 / 2018-04-25
+* Fix Inspec report failures
+* Fix SSG build failures
+* Allow the SSG remediation acceptance test to fail
+
 ### 1.10.3 / 2018-03-23
 * Avoid warnings when using `puppet config print`
 

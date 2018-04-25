@@ -117,11 +117,15 @@ module Simp::BeakerHelpers
       end
     end
 
+    def process_inspec_results
+      self.class.process_inspec_results(@results)
+    end
+
     # Process the results of an InSpec run
     #
     # @return [Hash] A Hash of statistics and a formatted report
     #
-    def process_inspec_results
+    def self.process_inspec_results(results)
       require 'highline'
 
       HighLine.colorize_strings
@@ -133,7 +137,21 @@ module Simp::BeakerHelpers
         :report  => []
       }
 
-      profiles = @results['profiles']
+      if results.is_a?(String)
+        if File.readable?(results)
+          profiles = JSON.load(File.read(results))['profiles']
+        else
+          fail("Error: Could not read results file at #{results}")
+        end
+      elsif results.is_a?(Hash)
+        profiles = results['profiles']
+      else
+        fail("Error: first argument must be a String path to a file or a Hash")
+      end
+
+      if !profiles || profiles.empty?
+        fail("Error: Could not find 'profiles' in the passed results")
+      end
 
       profiles.each do |profile|
         stats[:report] << "Name: #{profile['name']}"
@@ -156,7 +174,7 @@ module Simp::BeakerHelpers
             stats[:report] << title_chunks.join("\n")
           end
 
-          if control['results']
+          if control['results'] && !control['results'].empty?
             status = control['results'].first['status']
           else
             status = 'skipped'
