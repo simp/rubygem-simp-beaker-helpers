@@ -9,10 +9,11 @@ module Simp::BeakerHelpers
     end
 
     EL_PACKAGES = [
-      'git',
+      'PyYAML',
       'cmake',
-      'openscap-utils',
+      'git',
       'openscap-python',
+      'openscap-utils',
       'python-lxml'
     ]
 
