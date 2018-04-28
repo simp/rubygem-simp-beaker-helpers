@@ -1,3 +1,8 @@
+### 1.10.5 / 2018-04-27
+* Fix issue with direct copy to/from docker containers
+* Add necessary package for SSG builds
+* Added the downloaded inspec_deps directory to the clean list
+
 ### 1.10.4 / 2018-04-25
 * Fix Inspec report failures
 * Fix SSG build failures

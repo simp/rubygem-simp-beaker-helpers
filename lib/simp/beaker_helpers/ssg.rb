@@ -14,7 +14,8 @@ module Simp::BeakerHelpers
       'git',
       'openscap-python',
       'openscap-utils',
-      'python-lxml'
+      'python-lxml',
+      'python-jinja2'
     ]
 
     OS_INFO = {

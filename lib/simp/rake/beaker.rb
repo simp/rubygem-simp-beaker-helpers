@@ -15,6 +15,7 @@ module Simp::Rake
       ::CLEAN.include( %{#{@base_dir}/log} )
       ::CLEAN.include( %{#{@base_dir}/junit} )
       ::CLEAN.include( %{#{@base_dir}/sec_results} )
+      ::CLEAN.include( %{#{@base_dir}/spec/fixtures/inspec_deps} )
 
       yield self if block_given?
 
