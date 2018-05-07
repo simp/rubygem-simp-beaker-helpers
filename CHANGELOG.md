@@ -1,3 +1,7 @@
+### 1.10.6 / 2018-05-07
+* Added Simp::BeakerHelpers.tmpname method to work around the removal of
+  Dir::Tmpname in Ruby 2.5
+
 ### 1.10.5 / 2018-04-27
 * Fix issue with direct copy to/from docker containers
 * Add necessary package for SSG builds

@@ -5,6 +5,12 @@ module Simp::BeakerHelpers
   require 'simp/beaker_helpers/inspec'
   require 'simp/beaker_helpers/ssg'
 
+  # Stealing this from the Ruby 2.5 Dir::Tmpname workaround from Rails
+  def self.tmpname
+    t = Time.new.strftime("%Y%m%d")
+    "simp-beaker-helpers-#{t}-#{$$}-#{rand(0x100000000).to_s(36)}.tmp"
+  end
+
   # This is the *oldest* version that the latest release of SIMP supports
   #
   # This is done so that we know if some new thing that we're using breaks the
@@ -175,7 +181,7 @@ module Simp::BeakerHelpers
 
           Dir.chdir(mod_root) do
             begin
-              tarfile = Dir::Tmpname.make_tmpname(['beaker','.tar'],nil)
+              tarfile = "#{Simp::BeakerHelpers.tmpname}.tar"
 
               excludes = PUPPET_MODULE_INSTALL_IGNORE.map do |x|
                 x = "--exclude '*/#{x}'"
