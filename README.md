@@ -3,38 +3,48 @@
 Methods to assist beaker acceptance tests for SIMP.
 
 #### Table of Contents
-1. [Overview](#overview)
-2. [Setup](#setup)
-    * [Beginning with simp-beaker-helpers](#beginning-with-simp-beaker-helpers)
-3. [General Enhancements](#general-enhancements)
-    * [Suites](#suites)
-4. [Nodeset Enhancements](#nodeset-enhancements)
-    * [YUM Repo Support](#yum_repo_support)
-5. [Methods](#methods)
-    * [`copy_fixture_modules_to`](#copy_fixture_modules_to)
+
+<!-- vim-markdown-toc GFM -->
+
+* [Overview](#overview)
+* [Setup](#setup)
+  * [Beginning with simp-beaker-helpers](#beginning-with-simp-beaker-helpers)
+* [Rake Tasks](#rake-tasks)
+  * [`rake beaker:suites`](#rake-beakersuites)
+  * [Suite Execution](#suite-execution)
+    * [Environment Variables](#environment-variables)
+    * [Global Suite Configuration](#global-suite-configuration)
+      * [Supported Config:](#supported-config)
+    * [Individual Suite Configuration](#individual-suite-configuration)
+      * [Supported Config:](#supported-config-1)
+* [Nodeset Enhancements](#nodeset-enhancements)
+  * [YUM Repo Support](#yum-repo-support)
+* [Methods](#methods)
     * [`copy_to`](#copy_to)
+    * [`copy_fixture_modules_to`](#copy_fixture_modules_to)
     * [`fix_errata_on`](#fix_errata_on)
-    * PKI
-      * [`run_fake_pki_ca_on`](#run_fake_pki_ca_on)
-      * [`copy_pki_to`](#copy_pki_to)
-      * [`copy_keydist_to`](#copy_keydist_to)
-    * Custom facts
-      * [`pfact_on`](#pfact_on)
-      * [`pluginsync_on`](#pluginsync_on)
-    * Hiera
-      * [`write_hieradata_to`](#write_hieradata_to)
-      * [`set_hieradata_on`](#set_hieradata_on)
-      * [`clear_temp_hieradata`](#clear_temp_hieradata)
-6. [Environment variables](#environment-variables)
+    * [`run_fake_pki_ca_on`](#run_fake_pki_ca_on)
+    * [`copy_pki_to`](#copy_pki_to)
+    * [`copy_keydist_to`](#copy_keydist_to)
+    * [`pfact_on`](#pfact_on)
+    * [`pluginsync_on`](#pluginsync_on)
+    * [`write_hieradata_to`](#write_hieradata_to)
+    * [`set_hieradata_on`](#set_hieradata_on)
+    * [`clear_temp_hieradata`](#clear_temp_hieradata)
+    * [`latest_puppet_agent_version_for(puppet_version)`](#latest_puppet_agent_version_forpuppet_version)
+    * [`install_puppet`](#install_puppet)
+* [Environment variables](#environment-variables-1)
     * [`BEAKER_fips`](#beaker_fips)
     * [`BEAKER_spec_prep`](#beaker_spec_prep)
     * [`BEAKER_stringify_facts`](#beaker_stringify_facts)
     * [`BEAKER_use_fixtures_dir_for_modules`](#beaker_use_fixtures_dir_for_modules)
-    * [`PUPPET_VERSION`](#puppet_version)
-7. [Examples](#examples)
-    * [Prep OS, Generate and copy PKI certs to each SUT](#prep-os-generate-and-copy-pki-certs-to-each-sut)
-    * [Specify the version of Puppet to run in the SUTs](#specify-the-version-of-puppet-to-run-in-the-suts)
-8. [License](#license)
+    * [PUPPET_VERSION](#puppet_version)
+* [Examples](#examples)
+  * [Prep OS, Generate and copy PKI certs to each SUT](#prep-os-generate-and-copy-pki-certs-to-each-sut)
+  * [Specify the version of Puppet to run in the SUTs](#specify-the-version-of-puppet-to-run-in-the-suts)
+* [License](#license)
+
+<!-- vim-markdown-toc -->
 
 ## Overview
 
@@ -53,9 +63,19 @@ Add this to your project's `spec/spec_helper_acceptance.rb`:
 require 'simp/beaker_helpers'
 include Simp::BeakerHelpers
 ```
-## General Enhancements
 
-### Suites
+## Rake Tasks
+
+New `rake` tasks are available to help you use `beaker` more effectively.
+
+These can be included in your `Rakefile` by adding the following:
+
+```
+require 'simp/rake/beaker'
+Simp::Rake::Beaker.new(File.dirname(__FILE__))
+```
+
+### `rake beaker:suites`
 
 The 'beaker:suites' rake task provides the ability to run isolated test sets
 with a full reset of the Beaker environment.
@@ -64,7 +84,7 @@ These are entirely isolated runs of Beaker and have been designed to be used
 for situations where you need to eliminate all of the cruft from your previous
 runs to perform a new type of test.
 
-#### Suite Execution
+### Suite Execution
 
 By default the only suite that will be executed is `default`.  Since each suite
 is executed in a new environment, spin up can take a lot of time. Therefore,
@@ -278,8 +298,35 @@ Clean up all temporary hiera data files; meant to be called from `after(:all)`
 
 `clear_temp_hieradata`
 
+#### `latest_puppet_agent_version_for(puppet_version)`
+
+Finds the latest `puppet-agent` version based on the passed gem version and can
+accept the usual Gem comparison syntax (e.g., '4.0', '=4.2', '~> 4.3.1', '5')
+
+Returns the `puppet-agent` package version or `nil` if not found.
+
+#### `install_puppet`
+
+Performs an assessment of all set parameters and installs the correct
+`puppet-agent` based on those parameters based on the following logic.
+
+If the environment variable `PUPPET_INSTALL_VERSION` or `PUPPET_VERSION` is
+set, will use that to determine the `puppet-agent` version to install.
+
+If the environment variable `BEAKER_PUPPET_COLLECTION` is set, will use this to
+determine which puppet collection to install from. (Presently, this only works
+with Puppet 5+ and is set as `puppet5`.)
+
+If you set a combination of options that does not work together, the values
+will be passed to Beaker and will probably cause the install to fail due to a
+missing package. There is no way for the code to be sure that you don't know
+what you are doing so it just passes along what it discovers.
+
+The version of the `puppet-agent` will default to `1.10.4` unless otherwise
+set.
 
 ## Environment variables
+
 #### `BEAKER_fips`
 
 _(Default: `no`)_ When set to `yes`, Beaker will enable [FIPS mode](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Security_Guide/sect-Security_Guide-Federal_Standards_And_Regulations-Federal_Information_Processing_Standard.html) on all SUTs before running tests.
@@ -360,6 +407,9 @@ PUPPET_VERSION="~> 4.8.0" bundle exec rake beaker:suites
 
 # puppet-agent 1.9.2 will be installed in VMs
 PUPPET_INSTALL_VERSION=1.9.2 bundle exec rake beaker:suites
+
+# The latest puppet 5 will be installed in VMs
+PUPPET_VERSION="5" bundle exec rake beaker:suites
 
 # puppet-agent 1.8.3 will be installed in VMs
 bundle exec rake beaker:suites

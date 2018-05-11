@@ -15,7 +15,7 @@ module Simp::BeakerHelpers
   #
   # This is done so that we know if some new thing that we're using breaks the
   # oldest system that we support.
-  DEFAULT_PUPPET_AGENT_VERSION = '1.7.1'
+  DEFAULT_PUPPET_AGENT_VERSION = '1.10.4'
 
   # We can't cache this because it may change during a run
   def fips_enabled(sut)
@@ -693,18 +693,45 @@ done
   #
   def latest_puppet_agent_version_for( puppet_version )
     return nil if puppet_version.nil?
+
     require 'rubygems/requirement'
     require 'rubygems/version'
     require 'yaml'
+
+    _puppet_version = puppet_version.strip
+
     @agent_version_table ||= YAML.load_file(
                                File.expand_path(
                                  '../../files/puppet-agent-versions.yaml',
                                  File.dirname(__FILE__)
                              )).fetch('version_mappings')
     _pair = @agent_version_table.find do |k,v|
-      Gem::Requirement.new(puppet_version).satisfied_by?(Gem::Version.new(k))
+      Gem::Requirement.new(_puppet_version).satisfied_by?(Gem::Version.new(k))
     end
     result = _pair ? _pair.last : nil
+
+    # If we didn't get a match, go look for published rubygems
+    unless result
+      puppet_gems = nil
+
+      Bundler.with_clean_env do
+        puppet_gems = %x(gem search -ra -e puppet).match(/\((.+)\)/)
+      end
+
+      if puppet_gems
+        puppet_gems = puppet_gems[1].split(/,?\s+/).select{|x| x =~ /^\d/}
+
+        # If we don't have a full version string, we need to massage it for the
+        # match.
+        if (_puppet_version.count('.') < 2) && !_puppet_version.include?(' ')
+          _puppet_version = "~> #{_puppet_version}"
+        end
+
+        result = puppet_gems.find do |ver|
+          Gem::Requirement.new(_puppet_version).satisfied_by?(Gem::Version.new(ver))
+        end
+      end
+    end
 
     return result
   end
@@ -712,20 +739,41 @@ done
 
   # Replacement for `install_puppet` in spec_helper_acceptance.rb
   def install_puppet
+    # The first match is internal Beaker and the second is legacy SIMP
+    puppet_agent_version = ENV['PUPPET_INSTALL_VERSION'] || ENV['PUPPET_VERSION']
+
+    # In case Beaker needs this down the line
+    ENV['PUPPET_INSTALL_VERSION'] = puppet_agent_version
+
+    # Environment variables override host settings
+    puppet_collection = ENV['BEAKER_PUPPET_COLLECTION'] || host.options['puppet_collection']
+
     puppet_install_type = ENV.fetch('PUPPET_INSTALL_TYPE', 'agent')
 
-    puppet_agent_version = ENV.fetch('PUPPET_INSTALL_VERSION', nil)
+    # This matches the passed version or a fuzzy matched version if applicable
+    if puppet_agent_version =~ /.*\s+?(\d+)\.?/
+      base_version = $1.to_i
 
-    unless puppet_agent_version
-      if host.options['puppet_collection'] && host.options['puppet_collection'] =~ /puppet(\d+)/
-        puppet_agent_version = latest_puppet_agent_version_for("~> #{$1}")
-      else
-        puppet_agent_version = (
-          latest_puppet_agent_version_for(ENV.fetch('PUPPET_VERSION',nil)) ||
-          DEFAULT_PUPPET_AGENT_VERSION
-        )
+      if base_version >= 5
+        unless puppet_collection
+          puppet_collection = "puppet#{base_version}"
+          ENV['BEAKER_PUPPET_COLLECTION'] = puppet_collection
+        end
       end
     end
+
+    if puppet_collection
+      if puppet_collection =~ /puppet(\d+)/
+        puppet_agent_version = "~> #{$1}" unless puppet_agent_version
+      else
+        raise("Error: Puppet Collection '#{puppet_collection}' must match /puppet(\d+)/")
+      end
+    end
+
+    puppet_agent_version = (
+      latest_puppet_agent_version_for(puppet_agent_version) ||
+      DEFAULT_PUPPET_AGENT_VERSION
+    )
 
     require 'beaker/puppet_install_helper'
 

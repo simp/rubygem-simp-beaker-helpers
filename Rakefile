@@ -5,16 +5,16 @@ require 'rake/clean'
 require 'fileutils'
 require 'find'
 require 'rspec/core/rake_task'
-require 'puppetlabs_spec_helper/rake_tasks'
-
-
-['spec','syntax','syntax:hiera','syntax:manifests','syntax:templates','lint','metadata'].each do |task|
-  Rake::Task[task].clear
-end
+require 'simp/rake/beaker'
 
 @package='simp-beaker-helpers'
 @rakefile_dir=File.dirname(__FILE__)
 
+Simp::Rake::Beaker.new(@rakefile_dir)
+
+['spec','syntax','syntax:hiera','syntax:manifests','syntax:templates','lint','metadata'].each do |task|
+  Rake::Task[task].clear
+end
 
 CLEAN.include "#{@package}-*.gem"
 CLEAN.include 'pkg'

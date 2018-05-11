@@ -1,3 +1,9 @@
+### 1.10.7 / 2018-05-11
+* Updated README
+* Changed acceptance tests to use `beaker:suites`
+* Removed all Puppet 5+ mappings and updated the install method to figure out
+  what to use based on the available gems so that everything is now consistent
+
 ### 1.10.6 / 2018-05-07
 * Added Simp::BeakerHelpers.tmpname method to work around the removal of
   Dir::Tmpname in Ruby 2.5

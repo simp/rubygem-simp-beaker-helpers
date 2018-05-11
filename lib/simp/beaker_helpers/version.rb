@@ -1,5 +1,5 @@
 module Simp; end
 
 module Simp::BeakerHelpers
-  VERSION = '1.10.6'
+  VERSION = '1.10.7'
 end
