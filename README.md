@@ -310,20 +310,18 @@ Returns the `puppet-agent` package version or `nil` if not found.
 Performs an assessment of all set parameters and installs the correct
 `puppet-agent` based on those parameters based on the following logic.
 
-If the environment variable `PUPPET_INSTALL_VERSION` or `PUPPET_VERSION` is
-set, will use that to determine the `puppet-agent` version to install.
+If the environment variable `BEAKER_PUPPET_AGENT_VERSION` or
+`PUPPET_INSTALL_VERSION` or `PUPPET_VERSION` is set, it will use that value
+to determine the `puppet-agent` version to install.
 
-If the environment variable `BEAKER_PUPPET_COLLECTION` is set, will use this to
-determine which puppet collection to install from. (Presently, this only works
-with Puppet 5+ and is set as `puppet5`.)
+If it is unable to determine the `puppet-agent` version from any `*VERSION`
+environment variables and the environment variable `BEAKER_PUPPET_COLLECTION`
+is set, it will use this to determine which puppet collection to install from.
+(Presently, this only works with Puppet 5.x and is set as `puppet5`.)
 
-If you set a combination of options that does not work together, the values
-will be passed to Beaker and will probably cause the install to fail due to a
-missing package. There is no way for the code to be sure that you don't know
-what you are doing so it just passes along what it discovers.
-
-The version of the `puppet-agent` will default to `1.10.4` unless otherwise
-set.
+If it cannot determinte the `puppet-agent` version from any environment
+variables, it will default the version to the value of
+Simp::BeakerHelpers::DEFAULT_PUPPET_AGENT_VERSION, which is currently '1.10.4'.
 
 ## Environment variables
 
@@ -350,6 +348,9 @@ this will _not_ update modules that are already present under
 The `PUPPET_VERSION` environment variable will install the latest
 `puppet-agent` package that provides that version of Puppet.  This honors
 `Gemfile`-style expressions like `"~> 4.8.0"`
+
+`BEAKER_PUPPET_AGENT_VERSION` and `PUPPET_INSTALL_VERSION` are synonyms of
+`PUPPET_VERSION`.
 
 ## Examples
 
@@ -411,7 +412,7 @@ PUPPET_INSTALL_VERSION=1.9.2 bundle exec rake beaker:suites
 # The latest puppet 5 will be installed in VMs
 PUPPET_VERSION="5" bundle exec rake beaker:suites
 
-# puppet-agent 1.8.3 will be installed in VMs
+# puppet-agent 1.10.4 will be installed in VMs
 bundle exec rake beaker:suites
 ```
 

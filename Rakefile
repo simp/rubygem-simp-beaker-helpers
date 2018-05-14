@@ -46,6 +46,12 @@ SIMP_RPM_BUILD     when set, alters the gem produced by pkg:gem to be RPM-safe.
   }
 end
 
+desc "Run spec tests"
+RSpec::Core::RakeTask.new(:spec) do |t|
+  t.rspec_opts = ['--color']
+  t.pattern = 'spec/lib/**/*_spec.rb'
+end
+
 desc %q{run all RSpec tests (alias of 'spec')}
 task :test => :spec
 
