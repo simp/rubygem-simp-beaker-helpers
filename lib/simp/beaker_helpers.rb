@@ -687,7 +687,7 @@ done
   # Looks up latest `puppet-agent` version by the version of its `puppet` gem
   #
   # @param puppet_version [String] target Puppet gem version.  Works with
-  #   Gemfile comparison syntax (e.g., '4.0', '= 4.2', '~> 4.3.1', '> 4.10, < 5.5')
+  #   Gemfile comparison syntax (e.g., '4.0', '= 4.2', '~> 4.3.1', '> 5.1, < 5.5')
   #
   # @return [String,Nil] the `puppet-agent` version or nil
   #
