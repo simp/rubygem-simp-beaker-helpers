@@ -1,3 +1,8 @@
+### 1.10.7 / 2018-05-18
+* New env var BEAKER_no_fix_interfaces, set to skip the fix that brings up all
+  vagrant interfaces
+* Parallelized actions that are used across all hosts using `block_on`
+
 ### 1.10.7 / 2018-05-11
 * Updated README
 * Changed acceptance tests to use `beaker:suites`

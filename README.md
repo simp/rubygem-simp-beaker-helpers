@@ -343,6 +343,10 @@ this will _not_ update modules that are already present under
 #### `BEAKER_stringify_facts`
 #### `BEAKER_use_fixtures_dir_for_modules`
 
+#### `BEAKER_no_fix_interfaces`
+
+Set to skip code that makes sure all interfaces are up
+
 #### PUPPET_VERSION
 
 The `PUPPET_VERSION` environment variable will install the latest
