@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'beaker', '~> 3.14'
   s.add_runtime_dependency 'beaker-puppet', '~> 0.8.0'
   s.add_runtime_dependency 'beaker-puppet_install_helper', '~> 0.6'
+  s.add_runtime_dependency 'highline', '~> 1.6'
 
   ### s.files = Dir['Rakefile', '{bin,lib,spec}/**/*', 'README*', 'LICENSE*'] & `git ls-files -z .`.split("\0")
   s.files       = `git ls-files`.split("\n")

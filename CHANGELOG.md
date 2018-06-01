@@ -1,3 +1,6 @@
+### 1.10.9 / 2018-06-01
+* Add runtime dependency on `highline` for the `inspec` reporting
+
 ### 1.10.8 / 2018-05-18
 * New env var BEAKER_no_fix_interfaces, set to skip the fix that brings up all
   vagrant interfaces
