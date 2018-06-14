@@ -1,3 +1,7 @@
+### 1.10.9 /2018-06-14
+* Pin the suite base directory off of the global base directory instead of
+  local to wherever the system happenes to be at the time.
+
 ### 1.10.8 / 2018-05-18
 * New env var BEAKER_no_fix_interfaces, set to skip the fix that brings up all
   vagrant interfaces
