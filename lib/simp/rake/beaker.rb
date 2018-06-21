@@ -111,7 +111,8 @@ module Simp::Rake
           # Need to figure out how to capture the errors
           failures = Hash.new
 
-          suite_basedir = 'spec/acceptance/suites'
+          suite_basedir = File.join(@base_dir, 'spec/acceptance/suites')
+
           if ENV['BEAKER_suite_basedir']
             suite_basedir = ENV['BEAKER_suite_basedir']
           end
