@@ -1,5 +1,7 @@
+### 1.10.10/ 2018-06-22
+* Version bump due to being released without a git tag
 
-### 1.10.9 /2018-06-22
+### 1.10.9 / 2018-06-22
 * Ensure that the SSG is built from the latest tag instead of master
 * Provide the option to pass a specific branch to the SSG builds
 * Pin the suite base directory off of the global base directory instead of
