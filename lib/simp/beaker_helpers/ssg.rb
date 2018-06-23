@@ -8,6 +8,13 @@ module Simp::BeakerHelpers
       GIT_REPO = 'https://github.com/OpenSCAP/scap-security-guide.git'
     end
 
+    # If this is not set, the closest tag to the default branch will be used
+    GIT_BRANCH = nil
+
+    if ENV['BEAKER_ssg_branch']
+      GIT_BRANCH = ENV['BEAKER_ssg_branch']
+    end
+
     EL_PACKAGES = [
       'PyYAML',
       'cmake',
@@ -139,6 +146,11 @@ module Simp::BeakerHelpers
         on(@sut, %(mkdir -p scap-security-guide && tar -xj -C scap-security-guide --strip-components 1 -f #{ssg_release} && cp scap-security-guide/*ds.xml #{@scap_working_dir}))
       else
         on(@sut, %(git clone #{GIT_REPO}))
+        if GIT_BRANCH
+          on(@sut, %(cd scap-security-guide; git checkout #{GIT_BRANCH}))
+        else
+          on(@sut, %(cd scap-security-guide; git checkout $(git describe --abbrev=0 --tags)))
+        end
         on(@sut, %(cd scap-security-guide/build; cmake ../; make -j4 #{OS_INFO[@os][@os_rel]['ssg']['build_target']}-content && cp *ds.xml #{@scap_working_dir}))
       end
     end

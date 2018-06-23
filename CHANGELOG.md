@@ -1,4 +1,7 @@
-### 1.10.9 /2018-06-14
+
+### 1.10.9 /2018-06-22
+* Ensure that the SSG is built from the latest tag instead of master
+* Provide the option to pass a specific branch to the SSG builds
 * Pin the suite base directory off of the global base directory instead of
   local to wherever the system happenes to be at the time.
 
