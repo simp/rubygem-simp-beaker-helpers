@@ -23,6 +23,11 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'beaker-puppet_install_helper', '~> 0.6'
   s.add_runtime_dependency 'highline', '~> 1.6'
 
+  # Because fog-opensack dropped support for Ruby < 2.2.0
+  if RUBY_VERSION <= '2.2.0'
+    s.add_runtime_dependency 'fog-openstack', '0.1.25'
+  end
+
   ### s.files = Dir['Rakefile', '{bin,lib,spec}/**/*', 'README*', 'LICENSE*'] & `git ls-files -z .`.split("\0")
   s.files       = `git ls-files`.split("\n")
   s.test_files  = `git ls-files -- {test,spec,features}/*`.split("\n")
