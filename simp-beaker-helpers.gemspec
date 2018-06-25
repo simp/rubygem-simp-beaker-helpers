@@ -24,9 +24,8 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'highline', '~> 1.6'
 
   # Because fog-opensack dropped support for Ruby < 2.2.0
-  if RUBY_VERSION <= '2.2.0'
-    s.add_runtime_dependency 'fog-openstack', '0.1.25'
-  end
+  # TODO: Update this when we no longer support Ruby 1.9 (should be October 2018)
+  s.add_runtime_dependency 'fog-openstack', '0.1.25'
 
   ### s.files = Dir['Rakefile', '{bin,lib,spec}/**/*', 'README*', 'LICENSE*'] & `git ls-files -z .`.split("\0")
   s.files       = `git ls-files`.split("\n")
