@@ -1,11 +1,18 @@
-### 1.10.10/ 2018-06-22
+### 1.10.11 / 2018-06-25
+* Pinned `fog-openstack` to `0.1.25` for all releases due to dropping support
+  for Ruby 1.9 in `0.1.26`. This should be removed once we drop support for
+  Ruby 1.9 (late October 2018)
+* Added removal of `.vendor` directory which was preventing successful
+  deployment status in Travis CI
+
+### 1.10.10 / 2018-06-22
 * Version bump due to being released without a git tag
 
 ### 1.10.9 / 2018-06-22
 * Ensure that the SSG is built from the latest tag instead of master
 * Provide the option to pass a specific branch to the SSG builds
 * Pin the suite base directory off of the global base directory instead of
-  local to wherever the system happenes to be at the time.
+  local to wherever the system happens to be at the time.
 
 ### 1.10.8 / 2018-05-18
 * New env var BEAKER_no_fix_interfaces, set to skip the fix that brings up all
