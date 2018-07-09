@@ -1,3 +1,7 @@
+### 1.10.12 / 2018-07-09
+* Forced all parallelization to `false` by default due to random issues with
+  Beaker
+
 ### 1.10.11 / 2018-06-25
 * Pinned `fog-openstack` to `0.1.25` for all releases due to dropping support
   for Ruby 1.9 in `0.1.26`. This should be removed once we drop support for
