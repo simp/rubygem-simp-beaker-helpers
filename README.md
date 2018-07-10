@@ -35,6 +35,7 @@ Methods to assist beaker acceptance tests for SIMP.
     * [`install_puppet`](#install_puppet)
 * [Environment variables](#environment-variables-1)
     * [`BEAKER_fips`](#beaker_fips)
+    * [`BEAKER_SIMP_parallel`](#beaker_simp_parallel)
     * [`BEAKER_spec_prep`](#beaker_spec_prep)
     * [`BEAKER_stringify_facts`](#beaker_stringify_facts)
     * [`BEAKER_use_fixtures_dir_for_modules`](#beaker_use_fixtures_dir_for_modules)
@@ -339,6 +340,14 @@ spec_prep` to populate the missing modules using `.fixtures.yml`.  Note that
 this will _not_ update modules that are already present under
 `spec/fixtures/modules`.
 
+#### `BEAKER_SIMP_parallel`
+
+_(Default: `no`)_  Execute each SIMP host setup method such as
+`Simp::BeakerHelpers::copy_fixure_modules_to` and `Simp::BeakerHelpers::fix_errata_on`
+on all hosts in a node set in parallel. Uses parallelization provided by Beaker.
+
+**NOTE:** Beaker's parallelization capability does not always work, so a word
+to the wise is sufficient.
 
 #### `BEAKER_stringify_facts`
 #### `BEAKER_use_fixtures_dir_for_modules`

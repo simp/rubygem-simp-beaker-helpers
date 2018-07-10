@@ -165,7 +165,8 @@ module Simp::BeakerHelpers
     opts[:pluginsync] = opts.fetch(:pluginsync, true)
 
     unless ENV['BEAKER_copy_fixtures'] == 'no'
-      block_on(suts, :run_in_parallel => true) do |sut|
+      parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+      block_on(suts, :run_in_parallel => parallel) do |sut|
         STDERR.puts "  ** copy_fixture_modules_to: '#{sut}'" if ENV['BEAKER_helpers_verbose']
 
         # Use spec_prep to provide modules (this supports isolated networks)
@@ -214,7 +215,8 @@ module Simp::BeakerHelpers
   def enable_fips_mode_on( suts = hosts )
     puts '== configuring FIPS mode on SUTs'
     puts '  -- (use BEAKER_fips=no to disable)'
-    block_on(suts, :run_in_parallel => true) do |sut|
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(suts, :run_in_parallel => parallel) do |sut|
       puts "  -- enabling FIPS on '#{sut}'"
 
       # We need to use FIPS compliant algorithms and keylengths as per the FIPS
@@ -327,7 +329,8 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
       :timeout
     ]
 
-    block_on(suts, :run_in_parallel => true) do |sut|
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(suts, :run_in_parallel => parallel) do |sut|
       if sut['yum_repos']
         sut['yum_repos'].each_pair do |repo, metadata|
           repo_manifest = %(yumrepo { #{repo}:)
@@ -362,8 +365,8 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
 
   # Apply known OS fixes we need to run Beaker on each SUT
   def fix_errata_on( suts = hosts )
-
-    block_on(suts, :run_in_parallel => true) do |sut|
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(suts, :run_in_parallel => parallel) do |sut|
       # We need to be able to flip between server and client without issue
       on sut, 'puppet resource group puppet gid=52'
       on sut, 'puppet resource user puppet comment="Puppet" gid="52" uid="52" home="/var/lib/puppet" managehome=true'
@@ -556,7 +559,8 @@ done
   #
   # Can be passed any number of hosts either singly or as an Array
   def activate_interfaces(hosts)
-    block_on(hosts, :run_in_parallel => true) do |host|
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(hosts, :run_in_parallel => parallel) do |host|
       interfaces_fact = retry_on(host,'facter interfaces', verbose: true).stdout
 
       interfaces = interfaces_fact.strip.split(',')
@@ -682,7 +686,8 @@ done
           noop    => false
         }
     PLUGINSYNC_MANIFEST
-    apply_manifest_on(hosts, pluginsync_manifest, :run_in_parallel => true)
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    apply_manifest_on(hosts, pluginsync_manifest, :run_in_parallel => parallel)
   end
 
 
