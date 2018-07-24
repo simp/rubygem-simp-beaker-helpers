@@ -1,3 +1,6 @@
+### 1.10.13 / 2018-07-24
+* Update puppet to puppet-agent mapping table for puppet-agent 1.10.14
+
 ### 1.10.12 / 2018-07-09
 * Forced all parallelization to `false` by default due to random issues with
   Beaker
