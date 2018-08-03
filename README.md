@@ -34,11 +34,14 @@ Methods to assist beaker acceptance tests for SIMP.
     * [`latest_puppet_agent_version_for(puppet_version)`](#latest_puppet_agent_version_forpuppet_version)
     * [`install_puppet`](#install_puppet)
 * [Environment variables](#environment-variables-1)
+    * [`BEAKER_SIMP_webserve`](#beaker_simp_webserve)
+    * [`BEAKER_SIMP_webserve_port`](#beaker_simp_webserve_port)
     * [`BEAKER_fips`](#beaker_fips)
-    * [`BEAKER_SIMP_parallel`](#beaker_simp_parallel)
     * [`BEAKER_spec_prep`](#beaker_spec_prep)
+    * [`BEAKER_SIMP_parallel`](#beaker_simp_parallel)
     * [`BEAKER_stringify_facts`](#beaker_stringify_facts)
     * [`BEAKER_use_fixtures_dir_for_modules`](#beaker_use_fixtures_dir_for_modules)
+    * [`BEAKER_no_fix_interfaces`](#beaker_no_fix_interfaces)
     * [PUPPET_VERSION](#puppet_version)
 * [Examples](#examples)
   * [Prep OS, Generate and copy PKI certs to each SUT](#prep-os-generate-and-copy-pki-certs-to-each-sut)
@@ -325,6 +328,18 @@ variables, it will default the version to the value of
 Simp::BeakerHelpers::DEFAULT_PUPPET_AGENT_VERSION, which is currently '1.10.4'.
 
 ## Environment variables
+
+#### `BEAKER_SIMP_webserve`
+
+If set, will start up a local web server that serves the directory specified in
+this environment variable as the web server root directory on the port
+specified by `BEAKER_SIMP_webserve_port`.
+
+The web server will be destroyed on application exit.
+
+#### `BEAKER_SIMP_webserve_port`
+
+_(Default: 11111)_ The port to use for the temporary local web server.
 
 #### `BEAKER_fips`
 
