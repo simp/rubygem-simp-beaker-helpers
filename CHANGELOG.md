@@ -1,3 +1,8 @@
+### 1.10.14 / 2018-08-01
+* Pinned `net-telnet` to `~> 0.1.1` for all releases due to dropping support
+  for Ruby less than 2.3 in `0.2.X`. This should be removed once we drop
+  support for Ruby 1.9 (late October 2018).
+
 ### 1.10.13 / 2018-07-24
 * Update puppet to puppet-agent mapping table for puppet-agent 1.10.14
 
