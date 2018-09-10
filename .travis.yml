@@ -8,8 +8,7 @@ bundler_args: "--without development --path .vendor"
 notifications:
   email: false
 rvm:
-  - 2.1.9
-  - 2.4.2
+  - 2.4.4
 env:
   - SIMP_SKIP_NON_SIMPOS_TESTS=1
 script:
@@ -26,12 +25,12 @@ deploy:
       secure: "AlnBx0dBSxn+S97n0h14ltKUOA+6v0bc7QZPIcwGJV9nnf1hKH3pf9La1TVknEx7XgpAcM9jusQJ7hBlqvSq8z8SFF0bZk1EgSRIKc1cuYPLiGyUM2O7+AFHyCy3iCnPvKeoQmE/BJb5O1dGnbmSbf4A0fqLxA7jiHG1j7z+cnmJB1i67wovDfl13TsOXyBfbespWBMMc0BKAw56FPs9XggAk2cNusS3hd5tqW1AZPT2/xwt+d8ngkmO96u8QcichYRFQ+w+XW4H0w935wNg/dWiskJlt7TIYVAh4Ko5s2DZKf52Tne8TugALSn0LhRatpp7sw1FTTpteCW8UqK8uwGC2hM4pZViAOv4P1YObz2IPOZPriBl+cCayJdMKnotkUJliAMnw5TLiSWKLou+S0Pdj2h3fJZWdOEwRPMzIVoJtsOHG3GdNcPL6f7iU0vP/wr6FeR3uWa+fA7NHRi2Du955O8JpogjdrW08ahcAEwhtI3A4mrA08wN09axsrwr093uDRm/5h4FHyAhExJ0YiA/6kcPpUvILcLStyHe0RQDICQMdsQo2DSbnL65w3QjFa2fML2Shf9cRwX06+ia2BxozWzFD/6p3RiRtPxphnbFiUdjYSGWcwCcUgbJx9SW04lSSxOhpyItuXgxZqiybkzstXd6riu5zwg1R8TWk34="
     on:
       tags: true
-      rvm: 2.4.2
+      rvm: 2.4.4
       condition: "($SKIP_PUBLISH != true)"
   - provider: releases
     api_key:
       secure: "RoQepMSpEzpTLgSYP1apB8AcKNMoumqe/emNg9lIu4T55t7fCPVZFmoTL2/VCjpGpBY3SL6PijSRelY6B1bri+6SFz/hlWhCQ8t1hodrEX23ieFBwWyLI7TFvrCjVejkJwaj7N2nYUQBv8YxScbRp4daFaDhrPJMrfqKZUlBBQ2KEUvqienOn7Tdt4OQ7/ThRXlhBm8OGjZfaKyWDyJykef+yC1scJrl8HA71XRHxho/iojTRPqJJCKW1QNmomVWAwK6ZEvb2WrD27yZN60wEcygdbmzKxlAXrfp13Ho+ir2GjRXJr1VKNPecFTDe21fDFMLZ5VxZgOJ7TWnhz2UAQIPjDTLzEMuJci7DDvRCWMJ17pYurm0OGAeKPWZbtf5PLYouKvnjNsfY8vy+Ip6MqmhiXqqLSO9XN/jgEVFPHj8pOj0DDq6PtTB8dNJj7g60Ak0Uj5iole4/ef1DHv803/t9J6IVqULmYZREqeTg24KkZLfTSEbkhYMGjbCZGaSAGhAFLAAjEDTM19/k50TXnNt5smn31Mqt45PULcrHP4+t6hM+IsX9w05aOlcvfwWiBm9nPlBPeRn59wZ64+T729i5wgkhFcHmYE/2Ql1Hvz5FebyxJQziyw6eRvCVASTtFEkuT+Noy3v4u3G4fQl/S2OeCP4v6Fs0wlImzFE1lA="
     on:
       tags: true
-      rvm: 2.4.2
+      rvm: 2.4.4
       condition: "($SKIP_PUBLISH != true)"
