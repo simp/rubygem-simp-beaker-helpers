@@ -1,3 +1,6 @@
+### 1.11.0 / 2018-09-09
+* Add support for Beaker 4
+
 ### 1.10.14 / 2018-08-01
 * Pinned `net-telnet` to `~> 0.1.1` for all releases due to dropping support
   for Ruby less than 2.3 in `0.2.X`. This should be removed once we drop

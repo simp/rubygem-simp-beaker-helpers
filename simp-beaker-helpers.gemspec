@@ -18,18 +18,21 @@ Gem::Specification.new do |s|
   s.metadata = {
                  'issue_tracker' => 'https://simp-project.atlassian.net'
                }
-  s.add_runtime_dependency 'beaker', '~> 3.14'
-  s.add_runtime_dependency 'beaker-puppet', '~> 0.8.0'
-  s.add_runtime_dependency 'beaker-puppet_install_helper', '~> 0.6'
-  s.add_runtime_dependency 'highline', '~> 1.6'
-
-  # Because fog-opensack dropped support for Ruby < 2.2.0
-  # TODO: Update this when we no longer support Ruby 2.1.9 (should be October 2018)
-  s.add_runtime_dependency 'fog-openstack', '0.1.25'
+  s.add_runtime_dependency 'beaker'                      , '~> 4.0'
+  s.add_runtime_dependency 'beaker-rspec'                , '~> 6.2'
+  s.add_runtime_dependency 'beaker-puppet'               , '~> 1.0'
+  s.add_runtime_dependency 'beaker-docker'               , '~> 0.3'
+  s.add_runtime_dependency 'beaker-vagrant'              , '~> 0.5'
+  s.add_runtime_dependency 'beaker-puppet_install_helper', '~> 0.9'
+  s.add_runtime_dependency 'highline'                    , '~> 1.6'
 
   # Because net-telnet dropped support for Ruby < 2.3.0
   # TODO: Update this when we no longer support Ruby 2.1.9 (should be October 2018)
   s.add_runtime_dependency 'net-telnet', '~> 0.1.1'
+
+  # Because net-telnet dropped support for Ruby < 2.2.0
+  # TODO: Update this when we no longer support Ruby 2.1.9 (should be October 2018)
+  s.add_runtime_dependency 'rubocop', '~> 0.57.2'
 
 
   ### s.files = Dir['Rakefile', '{bin,lib,spec}/**/*', 'README*', 'LICENSE*'] & `git ls-files -z .`.split("\0")

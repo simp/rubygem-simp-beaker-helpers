@@ -1,6 +1,10 @@
+require 'beaker-puppet'
+
 module Simp; end
 
 module Simp::BeakerHelpers
+  include BeakerPuppet
+
   require 'simp/beaker_helpers/version'
   require 'simp/beaker_helpers/inspec'
   require 'simp/beaker_helpers/ssg'
