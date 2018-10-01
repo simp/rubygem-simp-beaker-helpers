@@ -1,5 +1,7 @@
-### 1.11.0 / 2018-09-09
+### 1.11.0 / 2018-10-01
 * Add support for Beaker 4
+* Change InSpec to use the 'reporter' option instead of 'format'
+* Update the SSG to point to the new ComplianceAsCode repository
 
 ### 1.10.14 / 2018-08-01
 * Pinned `net-telnet` to `~> 0.1.1` for all releases due to dropping support
