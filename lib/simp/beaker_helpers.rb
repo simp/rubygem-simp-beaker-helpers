@@ -607,15 +607,15 @@ done
   # Writes a YAML file in the Hiera :datadir of a Beaker::Host.
   #
   # @note This is useless unless Hiera is configured to use the data file.
-  #   @see `Beaker::DSL::Helpers::Hiera#write_hiera_config_on`
+  #   @see `#write_hiera_config_on`
   #
   # @param sut  [Array<Host>, String, Symbol] One or more hosts to act upon.
   #
   # @param heradata [Hash, String] The full hiera data structure to write to
   #   the system.
   #
-  # @param terminus [String] The basename of the YAML file minus the extension
-  #   to write to the system.
+  # @param terminus [String]  DEPRECATED - This will be removed in a future
+  #   release and currently has no effect.
   #
   # @return [Nil]
   #
@@ -623,12 +623,12 @@ done
   #   using `#clear_temp_hieradata` in the `after(:all)` hook.  It may also be
   #   retained for debugging purposes.
   #
-  def write_hieradata_to(sut, hieradata, terminus = 'default')
+  def write_hieradata_to(sut, hieradata, terminus = 'deprecated')
     @temp_hieradata_dirs ||= []
     data_dir = Dir.mktmpdir('hieradata')
     @temp_hieradata_dirs << data_dir
 
-    fh = File.open(File.join(data_dir, "#{terminus}.yaml"), 'w')
+    fh = File.open(File.join(data_dir, 'common.yaml'), 'w')
     if hieradata.is_a?(String)
       fh.puts(hieradata)
     else
@@ -636,10 +636,63 @@ done
     end
     fh.close
 
-    apply_manifest_on sut, "file { '#{hiera_datadir(sut)}': ensure => 'directory', force => true }"
-    copy_hiera_data_to sut, File.join(data_dir, "#{terminus}.yaml")
+    copy_hiera_data_to sut, File.join(data_dir, 'common.yaml')
   end
 
+  # A shim to stand in for the now deprecated copy_hiera_data_to function
+  #
+  # @param sut [Host]  One host to act upon
+  #
+  # @param [Path] File containing hiera data
+  def copy_hiera_data_to(sut, path)
+    copy_to(sut, path, hiera_datadir(sut))
+  end
+
+  # A shim to stand in for the now deprecated hiera_datadir function
+  #
+  # Note: This may not work if you've shoved data somewhere that is not the
+  # default and/or are manipulating the default hiera.yaml.
+  #
+  # @param sut  [Host] One host to act upon
+  #
+  # @returns [String] Path to the Hieradata directory on the target system
+  def hiera_datadir(sut)
+    # This output lets us know where Hiera is configured to look on the system
+    puppet_lookup_info = on(sut, 'puppet lookup --explain test__simp__test').output.strip.lines
+
+    # Get the target manifest path
+    # This provides us with a base directory from which to start
+    puppet_env_path = File.dirname(on(sut, 'puppet config print manifest').output.strip)
+
+    # We'll just take the first match since Hiera will find things there
+    puppet_lookup_info = puppet_lookup_info.grep(/Path "/).grep(Regexp.new(puppet_env_path))
+
+    # Grep always returns an Array
+    if puppet_lookup_info.empty?
+      fail("Could not determine hiera data directory under #{puppet_env_path} on #{sut}")
+    end
+
+    # Snag the actual path without the extra bits
+    puppet_lookup_info = puppet_lookup_info.first.strip.split('"').last
+
+    # We just want the data directory name
+    datadir_name = puppet_lookup_info.split(puppet_env_path).last
+
+    # Grab the file separator to add back later
+    file_sep = datadir_name[0]
+
+    # Snag the first entry (this is the data directory)
+    datadir_name = datadir_name.split(file_sep)[1]
+
+    # Constitute the full path to the data directory
+    datadir_path = puppet_env_path + file_sep + datadir_name
+
+    # Make the directory if it does not exist (it usually does not)
+    sut.mkdir_p(datadir_path)
+
+    # Return the path to the data directory
+    return datadir_path
+  end
 
   # Write the provided data structure to Hiera's :datadir and configure Hiera to
   # use that data exclusively.
@@ -652,14 +705,14 @@ done
   # @param heradata [Hash, String] The full hiera data structure to write to
   #   the system.
   #
-  # @param terminus [String] The basename of the YAML file minus the extension
-  #   to write to the system.
+  # @param terminus [String] DEPRECATED - Will be removed in a future release.
+  #        All hieradata is written to the first discovered path via 'puppet
+  #        lookup'
   #
   # @return [Nil]
   #
-  def set_hieradata_on(sut, hieradata, terminus = 'default')
-    write_hieradata_to sut, hieradata, terminus
-    write_hiera_config_on sut, Array(terminus)
+  def set_hieradata_on(sut, hieradata, terminus = 'deprecated')
+    write_hieradata_to sut, hieradata, 'common'
   end
 
 

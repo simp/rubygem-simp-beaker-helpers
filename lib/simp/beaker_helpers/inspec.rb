@@ -56,7 +56,7 @@ module Simp::BeakerHelpers
     def run
       sut_inspec_results = '/tmp/inspec_results.json'
 
-      inspec_cmd = "inspec exec --format json #{@test_dir} > #{sut_inspec_results}"
+      inspec_cmd = "inspec exec '#{@test_dir}' --reporter json > #{sut_inspec_results}"
       result = on(@sut, inspec_cmd, :accept_all_exit_codes => true)
 
       tmpdir = Dir.mktmpdir
