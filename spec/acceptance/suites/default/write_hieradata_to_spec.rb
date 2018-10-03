@@ -11,7 +11,7 @@ hosts.each do |host|
       end
 
       it 'writes the correct contents to the correct file' do
-        stdout = on(host, "cat #{hiera_datadir(host)}/default.yaml").stdout
+        stdout = on(host, "cat #{hiera_datadir(host)}/common.yaml").stdout
         expect(stdout).to eq("---\n")
       end
     end
@@ -25,22 +25,8 @@ hosts.each do |host|
       end
 
       it 'writes the correct contents to the correct file' do
-        stdout = on(host, "cat #{hiera_datadir(host)}/default.yaml").stdout
+        stdout = on(host, "cat #{hiera_datadir(host)}/common.yaml").stdout
         expect(stdout).to eq("---\nfoo: bar\n")
-      end
-    end
-
-    context 'when the terminus is set' do
-      before(:all) { set_hieradata_on(host, "---\n", 'not-default') }
-      after(:all) { on(host, "rm -rf #{hiera_datadir(host)}") }
-
-      it 'creates the datadir' do
-        on host, "test -d #{hiera_datadir(host)}"
-      end
-
-      it 'writes the correct contents to the correct file' do
-        stdout = on(host, "cat #{hiera_datadir(host)}/not-default.yaml").stdout
-        expect(stdout).to eq("---\n")
       end
     end
   end

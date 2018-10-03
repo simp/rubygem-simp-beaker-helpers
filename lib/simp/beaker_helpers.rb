@@ -83,9 +83,7 @@ module Simp::BeakerHelpers
 
   # Returns the modulepath on the SUT, as an Array
   def puppet_modulepath_on(sut, environment='production')
-    on(
-      sut, "puppet config print --section main modulepath --environment #{environment} 2>/dev/null"
-    ).output.lines.last.strip.split(':')
+    sut.puppet['modulepath'].split(':')
   end
 
   # Return the path to the 'spec/fixtures' directory
@@ -660,9 +658,11 @@ done
     # This output lets us know where Hiera is configured to look on the system
     puppet_lookup_info = on(sut, 'puppet lookup --explain test__simp__test').output.strip.lines
 
-    # Get the target manifest path
-    # This provides us with a base directory from which to start
-    puppet_env_path = File.dirname(on(sut, 'puppet config print manifest').output.strip)
+    if sut.puppet['manifest'].nil? || sut.puppet['manifest'].empty?
+      fail("No output returned from `puppet config print manifest` on #{sut}")
+    end
+
+    puppet_env_path = File.dirname(sut.puppet['manifest'])
 
     # We'll just take the first match since Hiera will find things there
     puppet_lookup_info = puppet_lookup_info.grep(/Path "/).grep(Regexp.new(puppet_env_path))
@@ -712,7 +712,7 @@ done
   # @return [Nil]
   #
   def set_hieradata_on(sut, hieradata, terminus = 'deprecated')
-    write_hieradata_to sut, hieradata, 'common'
+    write_hieradata_to sut, hieradata
   end
 
 
