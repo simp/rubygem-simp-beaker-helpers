@@ -5,7 +5,7 @@ module Simp::BeakerHelpers
     if ENV['BEAKER_ssg_repo']
       GIT_REPO = ENV['BEAKER_ssg_repo']
     else
-      GIT_REPO = 'https://github.com/OpenSCAP/scap-security-guide.git'
+      GIT_REPO = 'https://github.com/ComplianceAsCode/content.git'
     end
 
     # If this is not set, the closest tag to the default branch will be used
@@ -143,15 +143,15 @@ module Simp::BeakerHelpers
       if ssg_release
         copy_to(@sut, ssg_release, @scap_working_dir)
 
-        on(@sut, %(mkdir -p scap-security-guide && tar -xj -C scap-security-guide --strip-components 1 -f #{ssg_release} && cp scap-security-guide/*ds.xml #{@scap_working_dir}))
+        on(@sut, %(mkdir -p scap-content && tar -xj -C scap-content --strip-components 1 -f #{ssg_release} && cp scap-content/*ds.xml #{@scap_working_dir}))
       else
-        on(@sut, %(git clone #{GIT_REPO}))
+        on(@sut, %(git clone #{GIT_REPO} scap-content))
         if GIT_BRANCH
-          on(@sut, %(cd scap-security-guide; git checkout #{GIT_BRANCH}))
+          on(@sut, %(cd scap-content; git checkout #{GIT_BRANCH}))
         else
-          on(@sut, %(cd scap-security-guide; git checkout $(git describe --abbrev=0 --tags)))
+          on(@sut, %(cd scap-content; git checkout $(git describe --abbrev=0 --tags)))
         end
-        on(@sut, %(cd scap-security-guide/build; cmake ../; make -j4 #{OS_INFO[@os][@os_rel]['ssg']['build_target']}-content && cp *ds.xml #{@scap_working_dir}))
+        on(@sut, %(cd scap-content/build; cmake ../; make -j4 #{OS_INFO[@os][@os_rel]['ssg']['build_target']}-content && cp *ds.xml #{@scap_working_dir}))
       end
     end
   end

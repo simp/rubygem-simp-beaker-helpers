@@ -1,4 +1,11 @@
-### 1.11.0 / 2018-09-09
+### 1.11.1 / 2018-10-03
+* Deprecate the 'terminus' parameter in 'write_hieradata_to' and 'set_hieradata_on'
+* Add 'copy_hiera_data_to' method to replace the one from beaker-hiera
+* Add 'hiera_datadir' method to replace the one from beaker-hiera
+* Change InSpec to use the 'reporter' option instead of 'format'
+* Update the SSG to point to the new ComplianceAsCode repository
+
+### 1.11.0 / 2018-10-01
 * Add support for Beaker 4
 
 ### 1.10.14 / 2018-08-01
