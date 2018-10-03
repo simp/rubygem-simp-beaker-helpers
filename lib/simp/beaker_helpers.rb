@@ -675,6 +675,9 @@ done
     # Snag the actual path without the extra bits
     puppet_lookup_info = puppet_lookup_info.first.strip.split('"').last
 
+    # Make the parent directories exist
+    sut.mkdir_p(File.dirname(puppet_lookup_info))
+
     # We just want the data directory name
     datadir_name = puppet_lookup_info.split(puppet_env_path).last
 
@@ -686,9 +689,6 @@ done
 
     # Constitute the full path to the data directory
     datadir_path = puppet_env_path + file_sep + datadir_name
-
-    # Make the directory if it does not exist (it usually does not)
-    sut.mkdir_p(datadir_path)
 
     # Return the path to the data directory
     return datadir_path
