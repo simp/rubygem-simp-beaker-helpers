@@ -609,7 +609,7 @@ done
   #
   # @param sut  [Array<Host>, String, Symbol] One or more hosts to act upon.
   #
-  # @param heradata [Hash, String] The full hiera data structure to write to
+  # @param hieradata [Hash, String] The full hiera data structure to write to
   #   the system.
   #
   # @param terminus [String]  DEPRECATED - This will be removed in a future
