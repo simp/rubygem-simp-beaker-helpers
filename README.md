@@ -35,6 +35,7 @@ Methods to assist beaker acceptance tests for SIMP.
     * [`install_puppet`](#install_puppet)
 * [Environment variables](#environment-variables-1)
     * [`BEAKER_fips`](#beaker_fips)
+    * [`BEAKER_fips_module_version`](#beaker_fips_module_version)
     * [`BEAKER_SIMP_parallel`](#beaker_simp_parallel)
     * [`BEAKER_spec_prep`](#beaker_spec_prep)
     * [`BEAKER_stringify_facts`](#beaker_stringify_facts)
@@ -331,6 +332,12 @@ Simp::BeakerHelpers::DEFAULT_PUPPET_AGENT_VERSION, which is currently '1.10.4'.
 _(Default: `no`)_ When set to `yes`, Beaker will enable [FIPS mode](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Security_Guide/sect-Security_Guide-Federal_Standards_And_Regulations-Federal_Information_Processing_Standard.html) on all SUTs before running tests.
 
 **NOTE:** FIPS mode is only enabled on RedHat family hosts.
+
+#### `BEAKER_fips_module_version`
+
+_(Default: unset)_ Set to a version of the simp-fips Puppet module released
+to Puppet Forge, when you want to specify the version of that module used to
+implement enable FIPS. When unset, the latest version is used.
 
 #### `BEAKER_spec_prep`
 

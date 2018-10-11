@@ -228,56 +228,27 @@ module Simp::BeakerHelpers
 
       # We need to be able to get back into our system!
       # Make these safe for all systems, even old ones.
+      # TODO Use simp-ssh Puppet module appropriately (i.e., in a fashion
+      #      that doesn't break vagrant access and is appropriate for
+      #      typical module tests.)
       fips_ssh_ciphers = [ 'aes256-cbc','aes192-cbc','aes128-cbc']
       on(sut, %(sed -i '/Ciphers /d' /etc/ssh/sshd_config))
       on(sut, %(echo 'Ciphers #{fips_ssh_ciphers.join(',')}' >> /etc/ssh/sshd_config))
 
-      if fact_on(sut, 'osfamily') == 'RedHat'
-        pp = <<-EOS
-        # This is necessary to prevent a kernel panic after rebooting into FIPS
-        # (last checked: 20150928)
-          package { ['kernel'] : ensure => 'latest' }
-
-          package { ['dracut-fips'] : ensure => 'latest' }
-          ~>
-          exec { 'Always run dracut after installing dracut-fips':
-            path        => ['/usr/bin', '/sbin'],
-            command     => 'dracut -f',
-            refreshonly => true
-          }
-
-          package { ['grubby'] : ensure => 'latest' }
-          ~>
-          exec{ 'setup_fips':
-            command     => '/bin/bash /root/setup_fips.sh',
-            refreshonly => true,
-          }
-
-          file{ '/root/setup_fips.sh':
-            ensure  => 'file',
-            owner   => 'root',
-            group   => 'root',
-            mode    => '0700',
-            content => "#!/bin/bash
-
-# FIPS
-if [ -e /sys/firmware/efi ]; then
-  BOOTDEV=`df /boot/efi | tail -1 | cut -f1 -d' '`
-else
-  BOOTDEV=`df /boot | tail -1 | cut -f1 -d' '`
-fi
-# In case you need a working fallback
-DEFAULT_KERNEL_INFO=`/sbin/grubby --default-kernel`
-DEFAULT_INITRD=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep initrd | cut -f2 -d'='`
-DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 title | cut -f2 -d'='`
-/sbin/grubby --copy-default --make-default --args=\\\"boot=\\\${BOOTDEV} fips=1\\\" --add-kernel=`/sbin/grubby --default-kernel` --initrd=\\\${DEFAULT_INITRD} --title=\\\"FIPS \\\${DEFAULT_KERNEL_TITLE}\\\"
-",
-            notify => Exec['setup_fips']
-          }
-        EOS
-        apply_manifest_on(sut, pp, :catch_failures => false)
-        on( sut, 'shutdown -r now', { :expect_connection_failure => true } )
+      # Use the simp-fips Puppet module to set FIPS up properly:
+      # Download the appropriate version of the module and its dependencies from PuppetForge.
+      # TODO provide a R10k download option in which user provides a Puppetfile
+      # with simp-fips and its dependencies
+      on(sut, 'mkdir -p /root/test_prep/modules')
+      module_install_cmd = 'puppet module install simp-fips --target-dir=/root/test_prep/modules'
+      if ENV['BEAKER_fips_module_version']
+        module_install_cmd += " --version #{ENV['BEAKER_fips_module_version']}"
       end
+      on(sut, module_install_cmd)
+
+      # Enable FIPS and then reboot to finish.
+      on(sut, 'puppet apply --verbose --modulepath=/root/test_prep/modules -e "class { \'fips\': enabled => true }"')
+      sut.reboot
     end
   end
 

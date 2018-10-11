@@ -1,6 +1,7 @@
 ### 1.11.2 / 2018-10-11
 * Copy ssh keys in home directories to simp standard '/etc/ssh/local_keys/'
   to avoid error when certain simp puppet modules are applied
+* Fix enable_fips_mode_on(), which no longer works on centos/7 vagrant boxes.
 
 ### 1.11.1 / 2018-10-03
 * Deprecate the 'terminus' parameter in 'write_hieradata_to' and 'set_hieradata_on'
