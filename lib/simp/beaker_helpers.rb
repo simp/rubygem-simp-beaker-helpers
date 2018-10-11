@@ -373,6 +373,15 @@ DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 t
       on sut, 'puppet resource group puppet gid=52'
       on sut, 'puppet resource user puppet comment="Puppet" gid="52" uid="52" home="/var/lib/puppet" managehome=true'
 
+      # SIMP uses a central ssh key location, but some keys are only home dirs
+      on(sut, "mkdir -p /etc/ssh/local_keys")
+      on(sut, "for path in `find / -wholename '/home/*/.ssh/authorized_keys'`;"\
+              "do echo $path; user=`ls -l $path | awk '{print $3}'`;"\
+              "echo $user; cp --preserve=all -f $path /etc/ssh/local_keys/$user; done")
+      on(sut, "if [ -f /root/.ssh/authorized_keys ]; then cp --preserve=all -f /root/.ssh/authorized_keys /etc/ssh/local_keys/root; fi")
+      on(sut, "chown -R root:root /etc/ssh/local_keys")
+      on(sut, "chmod 644 /etc/ssh/local_keys/*")
+
       # SIMP uses structured facts, therefore stringify_facts must be disabled
       unless ENV['BEAKER_stringify_facts'] == 'yes'
         on sut, 'puppet config set stringify_facts false'
