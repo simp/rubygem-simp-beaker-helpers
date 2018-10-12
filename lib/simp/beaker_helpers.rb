@@ -104,19 +104,27 @@ module Simp::BeakerHelpers
   # Locates .fixture.yml in or above this directory.
   def fixtures_yml_path
     STDERR.puts '  ** fixtures_yml_path' if ENV['BEAKER_helpers_verbose']
-    fixtures_yml = ''
-    dir          = '.'
-    while( fixtures_yml.empty? && File.expand_path(dir) != '/' ) do
-      file = File.expand_path( '.fixtures.yml', dir )
-      STDERR.puts "  ** fixtures_yml_path: #{file}" if ENV['BEAKER_helpers_verbose']
-      if File.exists? file
-        fixtures_yml = file
-        break
+
+    if ENV['FIXTURES_YML']
+      fixtures_yml = ENV['FIXTURES_YML']
+    else
+      fixtures_yml = ''
+      dir          = '.'
+      while( fixtures_yml.empty? && File.expand_path(dir) != '/' ) do
+        file = File.expand_path( '.fixtures.yml', dir )
+        STDERR.puts "  ** fixtures_yml_path: #{file}" if ENV['BEAKER_helpers_verbose']
+        if File.exists? file
+          fixtures_yml = file
+          break
+        end
+        dir = "#{dir}/.."
       end
-      dir = "#{dir}/.."
     end
-    raise 'ERROR: cannot locate .fixtures.yml!' if fixtures_yml.empty?
+
+    raise 'ERROR: cannot locate .fixtures.yml!' if fixtures_yml.empty? || !File.exist?(fixtures_yml)
+
     STDERR.puts "  ** fixtures_yml_path:finished (file: '#{file}')" if ENV['BEAKER_helpers_verbose']
+
     fixtures_yml
   end
 
@@ -235,19 +243,32 @@ module Simp::BeakerHelpers
       on(sut, %(sed -i '/Ciphers /d' /etc/ssh/sshd_config))
       on(sut, %(echo 'Ciphers #{fips_ssh_ciphers.join(',')}' >> /etc/ssh/sshd_config))
 
-      # Use the simp-fips Puppet module to set FIPS up properly:
-      # Download the appropriate version of the module and its dependencies from PuppetForge.
-      # TODO provide a R10k download option in which user provides a Puppetfile
-      # with simp-fips and its dependencies
-      on(sut, 'mkdir -p /root/test_prep/modules')
-      module_install_cmd = 'puppet module install simp-fips --target-dir=/root/test_prep/modules'
-      if ENV['BEAKER_fips_module_version']
-        module_install_cmd += " --version #{ENV['BEAKER_fips_module_version']}"
+      fips_enable_modulepath = ''
+
+      if pupmods_in_fixtures_yml.include?('fips')
+        copy_fixture_modules_to(sut)
+      else
+        # If we don't already have the simp-fips module installed
+        #
+        # Use the simp-fips Puppet module to set FIPS up properly:
+        # Download the appropriate version of the module and its dependencies from PuppetForge.
+        # TODO provide a R10k download option in which user provides a Puppetfile
+        # with simp-fips and its dependencies
+        on(sut, 'mkdir -p /root/.beaker_fips/modules')
+
+        fips_enable_modulepath = '--modulepath=/root/.beaker_fips/modules'
+
+        module_install_cmd = 'puppet module install simp-fips --target-dir=/root/.beaker_fips/modules'
+
+        if ENV['BEAKER_fips_module_version']
+          module_install_cmd += " --version #{ENV['BEAKER_fips_module_version']}"
+        end
+
+        on(sut, module_install_cmd)
       end
-      on(sut, module_install_cmd)
 
       # Enable FIPS and then reboot to finish.
-      on(sut, 'puppet apply --verbose --modulepath=/root/test_prep/modules -e "class { \'fips\': enabled => true }"')
+      on(sut, %(puppet apply --verbose #{fips_enable_modulepath} -e "class { 'fips': enabled => true }"))
       sut.reboot
     end
   end
