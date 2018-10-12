@@ -1,3 +1,7 @@
+### 1.11.2 / 2018-10-11
+* Copy ssh keys in home directories to simp standard '/etc/ssh/local_keys/'
+  to avoid error when certain simp puppet modules are applied
+
 ### 1.11.1 / 2018-10-03
 * Deprecate the 'terminus' parameter in 'write_hieradata_to' and 'set_hieradata_on'
 * Add 'copy_hiera_data_to' method to replace the one from beaker-hiera
