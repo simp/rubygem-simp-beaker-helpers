@@ -121,7 +121,7 @@ module Simp::BeakerHelpers
       end
     end
 
-    raise 'ERROR: cannot locate .fixtures.yml!' if fixtures_yml.empty? || !File.exist?(fixtures_yml)
+    raise 'ERROR: cannot locate .fixtures.yml!' if fixtures_yml.empty?
 
     STDERR.puts "  ** fixtures_yml_path:finished (file: '#{file}')" if ENV['BEAKER_helpers_verbose']
 
