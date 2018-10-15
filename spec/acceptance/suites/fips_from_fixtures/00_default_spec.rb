@@ -10,7 +10,7 @@ end
 require 'yaml'
 require 'tempfile'
 
-@alt_fixtures = '.fips_fixtures.yml'
+alt_fixtures = File.absolute_path('.fips_fixtures.yml')
 
 new_fixtures = {
   'fixtures' => {
@@ -24,31 +24,31 @@ new_fixtures['fixtures']['repositories']['augeasproviders_grub'] = 'https://gith
 new_fixtures['fixtures']['repositories']['simplib'] = 'https://github.com/simp/pupmod-simp-simplib'
 new_fixtures['fixtures']['repositories']['stdlib'] = 'https://github.com/simp/puppetlabs-stdlib'
 
-File.open(@alt_fixtures, 'w'){ |fh| fh.puts(new_fixtures.to_yaml) }
+File.open(alt_fixtures, 'w'){ |fh| fh.puts(new_fixtures.to_yaml) }
 
 ScrubFixtures.new
 
 ENV['BEAKER_fips'] = 'yes'
-ENV['FIXTURES_YML'] = @alt_fixtures
+ENV['FIXTURES_YML'] = alt_fixtures
 
 Bundler.with_clean_env{
-  ENV['FIXTURES_YML'] = @alt_fixtures
+  ENV['FIXTURES_YML'] = alt_fixtures
 
   %x{bundle exec rake spec_prep}
 }
 
 require 'spec_helper_acceptance'
 
-hosts.each do |host|
-  describe 'FIPS pre-installed' do
-    after(:suite) do
-      if @alt_fixtures && File.exist?(@alt_fixtures)
-        FileUtils.rm(@alt_fixtures)
+describe 'FIPS pre-installed' do
+  after(:all) do
+    if alt_fixtures && File.exist?(alt_fixtures)
+      FileUtils.rm(alt_fixtures)
 
-        ScrubFixtures.new
-      end
+      ScrubFixtures.new
     end
+  end
 
+  hosts.each do |host|
     context "on #{host}" do
       it 'does not create an alternate apply directory' do
         on(host, 'test ! -d /root/.beaker_fips/modules')
