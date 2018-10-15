@@ -1,5 +1,5 @@
 ---
 fixtures:
   repositories:
-    stdlib: "git://github.com/simp/puppetlabs-stdlib"
+    stdlib: "https://github.com/simp/puppetlabs-stdlib"
 

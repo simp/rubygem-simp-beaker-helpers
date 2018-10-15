@@ -104,19 +104,27 @@ module Simp::BeakerHelpers
   # Locates .fixture.yml in or above this directory.
   def fixtures_yml_path
     STDERR.puts '  ** fixtures_yml_path' if ENV['BEAKER_helpers_verbose']
-    fixtures_yml = ''
-    dir          = '.'
-    while( fixtures_yml.empty? && File.expand_path(dir) != '/' ) do
-      file = File.expand_path( '.fixtures.yml', dir )
-      STDERR.puts "  ** fixtures_yml_path: #{file}" if ENV['BEAKER_helpers_verbose']
-      if File.exists? file
-        fixtures_yml = file
-        break
+
+    if ENV['FIXTURES_YML']
+      fixtures_yml = ENV['FIXTURES_YML']
+    else
+      fixtures_yml = ''
+      dir          = '.'
+      while( fixtures_yml.empty? && File.expand_path(dir) != '/' ) do
+        file = File.expand_path( '.fixtures.yml', dir )
+        STDERR.puts "  ** fixtures_yml_path: #{file}" if ENV['BEAKER_helpers_verbose']
+        if File.exists? file
+          fixtures_yml = file
+          break
+        end
+        dir = "#{dir}/.."
       end
-      dir = "#{dir}/.."
     end
+
     raise 'ERROR: cannot locate .fixtures.yml!' if fixtures_yml.empty?
+
     STDERR.puts "  ** fixtures_yml_path:finished (file: '#{file}')" if ENV['BEAKER_helpers_verbose']
+
     fixtures_yml
   end
 
@@ -228,56 +236,40 @@ module Simp::BeakerHelpers
 
       # We need to be able to get back into our system!
       # Make these safe for all systems, even old ones.
+      # TODO Use simp-ssh Puppet module appropriately (i.e., in a fashion
+      #      that doesn't break vagrant access and is appropriate for
+      #      typical module tests.)
       fips_ssh_ciphers = [ 'aes256-cbc','aes192-cbc','aes128-cbc']
       on(sut, %(sed -i '/Ciphers /d' /etc/ssh/sshd_config))
       on(sut, %(echo 'Ciphers #{fips_ssh_ciphers.join(',')}' >> /etc/ssh/sshd_config))
 
-      if fact_on(sut, 'osfamily') == 'RedHat'
-        pp = <<-EOS
-        # This is necessary to prevent a kernel panic after rebooting into FIPS
-        # (last checked: 20150928)
-          package { ['kernel'] : ensure => 'latest' }
+      fips_enable_modulepath = ''
 
-          package { ['dracut-fips'] : ensure => 'latest' }
-          ~>
-          exec { 'Always run dracut after installing dracut-fips':
-            path        => ['/usr/bin', '/sbin'],
-            command     => 'dracut -f',
-            refreshonly => true
-          }
+      if pupmods_in_fixtures_yml.include?('fips')
+        copy_fixture_modules_to(sut)
+      else
+        # If we don't already have the simp-fips module installed
+        #
+        # Use the simp-fips Puppet module to set FIPS up properly:
+        # Download the appropriate version of the module and its dependencies from PuppetForge.
+        # TODO provide a R10k download option in which user provides a Puppetfile
+        # with simp-fips and its dependencies
+        on(sut, 'mkdir -p /root/.beaker_fips/modules')
 
-          package { ['grubby'] : ensure => 'latest' }
-          ~>
-          exec{ 'setup_fips':
-            command     => '/bin/bash /root/setup_fips.sh',
-            refreshonly => true,
-          }
+        fips_enable_modulepath = '--modulepath=/root/.beaker_fips/modules'
 
-          file{ '/root/setup_fips.sh':
-            ensure  => 'file',
-            owner   => 'root',
-            group   => 'root',
-            mode    => '0700',
-            content => "#!/bin/bash
+        module_install_cmd = 'puppet module install simp-fips --target-dir=/root/.beaker_fips/modules'
 
-# FIPS
-if [ -e /sys/firmware/efi ]; then
-  BOOTDEV=`df /boot/efi | tail -1 | cut -f1 -d' '`
-else
-  BOOTDEV=`df /boot | tail -1 | cut -f1 -d' '`
-fi
-# In case you need a working fallback
-DEFAULT_KERNEL_INFO=`/sbin/grubby --default-kernel`
-DEFAULT_INITRD=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep initrd | cut -f2 -d'='`
-DEFAULT_KERNEL_TITLE=`/sbin/grubby --info=\\\${DEFAULT_KERNEL_INFO} | grep -m1 title | cut -f2 -d'='`
-/sbin/grubby --copy-default --make-default --args=\\\"boot=\\\${BOOTDEV} fips=1\\\" --add-kernel=`/sbin/grubby --default-kernel` --initrd=\\\${DEFAULT_INITRD} --title=\\\"FIPS \\\${DEFAULT_KERNEL_TITLE}\\\"
-",
-            notify => Exec['setup_fips']
-          }
-        EOS
-        apply_manifest_on(sut, pp, :catch_failures => false)
-        on( sut, 'shutdown -r now', { :expect_connection_failure => true } )
+        if ENV['BEAKER_fips_module_version']
+          module_install_cmd += " --version #{ENV['BEAKER_fips_module_version']}"
+        end
+
+        on(sut, module_install_cmd)
       end
+
+      # Enable FIPS and then reboot to finish.
+      on(sut, %(puppet apply --verbose #{fips_enable_modulepath} -e "class { 'fips': enabled => true }"))
+      sut.reboot
     end
   end
 
