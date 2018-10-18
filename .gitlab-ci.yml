@@ -33,13 +33,14 @@ before_script:
   tags: ['beaker']
   cache:
     policy: 'pull'
-  dependencies: []
   artifacts:
     when: 'always'
     paths:
       - 'Gemfile.lock'
   retry: 1
   script:
+    - 'bundle exec rake spec_clean'
+    - 'bundle exec rake spec_prep'
     - 'bundle exec rake beaker:suites'
 
 # ----------------------------------------------------------------------
@@ -67,6 +68,10 @@ before_script:
 .simp_6_1: &simp_6_1
   variables:
     PUPPET_VERSION: '~> 4.10.4'
+
+.pe_2018_1: &pe_2018_1
+  variables:
+    PUPPET_VERSION: '~> 5.5'
 
 #=======================================================================
 # Basic Sanity Checks
@@ -100,7 +105,6 @@ unit:
     - 'bundle exec rake spec'
   cache:
     policy: 'pull'
-  dependencies: []
   artifacts:
     when: 'always'
     paths:
@@ -112,6 +116,10 @@ unit:
 el-simp_6_1-default:
   <<: *acceptance_base
   <<: *simp_6_1
+
+el-pe_2018_1-default:
+  <<: *acceptance_base
+  <<: *pe_2018_1
 
 el-simp_6_1-default-fips:
   <<: *acceptance_base
