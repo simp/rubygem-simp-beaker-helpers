@@ -1,3 +1,6 @@
+### 1.11.3 / 2018-10-18
+* Skip most of fix_errata_on on windows platforms
+
 ### 1.11.2 / 2018-10-11
 * Copy ssh keys in home directories to simp standard '/etc/ssh/local_keys/'
   to avoid error when certain simp puppet modules are applied

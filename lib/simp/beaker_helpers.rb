@@ -226,7 +226,13 @@ module Simp::BeakerHelpers
     puts '== configuring FIPS mode on SUTs'
     puts '  -- (use BEAKER_fips=no to disable)'
     parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+
     block_on(suts, :run_in_parallel => parallel) do |sut|
+      if sut[:platform] =~ /windows/
+        puts "  -- SKIPPING #{sut} because it is windows"
+        next
+      end
+
       puts "  -- enabling FIPS on '#{sut}'"
 
       # We need to use FIPS compliant algorithms and keylengths as per the FIPS
@@ -357,49 +363,58 @@ module Simp::BeakerHelpers
     end
   end
 
+  def linux_errata( sut )
+    # We need to be able to flip between server and client without issue
+    on sut, 'puppet resource group puppet gid=52'
+    on sut, 'puppet resource user puppet comment="Puppet" gid="52" uid="52" home="/var/lib/puppet" managehome=true'
+
+    # SIMP uses a central ssh key location, but some keys are only home dirs
+    on(sut, "mkdir -p /etc/ssh/local_keys")
+    on(sut, "for path in `find / -wholename '/home/*/.ssh/authorized_keys'`;"\
+            "do echo $path; user=`ls -l $path | awk '{print $3}'`;"\
+            "echo $user; cp --preserve=all -f $path /etc/ssh/local_keys/$user; done")
+    on(sut, "if [ -f /root/.ssh/authorized_keys ]; then cp --preserve=all -f /root/.ssh/authorized_keys /etc/ssh/local_keys/root; fi")
+    on(sut, "chown -R root:root /etc/ssh/local_keys")
+    on(sut, "chmod 644 /etc/ssh/local_keys/*")
+
+    # SIMP uses structured facts, therefore stringify_facts must be disabled
+    unless ENV['BEAKER_stringify_facts'] == 'yes'
+      on sut, 'puppet config set stringify_facts false'
+    end
+
+    # Occasionally we run across something similar to BKR-561, so to ensure we
+    # at least have the host defaults:
+    #
+    # :hieradatadir is used as a canary here; it isn't the only missing key
+    unless sut.host_hash.key? :hieradatadir
+      configure_type_defaults_on(sut)
+    end
+
+    if fact_on(sut, 'osfamily') == 'RedHat'
+      enable_yum_repos_on(sut)
+
+      # net-tools required for netstat utility being used by be_listening
+      if fact_on(sut, 'operatingsystemmajrelease') == '7'
+        pp = <<-EOS
+          package { 'net-tools': ensure => installed }
+        EOS
+        apply_manifest_on(sut, pp, :catch_failures => false)
+      end
+
+      # Clean up YUM prior to starting our test runs.
+      on(sut, 'yum clean all')
+    end
+  end
+
   # Apply known OS fixes we need to run Beaker on each SUT
   def fix_errata_on( suts = hosts )
     parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
     block_on(suts, :run_in_parallel => parallel) do |sut|
-      # We need to be able to flip between server and client without issue
-      on sut, 'puppet resource group puppet gid=52'
-      on sut, 'puppet resource user puppet comment="Puppet" gid="52" uid="52" home="/var/lib/puppet" managehome=true'
-
-      # SIMP uses a central ssh key location, but some keys are only home dirs
-      on(sut, "mkdir -p /etc/ssh/local_keys")
-      on(sut, "for path in `find / -wholename '/home/*/.ssh/authorized_keys'`;"\
-              "do echo $path; user=`ls -l $path | awk '{print $3}'`;"\
-              "echo $user; cp --preserve=all -f $path /etc/ssh/local_keys/$user; done")
-      on(sut, "if [ -f /root/.ssh/authorized_keys ]; then cp --preserve=all -f /root/.ssh/authorized_keys /etc/ssh/local_keys/root; fi")
-      on(sut, "chown -R root:root /etc/ssh/local_keys")
-      on(sut, "chmod 644 /etc/ssh/local_keys/*")
-
-      # SIMP uses structured facts, therefore stringify_facts must be disabled
-      unless ENV['BEAKER_stringify_facts'] == 'yes'
-        on sut, 'puppet config set stringify_facts false'
-      end
-
-      # Occasionally we run across something similar to BKR-561, so to ensure we
-      # at least have the host defaults:
-      #
-      # :hieradatadir is used as a canary here; it isn't the only missing key
-      unless sut.host_hash.key? :hieradatadir
-        configure_type_defaults_on(sut)
-      end
-
-      if fact_on(sut, 'osfamily') == 'RedHat'
-        enable_yum_repos_on(sut)
-
-        # net-tools required for netstat utility being used by be_listening
-        if fact_on(sut, 'operatingsystemmajrelease') == '7'
-          pp = <<-EOS
-            package { 'net-tools': ensure => installed }
-          EOS
-          apply_manifest_on(sut, pp, :catch_failures => false)
-        end
-
-        # Clean up YUM prior to starting our test runs.
-        on(sut, 'yum clean all')
+      if sut[:platform] =~ /windows/
+        puts "  -- SKIPPING #{sut} because it is windows"
+        # DO NOTHING
+      else
+        linux_errata(sut)
       end
     end
 
@@ -408,7 +423,6 @@ module Simp::BeakerHelpers
       enable_fips_mode_on(suts)
     end
   end
-
 
   # Generate a fake openssl CA + certs for each host on a given SUT
   #
@@ -564,6 +578,11 @@ done
   def activate_interfaces(hosts)
     parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
     block_on(hosts, :run_in_parallel => parallel) do |host|
+      if host[:platform] =~ /windows/
+        puts "  -- SKIPPING #{host} because it is windows"
+        next
+      end
+
       interfaces_fact = retry_on(host,'facter interfaces', verbose: true).stdout
 
       interfaces = interfaces_fact.strip.split(',')
