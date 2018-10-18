@@ -27,7 +27,7 @@ RSpec.configure do |c|
   c.before :suite do
     begin
       # Install modules and dependencies from spec/fixtures/modules
-      copy_fixture_modules_to( hosts )
+      # copy_fixture_modules_to( hosts )
       STDOUT.flush
     rescue StandardError, ScriptError => e
       if ENV['PRY']

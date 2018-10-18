@@ -1,128 +1,156 @@
 ---
-#=======================================================================
-# Global stuff
+.cache_bundler: &cache_bundler
+  cache:
+    untracked: true
+    # A broad attempt at caching between runs (ala Travis CI)
+    key: "${CI_PROJECT_NAMESPACE}__bundler"
+    paths:
+      - '.vendor'
+      - 'vendor'
+
+.setup_bundler_env: &setup_bundler_env
+  before_script:
+    - 'echo Files in cache: $(find .vendor | wc -l) || :'
+    - 'export GEM_HOME=.vendor/gem_install'
+    - 'export BUNDLE_CACHE_PATH=.vendor/bundler'
+    - 'declare GEM_BUNDLER_VER=(-v ''~> ${BUNDLER_VERSION:-1.16.0}'')'
+    - declare GEM_INSTALL=(gem install --no-document)
+    - declare BUNDLER_INSTALL=(bundle install --no-binstubs --jobs $(nproc) --path=.vendor "${FLAGS[@]}")
+    - gem list -ie "${GEM_BUNDLE_VER[@]}" --silent bundler || "${GEM_INSTALL[@]}" --local "${GEM_BUNDLE_VER[@]}" bundler || "${GEM_INSTALL[@]}" "${GEM_BUNDLE_VER[@]}" bundler
+    - 'rm -rf pkg/ || :'
+    - bundle check || rm -f Gemfile.lock && ("${BUNDLER_INSTALL[@]}" --local || "${BUNDLER_INSTALL[@]}")
+
+
+.validation_checks: &validation_checks
+  script:
+    - bundle exec rake syntax
+    - bundle exec rake check:dot_underscore
+    - bundle exec rake check:test_file
+    - bundle exec rake lint
+    # - bundle exec rake pkg:check_version
+    # - bundle exec rake pkg:compare_latest_tag
+
+.spec_tests: &spec_tests
+  script:
+    - bundle exec rake spec
+
+# To avoid running a prohibitive number of tests every commit,
+# don't set this env var in your gitlab instance
+.only_with_SIMP_FULL_MATRIX: &only_with_SIMP_FULL_MATRIX
+  only:
+    variables:
+      - $SIMP_FULL_MATRIX
+
 stages:
-  - sanity
+  - validation
   - unit
-  - lint
   - acceptance
+  - deploy
 
-# Default versions are set only as fallbacks for jobs that don't care which
-# version they use.  Versions should be explicitly set in any job with specific
-# version requirements, even if they match these defaults.
-image: 'ruby:2.4'
+# Puppet 4.10 for PE 2017.2 support (EOL:2018-02-21)
+# See: https://puppet.com/misc/puppet-enterprise-lifecycle
+# --------------------------------------
+2_1-validation:
+  stage: validation
+  tags:
+    - docker
+  image: ruby:2.1
+  <<: *cache_bundler
+  <<: *setup_bundler_env
+  <<: *validation_checks
 
-cache:
-  key: '${CI_COMMIT_REF_SLUG}'
-  paths:
-    - 'vendor/ruby'
+2_1-unit:
+  stage: unit
+  tags:
+    - docker
+  image: ruby:2.1
+  <<: *cache_bundler
+  <<: *setup_bundler_env
+  <<: *spec_tests
 
-before_script:
-  - 'ruby -v'
-  - 'apt update && apt install -y rpm'
-  - 'bundle -v || gem install bundler'
-  - 'bundle config --local path vendor'
-  - 'rm -f Gemfile.lock'
-  - 'bundle install -j $(nproc) --no-binstubs'
+# Puppet 4.10 for PE 2017.2 support (EOL:2018-02-21)
+# See: https://puppet.com/misc/puppet-enterprise-lifecycle
+# --------------------------------------
+2_4-validation:
+  stage: validation
+  tags:
+    - docker
+  image: ruby:2.4
+  <<: *cache_bundler
+  <<: *setup_bundler_env
+  <<: *validation_checks
+
+2_4-unit:
+  stage: unit
+  tags:
+    - docker
+  image: ruby:2.4
+  <<: *cache_bundler
+  <<: *setup_bundler_env
+  <<: *spec_tests
+
 
 #=======================================================================
-# Anchors
-
-.acceptance_base: &acceptance_base
-  stage: 'acceptance'
-  tags: ['beaker']
-  cache:
-    policy: 'pull'
-  artifacts:
-    when: 'always'
-    paths:
-      - 'Gemfile.lock'
-  retry: 1
-  script:
-    - 'bundle exec rake spec_clean'
-    - 'bundle exec rake spec_prep'
-    - 'bundle exec rake beaker:suites'
-
-# ----------------------------------------------------------------------
-# Version Matrix
-#
-# It would be too expensive, both in time and compute resources, to test
-# against every last version combination, so we restrict it to this subset.
-# Version sets are selected based on current support policies for major platform
-# software, such as Puppet and Ruby.  Namely, we use the version combinations
-# bundled in Puppet Enterprise.
-#
-# For more information see:
-#  * https://puppet.com/docs/pe/latest/overview/component_versions_in_recent_pe_releases.html
-#  * https://puppet.com/misc/puppet-enterprise-lifecycle
-#  * https://puppet.com/docs/pe/latest/overview/getting_support_for_pe.html#standard-releases-and-long-term-support-releases
-#
-# ----------------------------------------------
-# | Release | Puppet | Ruby | End-of-Life Date |
-# ----------|--------|------|------------------|
-# PE 2017.2   4.10     2.1    2018-02
-# PE 2017.3   5.3      2.4    2018-08
-# PE 2018.1   5.5      2.4    2020-05
-#
-
-.simp_6_1: &simp_6_1
+# Acceptance tests
+default:
+  stage: acceptance
+  tags:
+    - beaker
+  <<: *cache_bundler
+  <<: *setup_bundler_env
   variables:
-    PUPPET_VERSION: '~> 4.10.4'
+    PUPPET_VERSION: '~> 4.10.10'
+  script:
+    - bundle exec rake spec_clean
+    - bundle exec rake beaker:suites[default]
 
-.pe_2018_1: &pe_2018_1
+default-puppet5:
+  stage: acceptance
+  tags:
+    - beaker
+  <<: *cache_bundler
+  <<: *setup_bundler_env
   variables:
-    PUPPET_VERSION: '~> 5.5'
-
-#=======================================================================
-# Basic Sanity Checks
-#
-# Execute simple sanity checks on the environment before proceeding to more
-# resource-intensive jobs.  Besides running checks, this condenses the initial
-# cache generation into a single job for the later stages.  The first stage,
-# in particular, would otherwise suffer a heavy cache-miss penalty as its
-# jobs kick off in parallel.
-sanity_checks:
-  stage: 'sanity'
-  tags: ['docker']
+    PUPPET_VERSION: '~> 5.3'
+    BEAKER_PUPPET_COLLECTION: 'puppet5'
   script:
-    - 'bundle exec rake check:dot_underscore'
-    - 'bundle exec rake check:test_file'
+    - bundle exec rake spec_clean
+    - bundle exec rake beaker:suites[default]
 
-tag_check:
-  stage: 'sanity'
-  only: ['tags']
-  tags: ['docker']
-  script: '[ "$CI_COMMIT_TAG" = "$MODULE_VERSION" ] || echo "ERROR: Tag does not match metadata version" && exit 1'
-
-#=======================================================================
-# Unit Tests
-#
-unit:
-  stage: 'unit'
-  image: 'ruby:2.4.4'
-  tags: ['docker']
-  script:
-    - 'bundle exec rake spec'
-  cache:
-    policy: 'pull'
-  artifacts:
-    when: 'always'
-    paths:
-      - 'Gemfile.lock'
-
-# ==============================================================================
-# acceptance tests
-#
-el-simp_6_1-default:
-  <<: *acceptance_base
-  <<: *simp_6_1
-
-el-pe_2018_1-default:
-  <<: *acceptance_base
-  <<: *pe_2018_1
-
-el-simp_6_1-default-fips:
-  <<: *acceptance_base
-  <<: *simp_6_1
+default-fips:
+  stage: acceptance
+  tags:
+    - beaker
+  <<: *cache_bundler
+  <<: *setup_bundler_env
   variables:
     BEAKER_fips: 'yes'
+  script:
+    - bundle exec rake spec_clean
+    - bundle exec rake beaker:suites[default]
+
+fips_from_fixtures:
+  stage: acceptance
+  tags:
+    - beaker
+  <<: *cache_bundler
+  <<: *setup_bundler_env
+  variables:
+    PUPPET_VERSION: '~> 5.3'
+    BEAKER_PUPPET_COLLECTION: 'puppet5'
+  script:
+    - bundle exec rake spec_clean
+    - bundle exec rake beaker:suites[fips_from_fixtures]
+
+puppet_collections:
+  stage: acceptance
+  tags:
+    - beaker
+  <<: *cache_bundler
+  <<: *setup_bundler_env
+  variables:
+    PUPPET_VERSION: '~> 5.3'
+    BEAKER_PUPPET_COLLECTION: 'puppet5'
+  script:
+    - bundle exec rake spec_clean
+    - bundle exec rake beaker:suites[puppet_collections]
