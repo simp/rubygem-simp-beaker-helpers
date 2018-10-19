@@ -91,16 +91,13 @@ RSpec.configure do |c|
   end
 end
 
+
 hosts.each do |host|
   describe 'windows hosts coexising with linux hosts' do
     context "on #{host}" do
       it 'should have puppet installed' do
         on(host, 'puppet --version')
       end
-      # if host[:platform] =~ /windows/
-      #
-      # else
-      # end
     end
   end
 end
