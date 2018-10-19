@@ -154,3 +154,13 @@ puppet_collections:
   script:
     - bundle exec rake spec_clean
     - bundle exec rake beaker:suites[puppet_collections]
+
+windows:
+  stage: acceptance
+  tags:
+    - beaker
+  <<: *cache_bundler
+  <<: *setup_bundler_env
+  script:
+    - bundle exec rake spec_clean
+    - bundle exec rake beaker:suites[windows]
