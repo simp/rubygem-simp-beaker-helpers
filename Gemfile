@@ -15,6 +15,7 @@ gem 'rake'
 group :system_tests do
   gem 'beaker'
   gem 'beaker-rspec'
+  gem 'beaker-windows'
   gem 'net-ssh'
   gem 'puppet', ENV.fetch('PUPPET_VERSION', '~> 5.0')
   gem 'puppetlabs_spec_helper'
