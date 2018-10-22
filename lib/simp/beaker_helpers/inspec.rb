@@ -1,7 +1,8 @@
 module Simp::BeakerHelpers
-
   # Helpers for working with Inspec
   class Inspec
+
+    require 'json'
 
     attr_reader :profile
     attr_reader :profile_dir
@@ -131,10 +132,19 @@ module Simp::BeakerHelpers
       HighLine.colorize_strings
 
       stats = {
-        :passed  => 0,
-        :failed  => 0,
-        :skipped => 0,
-        :report  => []
+        # Legacy metrics counters for backwards compatibility
+        :failed     => 0,
+        :passed     => 0,
+        :skipped    => 0,
+        :overridden => 0,
+        # End legacy stuff
+        :global   => {
+          :failed     => [],
+          :passed     => [],
+          :skipped    => [],
+          :overridden => []
+        },
+        :profiles => {}
       }
 
       if results.is_a?(String)
@@ -154,64 +164,104 @@ module Simp::BeakerHelpers
       end
 
       profiles.each do |profile|
-        stats[:report] << "Name: #{profile['name']}"
+        profile_name = profile['name']
+
+        next unless profile_name
+
+        stats[:profiles][profile_name] = {
+          :controls => {}
+        }
 
         profile['controls'].each do |control|
           title = control['title']
 
-          # Skip auto-generated material
           next unless title
 
-          if title.length > 72
-            title = title[0..71] + '(...)'
-          end
+          stats[:profiles][profile_name][:controls][title] = {}
 
-          title_chunks = control['title'].scan(/.{1,72}\W|.{1,72}/).map(&:strip)
+          formatted_title = title.scan(/.{1,72}\W|.{1,72}/).map(&:strip).join("\n           ")
 
-          stats[:report] << "\n  Control: #{title_chunks.shift}"
-          unless title_chunks.empty?
-            title_chunks.map!{|x| x = "           #{x}"}
-            stats[:report] << title_chunks.join("\n")
-          end
+          stats[:profiles][profile_name][:controls][title][:formatted_title] = formatted_title
 
           if control['results'] && !control['results'].empty?
             status = control['results'].first['status']
+
+            if status == /^fail/
+              status = :failed
+            else
+              status = :passed
+            end
           else
-            status = 'skipped'
+            status = :skipped
           end
 
-          status_str = "    Status: "
-          if status == 'skipped'
-            stats[:skipped] += 1
+          stats[:global][status] << title
 
-            stats[:report] << status_str + status.yellow
-            stats[:report] << "    File: #{control['source_location']['ref']}"
-          elsif status =~ /^fail/
-            stats[:failed] += 1
-
-            stats[:report] << status_str + status.red
-            stats[:report] << "    File: #{control['source_location']['ref']}"
-          else
-            stats[:passed] += 1
-
-            stats[:report] << status_str + status.green
-          end
+          stats[:profiles][profile_name][:controls][title][:status] = status
+          stats[:profiles][profile_name][:controls][title][:source] = control['source_location']['ref']
         end
-
-        stats[:report] << "\n  Statistics:"
-        stats[:report] << "    * Passed: #{stats[:passed].to_s.green}"
-        stats[:report] << "    * Failed: #{stats[:failed].to_s.red}"
-        stats[:report] << "    * Skipped: #{stats[:skipped].to_s.yellow}"
-
-        score = 0
-        if (stats[:passed] + stats[:failed]) > 0
-          score = ((stats[:passed].to_f/(stats[:passed] + stats[:failed])) * 100.0).round(0)
-        end
-
-        stats[:report] << "    * Score:  #{score}%"
       end
 
-      stats[:report] = stats[:report].join("\n")
+      valid_checks = stats[:global][:failed] + stats[:global][:passed]
+      stats[:global][:skipped].dup.each do |skipped|
+        if valid_checks.include?(skipped)
+          stats[:global][:overridden] << skipped
+          stats[:global][:skipped].delete(skipped)
+        end
+      end
+
+      status_colors = {
+        :failed     => 'red',
+        :passed     => 'green',
+        :skipped    => 'yellow',
+        :overridden => 'white'
+      }
+
+      report = []
+
+      stats[:profiles].keys.each do |profile|
+        report << "Profile: #{profile}"
+
+        stats[:profiles][profile][:controls].each do |control|
+          control_info = control.last
+
+          report << "\n  Control: #{control_info[:formatted_title]}"
+
+          if control_info[:status] == :skipped && stats[:global][:overridden].include?(control.first)
+            control_info[:status] = :overridden
+          end
+
+          report << "    Status: #{control_info[:status].to_s.send(status_colors[control_info[:status]])}"
+          report << "    File: #{control_info[:source]}" if control_info[:source]
+        end
+
+        report << "\n"
+      end
+
+      num_passed     = stats[:global][:passed].count
+      num_failed     = stats[:global][:failed].count
+      num_skipped    = stats[:global][:skipped].count
+      num_overridden = stats[:global][:overridden].count
+
+      # Backwards compat values
+      stats[:passed]     = num_passed
+      stats[:failed]     = num_failed
+      stats[:skipped]    = num_skipped
+      stats[:overridden] = num_overridden
+
+      report << "Statistics:"
+      report << "  * Passed: #{num_passed.to_s.green}"
+      report << "  * Failed: #{num_failed.to_s.red}"
+      report << "  * Skipped: #{num_skipped.to_s.yellow}"
+
+      score = 0
+      if (stats[:global][:passed].count + stats[:global][:failed].count) > 0
+        score = ((stats[:global][:passed].count.to_f/(stats[:global][:passed].count + stats[:global][:failed].count)) * 100.0).round(0)
+      end
+
+      report << "\n Score: #{score}%"
+
+      stats[:report] = report.join("\n")
 
       return stats
     end
