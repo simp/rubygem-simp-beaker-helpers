@@ -365,14 +365,38 @@ module Simp::BeakerHelpers
       on sut, 'puppet resource group puppet gid=52'
       on sut, 'puppet resource user puppet comment="Puppet" gid="52" uid="52" home="/var/lib/puppet" managehome=true'
 
-      # SIMP uses a central ssh key location, but some keys are only home dirs
-      on(sut, "mkdir -p /etc/ssh/local_keys")
-      on(sut, "for path in `find / -wholename '/home/*/.ssh/authorized_keys'`;"\
-              "do echo $path; user=`ls -l $path | awk '{print $3}'`;"\
-              "echo $user; cp --preserve=all -f $path /etc/ssh/local_keys/$user; done")
-      on(sut, "if [ -f /root/.ssh/authorized_keys ]; then cp --preserve=all -f /root/.ssh/authorized_keys /etc/ssh/local_keys/root; fi")
-      on(sut, "chown -R root:root /etc/ssh/local_keys")
-      on(sut, "chmod 644 /etc/ssh/local_keys/*")
+      # This may not exist in docker so just skip the whole thing
+      if sut.file_exist?('/etc/ssh')
+        # SIMP uses a central ssh key location so we prep that spot in case we
+        # flip to the SIMP SSH module.
+        on(sut, 'mkdir -p /etc/ssh/local_keys')
+        on(sut, 'chown -R root:root /etc/ssh/local_keys')
+        on(sut, 'chmod 755 /etc/ssh/local_keys')
+
+        user_info = on(sut, 'getent passwd').stdout.lines
+
+        cmd = []
+        # Hash of user => home_dir
+        # Exclude silly directories
+        #   * /
+        #   * /dev/*
+        #   * /s?bin
+        #   * /proc
+        user_info = Hash[
+          user_info.map do |u|
+            u.strip!
+            u = u.split(':')
+            u[5] =~ %r{^(/|/dev/.*|/s?bin/?.*|/proc/?.*)$} ? [nil] : [u[0], u[5]]
+          end
+        ]
+
+        user_info.keys.each do |user|
+          src_file = "#{user_info[user]}/.ssh/authorzed_keys"
+          tgt_file = "/etc/ssh/local_keys/#{user}"
+
+          on(sut, %{if [ -f "#{src_file}" ]; then cp -a -f "#{src_file}" "#{tgt_file}" && chmod 644 "#{tgt_file}"; fi}, :silent => true)
+        end
+      end
 
       # SIMP uses structured facts, therefore stringify_facts must be disabled
       unless ENV['BEAKER_stringify_facts'] == 'yes'
