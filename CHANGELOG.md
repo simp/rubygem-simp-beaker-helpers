@@ -1,5 +1,7 @@
 ### 1.11.3 / 2018-10-22
-* Check if ssh keys exist before using chmod on them, error fix
+* Made the inspec report less confusing overall by noting where checks are
+  overridden
+* Fix errors in the previous ssh key copy
 
 ### 1.11.2 / 2018-10-11
 * Copy ssh keys in home directories to simp standard '/etc/ssh/local_keys/'
