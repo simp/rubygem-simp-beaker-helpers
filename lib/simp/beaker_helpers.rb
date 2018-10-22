@@ -372,7 +372,7 @@ module Simp::BeakerHelpers
               "echo $user; cp --preserve=all -f $path /etc/ssh/local_keys/$user; done")
       on(sut, "if [ -f /root/.ssh/authorized_keys ]; then cp --preserve=all -f /root/.ssh/authorized_keys /etc/ssh/local_keys/root; fi")
       on(sut, "chown -R root:root /etc/ssh/local_keys")
-      on(sut, "chmod 644 /etc/ssh/local_keys/*")
+      on(sut, 'if [ "$(ls -A /etc/ssh/local_keys)" ]; then chmod 644 /etc/ssh/local_keys/*; fi')
 
       # SIMP uses structured facts, therefore stringify_facts must be disabled
       unless ENV['BEAKER_stringify_facts'] == 'yes'
