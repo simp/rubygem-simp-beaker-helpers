@@ -8,6 +8,10 @@ ENV['PUPPET_VERSION'] = '5.1'
 
 require 'spec_helper_acceptance'
 
+Bundler.with_clean_env{
+  %x{bundle exec rake spec_prep}
+}
+
 hosts.each do |host|
   describe 'make sure puppet version is valid' do
     context "on #{host}" do
