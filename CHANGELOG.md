@@ -1,3 +1,8 @@
+### 1.12.0 / 2018-10-22
+* When using suites, allow users to loop through multiple specified nodesets as
+  a colon delimited list or loop through all nodesets by passing 'ALL'.
+* If 'ALL' is passed, the 'default' suite will be run first.
+
 ### 1.11.3 / 2018-10-22
 * Made the inspec report less confusing overall by noting where checks are
   overridden

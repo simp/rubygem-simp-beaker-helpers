@@ -53,6 +53,9 @@ module Simp::Rake
               * If you set this to `ALL`, all suites will be run
 
             * :nodeset - A specific nodeset to run on within a specific suite
+              * If you set this to `ALL`, all nodesets will be looped through, starting with 'default'
+              * You may also set this to a colon delimited list of short
+                nodeset names that will be run in that order
 
             ## Suite Execution
 
@@ -200,47 +203,62 @@ module Simp::Rake
 
             $stdout.puts("\n\n=== Suite '#{name}' Starting ===\n\n")
 
+            nodesets = Array.new
+            nodeset_path = File.join(suites[ste]['path'],'nodesets')
+
             if nodeset
-              nodeset_yml = File.join(suites[ste]['path'], 'nodesets', "#{nodeset}.yml")
+              if nodeset == 'ALL'
+                nodesets = Dir.glob(File.join(nodeset_path, '*.yml'))
+
+                # Make sure we run the default set first
+                default_set = nodesets.delete(File.join(nodeset_path, 'default.yml'))
+                nodesets.unshift(default_set) if default_set
+              else
+                nodeset.split(':').each do |tgt_nodeset|
+                  nodesets << File.join(nodeset_path, "#{tgt_nodeset.strip}.yml")
+                end
+              end
+            else
+              nodesets << File.join(nodeset_path, 'default.yml')
+            end
+
+            nodesets.each do |nodeset_yml|
               unless File.file?(nodeset_yml)
-                $stdout.puts("=== Suite #{name} Nodeset '#{nodeset}' Not Found, Skipping ===")
+                $stdout.puts("=== Suite #{name} Nodeset '#{File.basename(nodeset_yml, '.yml')}' Not Found, Skipping ===")
                 next
               end
 
               ENV['BEAKER_setfile'] = nodeset_yml
-            else
-              nodeset_yml = File.join(suites[ste]['path'], 'nodesets', 'default.yml')
 
-              ENV['BEAKER_setfile'] = nodeset_yml
-            end
-
-            Rake::Task[:beaker].clear
-            RSpec::Core::RakeTask.new(:beaker) do |tsk|
-              tsk.rspec_opts = ['--color']
-              tsk.pattern = File.join(suites[ste]['path'])
-            end
-
-            current_suite_task = Rake::Task[:beaker]
-
-            if suite_config['fail_fast'] == true
-              current_suite_task.execute
-            else
-              begin
-                current_suite_task.execute
-              rescue SystemExit
-                failures[suites[ste]['name']] = {
-                  'path' => suites[ste]['path']
-                }
+              Rake::Task[:beaker].clear
+              RSpec::Core::RakeTask.new(:beaker) do |tsk|
+                tsk.rspec_opts = ['--color']
+                tsk.pattern = File.join(suites[ste]['path'])
               end
-            end
 
-            $stdout.puts("\n\n=== Suite '#{name}' Complete ===\n\n")
+              current_suite_task = Rake::Task[:beaker]
+
+              if suite_config['fail_fast'] == true
+                current_suite_task.execute
+              else
+                begin
+                  current_suite_task.execute
+                rescue SystemExit
+                  failures[suites[ste]['name']] = {
+                    'path'    => suites[ste]['path'],
+                    'nodeset' => File.basename(nodeset_yml, '.yml')
+                  }
+                end
+              end
+
+              $stdout.puts("\n\n=== Suite '#{name}' Complete ===\n\n")
+            end
           end
 
           unless failures.keys.empty?
             $stdout.puts("The following tests had failures:")
             failures.keys.sort.each do |ste|
-              $stdout.puts("  * #{ste} => #{failures[ste]['path']}")
+              $stdout.puts("  * #{ste} => #{failures[ste]['path']} on #{failures[ste]['nodeset']}")
             end
           end
         end
