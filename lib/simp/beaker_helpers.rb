@@ -68,7 +68,16 @@ module Simp::BeakerHelpers
 
       # End rsync hackery
 
-      rsync_to(sut, src, dest, _opts)
+      begin
+        rsync_to(sut, src, dest, _opts)
+      rescue
+        # Depending on what is getting tested, a new SSH session might not
+        # work. In this case, we fall back to SSH.
+        #
+        # The rsync failure is quite fast so this doesn't affect performance as
+        # much as shoving a bunch of data over the ssh session.
+        scp_to(sut, src, dest, opts)
+      end
     else
       scp_to(sut, src, dest, opts)
     end
