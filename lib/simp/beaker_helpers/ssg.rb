@@ -61,6 +61,16 @@ module Simp::BeakerHelpers
             'datastream'     => 'ssg-centos7-ds.xml'
           }
         }
+      },
+      'OracleLinux' => {
+        '7' => {
+          'required_packages' => EL_PACKAGES,
+          'ssg' => {
+            'profile_target' => 'ol7',
+            'build_target'   => 'ol7',
+            'datastream'     => 'ssg-ol7-ds.xml'
+          }
+        }
       }
     }
 
@@ -116,7 +126,7 @@ module Simp::BeakerHelpers
         cmd += ' --remediate'
       end
 
-      cmd += %( --profile #{profile} --results #{@result_file}.xml --report #{@result_file}.html #{OS_INFO[@os][@os_rel]['ssg']['datastream']})
+      cmd += %( --fetch-remote-resources --profile #{profile} --results #{@result_file}.xml --report #{@result_file}.html #{OS_INFO[@os][@os_rel]['ssg']['datastream']})
 
       # We accept all exit codes here because there have occasionally been
       # failures in the SSG content and we're not testing that.
@@ -129,6 +139,122 @@ module Simp::BeakerHelpers
 
         fail("Could not retrieve #{path} from #{@sut}") unless File.exist?(File.join(@output_dir, "#{@result_file}.#{ext}"))
       end
+    end
+
+    # Output the report
+    #
+    # @param report
+    #   The results Hash
+    #
+    def write_report(report)
+      File.open(File.join(@output_dir, @result_file) + '.report', 'w') do |fh|
+        fh.puts(report[:report].uncolor)
+      end
+    end
+
+    # Retrieve a subset of test results based on a match to
+    # filter
+    #
+    # FIXME:
+    # - This is a hack! Should be searching for rules based on a set
+    #   set of STIG ids, but don't see those ids in the oscap results xml.
+    #   Further mapping is required...
+    # - Create the same report structure as inspec
+    def process_ssg_results(filter=nil)
+      self.class.process_ssg_results(File.join(@output_dir, @result_file) + '.xml', filter)
+    end
+
+    # Process the results of an SSG run
+    #
+    # @return [Hash] A Hash of statistics and a formatted report
+    #
+    def self.process_ssg_results(result_file, filter=nil)
+      require 'highline'
+      require 'nokogiri'
+
+      HighLine.colorize_strings
+
+      fail("Could not find results XML file '#{result_file}'") unless File.exist?(result_file)
+
+      puts "Processing #{result_file}"
+      doc = Nokogiri::XML(File.open(result_file))
+
+      # because I'm lazy
+      doc.remove_namespaces!
+
+      if filter
+        # XPATH to get the pertinent test results:
+        #   Any node named 'rule-result' for which the attribute 'idref'
+        #   contains filter
+        result_nodes = doc.xpath("//rule-result[contains(@idref,'#{filter}')]")
+      else
+        result_nodes = doc.xpath('//rule-result')
+      end
+
+      stats = {
+        :failed  => [],
+        :passed  => [],
+        :skipped => [],
+        :filter  => filter.nil? ? 'No Filter' : filter,
+        :report  => nil,
+        :score   => 0
+      }
+
+      result_nodes.each do |rule_result|
+        # Results are recorded in a child node named 'result'.
+        # Within the 'result' node, the actual result string is
+        # the content of that node's (only) child node.
+
+        result = rule_result.element_children.at('result')
+        result_id = rule_result.attributes['idref'].value.to_s
+        result_value = [
+          'Title: ' + doc.xpath("//Rule[@id='#{result_id}']/title/text()").first.to_s,
+          '  ID: ' + result_id
+        ].join("\n")
+
+        if result.child.content == 'fail'
+          stats[:failed] << result_value.red
+        elsif result.child.content == 'pass'
+          stats[:passed] << result_value.green
+        else
+          stats[:skipped] << result_value.yellow
+        end
+      end
+
+      report = []
+
+      report << '== Skipped =='
+      report << stats[:skipped].join("\n")
+
+      report << '== Passed =='
+      report << stats[:passed].join("\n")
+
+      report << '== Failed =='
+      report << stats[:failed].join("\n")
+
+
+      report << 'OSCAP Statistics:'
+
+      if filter
+        report << "  * Used Filter: 'idref' ~= '#{stats[:filter]}'"
+      end
+
+      report << "  * Passed: #{stats[:passed].count.to_s.green}"
+      report << "  * Failed: #{stats[:failed].count.to_s.red}"
+      report << "  * Skipped: #{stats[:skipped].count.to_s.yellow}"
+
+      score = 0
+
+      if (stats[:passed].count + stats[:failed].count) > 0
+        score = ((stats[:passed].count.to_f/(stats[:passed].count + stats[:failed].count)) * 100.0).round(0)
+      end
+
+      report << "\n Score: #{score}%"
+
+      stats[:score]  = score
+      stats[:report] = report.join("\n")
+
+      return stats
     end
 
     private

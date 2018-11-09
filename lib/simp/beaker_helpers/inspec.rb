@@ -144,6 +144,8 @@ module Simp::BeakerHelpers
           :skipped    => [],
           :overridden => []
         },
+        :score    => 0,
+        :report   => nil,
         :profiles => {}
       }
 
@@ -188,14 +190,17 @@ module Simp::BeakerHelpers
 
             if status == /^fail/
               status = :failed
+              color = 'red'
             else
               status = :passed
+              color = 'green'
             end
           else
             status = :skipped
+            color = 'yellow'
           end
 
-          stats[:global][status] << title
+          stats[:global][status] << title.to_s.color
 
           stats[:profiles][profile_name][:controls][title][:status] = status
           stats[:profiles][profile_name][:controls][title][:source] = control['source_location']['ref']
@@ -261,6 +266,7 @@ module Simp::BeakerHelpers
 
       report << "\n Score: #{score}%"
 
+      stats[:score] = score
       stats[:report] = report.join("\n")
 
       return stats
