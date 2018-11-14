@@ -2,6 +2,9 @@
 * Make the SSG reporting consistent with the InSpec reporting
   * Thanks to Liz Nemsick for the original result processing code
 
+### 1.12.2 / 2018-10-25
+* Skip most of fix_errata_on on windows platforms
+
 ### 1.12.1 / 2018-10-24
 * Fall back to SSH file copies automatically when rsync does not work due to
   test cases that affect ssh directly and that will cause new sessions to fail.

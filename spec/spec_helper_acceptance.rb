@@ -22,19 +22,4 @@ RSpec.configure do |c|
 
   # Readable test descriptions
   c.formatter = :documentation
-
-  # Configure all nodes in nodeset
-  c.before :suite do
-    begin
-      # Install modules and dependencies from spec/fixtures/modules
-      copy_fixture_modules_to( hosts )
-      STDOUT.flush
-    rescue StandardError, ScriptError => e
-      if ENV['PRY']
-        require 'pry'; binding.pry
-      else
-        raise e
-      end
-    end
-  end
 end
