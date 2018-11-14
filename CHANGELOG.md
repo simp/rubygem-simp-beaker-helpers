@@ -1,5 +1,19 @@
-### 1.11.3 / 2018-10-18
+### 1.12.2 / 2018-10-25
 * Skip most of fix_errata_on on windows platforms
+
+### 1.12.1 / 2018-10-24
+* Fall back to SSH file copies automatically when rsync does not work due to
+  test cases that affect ssh directly and that will cause new sessions to fail.
+
+### 1.12.0 / 2018-10-22
+* When using suites, allow users to loop through multiple specified nodesets as
+  a colon delimited list or loop through all nodesets by passing 'ALL'.
+* If 'ALL' is passed, the 'default' suite will be run first.
+
+### 1.11.3 / 2018-10-22
+* Made the inspec report less confusing overall by noting where checks are
+  overridden
+* Fix errors in the previous ssh key copy
 
 ### 1.11.2 / 2018-10-11
 * Copy ssh keys in home directories to simp standard '/etc/ssh/local_keys/'
