@@ -25,6 +25,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'beaker-vagrant'              , '~> 0.5'
   s.add_runtime_dependency 'beaker-puppet_install_helper', '~> 0.9'
   s.add_runtime_dependency 'highline'                    , '~> 1.6'
+  s.add_runtime_dependency 'nokogiri'                    , '~> 1.8'
 
   # Because net-telnet dropped support for Ruby < 2.3.0
   # TODO: Update this when we no longer support Ruby 2.1.9 (should be October 2018)

@@ -1,3 +1,7 @@
+### 1.13.0 / 2018-11-09
+* Make the SSG reporting consistent with the InSpec reporting
+  * Thanks to Liz Nemsick for the original result processing code
+
 ### 1.12.2 / 2018-10-25
 * Skip most of fix_errata_on on windows platforms
 
