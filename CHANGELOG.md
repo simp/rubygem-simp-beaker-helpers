@@ -1,3 +1,7 @@
+### 1.13.1 / 2018-11-27
+* Add a work around for getting the docker SUT ID due to breaking changes in
+  the beaker-docker gem
+
 ### 1.13.0 / 2018-11-09
 * Make the SSG reporting consistent with the InSpec reporting
   * Thanks to Liz Nemsick for the original result processing code
