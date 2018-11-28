@@ -64,7 +64,14 @@ module Simp::BeakerHelpers
       begin
         Dir.chdir(tmpdir) do
           if @sut[:hypervisor] == 'docker'
-            %x(docker cp "#{@sut.host_hash[:docker_container].id}:#{sut_inspec_results}" .)
+            # Work around for breaking changes in beaker-docker
+            if @sut.host_hash[:docker_container]
+              container_id = @sut.host_hash[:docker_container].id
+            else
+              container_id = @sut.host_hash[:docker_container_id]
+            end
+
+            %x(docker cp "#{container_id}:#{sut_inspec_results}" .)
           else
             scp_from(@sut, sut_inspec_results, '.')
           end
