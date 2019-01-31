@@ -49,7 +49,13 @@ module Simp::BeakerHelpers
         end
       end
 
-      %x(tar #{exclude_list.join(' ')} -hcf - -C "#{File.dirname(src)}" "#{File.basename(src)}" | docker exec -i "#{sut.host_hash[:docker_container].id}" tar -C "#{dest}" -xf -)
+      # Work around for breaking changes in beaker-docker
+      if sut.host_hash[:docker_container]
+        container_id = sut.host_hash[:docker_container].id
+      else
+        container_id = sut.host_hash[:docker_container_id]
+      end
+      %x(tar #{exclude_list.join(' ')} -hcf - -C "#{File.dirname(src)}" "#{File.basename(src)}" | docker exec -i "#{container_id}" tar -C "#{dest}" -xf -)
     elsif @has_rsync && sut.check_for_command('rsync')
       # This makes rsync_to work like beaker and scp usually do
       exclude_hack = %(__-__' -L --exclude '__-__)
