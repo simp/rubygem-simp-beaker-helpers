@@ -277,6 +277,15 @@ module Simp::BeakerHelpers
         else
           on(@sut, %(cd scap-content; git checkout $(git describe --abbrev=0 --tags)))
         end
+
+        # Work around the issue where the profiles now strip out derivative
+        # content that isn't explicitlly approved for that OS. This means that
+        # we are unable to test CentOS builds against the STIG, etc...
+        #
+        # This isn't 100% correct but it's "good enough" for an automated CI
+        # environment to tell us if something is critically out of alignment.
+        on(@sut, %(cd scap-content/build-scripts; sed -i 's/ssg.build_derivatives.profile_handling/#ssg.build_derivatives.profile_handling/g' enable_derivatives.py))
+
         on(@sut, %(cd scap-content/build; cmake ../; make -j4 #{OS_INFO[@os][@os_rel]['ssg']['build_target']}-content && cp *ds.xml #{@scap_working_dir}))
       end
     end
