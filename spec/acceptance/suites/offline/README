@@ -1,0 +1,2 @@
+This, very odd, test should NEVER be run by default because it runs docker in
+privileged mode and may cause horriffic unintended side effects on your system.
