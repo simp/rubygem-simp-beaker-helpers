@@ -379,9 +379,14 @@ module Simp::BeakerHelpers
 
     # Make sure we have a domain on our host
     current_domain = fact_on(sut, 'domain').strip
+    hostname = fact_on(sut, 'hostname').strip
+
     if current_domain.empty?
-      on(sut, 'echo `hostname`.beaker.test > /etc/hostname', :accept_all_exit_codes => true)
-      on(sut, 'hostname `cat /etc/hostname`', :accept_all_exit_codes => true)
+      new_fqdn = hostname + '.beaker.test'
+
+      on(sut, "sed -i 's/#{hostname}.*/#{new_fqdn} #{hostname}/' /etc/hosts")
+      on(sut, "echo '#{new_fqdn}' > /etc/hostname", :accept_all_exit_codes => true)
+      on(sut, "hostname #{new_fqdn}", :accept_all_exit_codes => true)
     end
 
     if fact_on(sut, 'domain').strip.empty?
