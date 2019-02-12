@@ -1,4 +1,5 @@
-### 1.13.1 / 2019-02-06
+### 1.13.1 / 2019-02-02
+* Ensure that SUTs have an FQDN set and not just a short hostname
 * Work around issue where the SSG doesn't build the STIG for CentOS any longer.
 * Add a work around for getting the docker SUT ID due to breaking changes in
   the beaker-docker gem
