@@ -31,11 +31,6 @@ Gem::Specification.new do |s|
   # TODO: Update this when we no longer support Ruby 2.1.9 (should be October 2018)
   s.add_runtime_dependency 'net-telnet', '~> 0.1.1'
 
-  # Because net-telnet dropped support for Ruby < 2.2.0
-  # TODO: Update this when we no longer support Ruby 2.1.9 (should be October 2018)
-  s.add_runtime_dependency 'rubocop', '~> 0.57.2'
-
-
   ### s.files = Dir['Rakefile', '{bin,lib,spec}/**/*', 'README*', 'LICENSE*'] & `git ls-files -z .`.split("\0")
   s.files       = `git ls-files`.split("\n")
   s.test_files  = `git ls-files -- {test,spec,features}/*`.split("\n")
