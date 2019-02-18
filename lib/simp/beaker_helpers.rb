@@ -382,7 +382,18 @@ module Simp::BeakerHelpers
     # We need to be able to flip between server and client without issue
     on sut, 'puppet resource group puppet gid=52'
     on sut, 'puppet resource user puppet comment="Puppet" gid="52" uid="52" home="/var/lib/puppet" managehome=true'
-    
+
+    # Make sure we have a domain on our host
+    current_domain = fact_on(sut, 'domain').strip
+    if current_domain.empty?
+      on(sut, 'echo `hostname`.beaker.test > /etc/hostname', :accept_all_exit_codes => true)
+      on(sut, 'hostname `cat /etc/hostname`', :accept_all_exit_codes => true)
+    end
+
+    if fact_on(sut, 'domain').strip.empty?
+      fail("Error: hosts must have an FQDN, got domain='#{current_domain}'")
+    end
+
     # This may not exist in docker so just skip the whole thing
     if sut.file_exist?('/etc/ssh')
       # SIMP uses a central ssh key location so we prep that spot in case we
@@ -415,7 +426,7 @@ module Simp::BeakerHelpers
         on(sut, %{if [ -f "#{src_file}" ]; then cp -a -f "#{src_file}" "#{tgt_file}" && chmod 644 "#{tgt_file}"; fi}, :silent => true)
       end
     end
-    
+
     # SIMP uses structured facts, therefore stringify_facts must be disabled
     unless ENV['BEAKER_stringify_facts'] == 'yes'
       on sut, 'puppet config set stringify_facts false'
