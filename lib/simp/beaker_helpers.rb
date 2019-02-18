@@ -393,6 +393,11 @@ module Simp::BeakerHelpers
       on(sut, "sed -i 's/#{hostname}.*/#{new_fqdn} #{hostname}/' /etc/hosts")
       on(sut, "echo '#{new_fqdn}' > /etc/hostname", :accept_all_exit_codes => true)
       on(sut, "hostname #{new_fqdn}", :accept_all_exit_codes => true)
+
+      if sut.file_exist?('/etc/sysconfig/network')
+        on(sut, "sed -s '/HOSTNAME=/d' /etc/sysconfig/network")
+        on(sut, "echo 'HOSTNAME=#{new_fqdn}' >> /etc/sysconfig/network")
+      end
     end
 
     if fact_on(sut, 'domain').strip.empty?
