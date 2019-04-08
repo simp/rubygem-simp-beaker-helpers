@@ -385,9 +385,19 @@ module Simp::BeakerHelpers
 
     # Make sure we have a domain on our host
     current_domain = fact_on(sut, 'domain').strip
+    hostname = fact_on(sut, 'hostname').strip
+
     if current_domain.empty?
-      on(sut, 'echo `hostname`.beaker.test > /etc/hostname', :accept_all_exit_codes => true)
-      on(sut, 'hostname `cat /etc/hostname`', :accept_all_exit_codes => true)
+      new_fqdn = hostname + '.beaker.test'
+
+      on(sut, "sed -i 's/#{hostname}.*/#{new_fqdn} #{hostname}/' /etc/hosts")
+      on(sut, "echo '#{new_fqdn}' > /etc/hostname", :accept_all_exit_codes => true)
+      on(sut, "hostname #{new_fqdn}", :accept_all_exit_codes => true)
+
+      if sut.file_exist?('/etc/sysconfig/network')
+        on(sut, "sed -s '/HOSTNAME=/d' /etc/sysconfig/network")
+        on(sut, "echo 'HOSTNAME=#{new_fqdn}' >> /etc/sysconfig/network")
+      end
     end
 
     if fact_on(sut, 'domain').strip.empty?
@@ -646,7 +656,6 @@ done
     end
   end
 
-
   ## Inline Hiera Helpers ##
   ## These will be integrated into core Beaker at some point ##
 
@@ -670,7 +679,6 @@ done
       clear_temp_hieradata
     end
   end
-
 
   # Writes a YAML file in the Hiera :datadir of a Beaker::Host.
   #
@@ -936,4 +944,40 @@ done
 
     run_puppet_install_helper(install_info[:puppet_install_type], install_info[:puppet_install_version])
   end
+
+  def install_simp_deps_repo(sut, version = '6_X_Dependencies', gpgcheck = '1')
+simp_dep_repo = <<-EOF
+# SIMP Dependencies Yum Repository
+[simp_dependencies]
+name=simp-project-#{version}
+gpgcheck=#{gpgcheck}
+enabled=1
+baseurl=https://packagecloud.io/simp-project/#{version}/el/$releasever/$basearch
+gpgkey=https://raw.githubusercontent.com/NationalSecurityAgency/SIMP/master/GPGKEYS/RPM-GPG-KEY-SIMP
+       https://yum.puppet.com/RPM-GPG-KEY-puppetlabs
+       https://yum.puppet.com/RPM-GPG-KEY-puppet
+       https://apt.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-96
+       https://artifacts.elastic.co/GPG-KEY-elasticsearch
+       https://grafanarel.s3.amazonaws.com/RPM-GPG-KEY-grafana
+       https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-$releasever
+sslverify=1
+sslcacert=/etc/pki/tls/certs/ca-bundle.crt
+metadata_expire=300
+EOF
+
+    result = nil
+
+    Dir.mktmpdir do |dir|
+      repo_file = File.join(dir, 'simp_dependencies.repo')
+
+      File.open(repo_file, 'w') do |fh|
+        fh.puts simp_dep_repo
+      end
+      result = copy_to(sut, repo_file, "/etc/yum.repos.d/simp_dependencies.repo")
+
+    end
+    return result
+
+  end
+
 end

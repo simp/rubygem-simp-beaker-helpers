@@ -1,3 +1,7 @@
+### 1.14.0 / 2019-04-08
+* Added function install_simp_deps_repo to install the simp dependency repo.
+  This will allow a central place for it to be updated in the future.
+
 ### 1.13.1 / 2019-02-02
 * Ensure that SUTs have an FQDN set and not just a short hostname
 * Work around issue where the SSG doesn't build the STIG for CentOS any longer.
