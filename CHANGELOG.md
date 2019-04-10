@@ -1,6 +1,7 @@
 ### 1.14.0 / 2019-04-08
-* Added function install_simp_deps_repo to install the simp dependency repo.
-  This will allow a central place for it to be updated in the future.
+* Added function install_simp_repo to install the simp online repos.
+  The will be configured and enabled.   To disable one or more of them
+  pass in an array of names to disable.
 
 ### 1.13.1 / 2019-02-02
 * Ensure that SUTs have an FQDN set and not just a short hostname
