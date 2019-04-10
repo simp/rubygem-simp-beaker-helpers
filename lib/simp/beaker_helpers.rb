@@ -947,16 +947,22 @@ done
     run_puppet_install_helper(install_info[:puppet_install_type], install_info[:puppet_install_version])
   end
 
+  # Configure all SIMP repos on a host and enable all but those listed in the disable list
+  #
+  # @param sut Host on which to configure SIMP repos
+  # @param disable List of SIMP repos to disable
+  # @raise if disable contains an invalid repo name.
+  #
+  # Examples:
+  #  install_simp_repos( myhost )           # install all the repos an enable them.
+  #  install_simp_repos( myhost, ['simp'])  # install the repos but disable the simp repo.
+  #
+  # Current set of valid SIMP repo names:
+  #  'simp'
+  #  'simp_deps'
+  #
   def install_simp_repos(sut, disable = [] )
-  #
-  #  This functions will configure the simp repos, defined in the  ``repos`` hash below, on the host
-  #  passed in.
-  #  They will be automatically enanbled.  If you wish to disable any of them pass in an array
-  #  with the nmae of the repos to disable.
-  #
-  #  install_simp_repos( myhost )   #  install all the repos an enable them.
-  #  install_simp_repos( myhost, ["simp6"])  #install the repos but disable the simp repo.
-  #
+ 
     repos = {
       'simp' => {
         :baseurl   => 'https://packagecloud.io/simp-project/6_X/el/$releasever/$basearch',
@@ -984,14 +990,13 @@ done
         :metadata_expire => 300
       }
     }
-    # Verify that the repos passed to disable  are in the list of valid repos
+    # Verify that the repos passed to disable are in the list of valid repos
     disable.each { |d|
       unless repos.has_key?(d)
-        puts "Error - install_simp_repo :SIMP repo #{d} does not exist."
-        return 1
+        raise("ERROR: install_simp_repo - disable contains invalid SIMP repo '#{d}'.")
       end
     }
-    repo_manifest = ""
+    repo_manifest = ''
     repos.each { | repo, metadata|
       metadata[:enabled] = disable.include?(repo) ? 0 : 1
       repo_manifest << create_yum_resource(repo, metadata)
