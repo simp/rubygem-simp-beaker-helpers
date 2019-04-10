@@ -1,7 +1,8 @@
 ### 1.14.0 / 2019-04-08
-* Added function install_simp_repo to install the simp online repos.
-  The will be configured and enabled.   To disable one or more of them
-  pass in an array of names to disable.
+* Added function, install_simp_repo, to install the simp online repos.
+  The repos are defined in a hash in the function. All the repos
+  will be configured and enabled.   To disable one or more of them pass
+  in an array of names of the repos to disable.
 
 ### 1.13.1 / 2019-02-02
 * Ensure that SUTs have an FQDN set and not just a short hostname
