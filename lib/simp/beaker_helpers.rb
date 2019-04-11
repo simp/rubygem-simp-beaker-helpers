@@ -294,7 +294,6 @@ module Simp::BeakerHelpers
     end
   end
 
-
   # Collect all 'yum_repos' entries from the host nodeset.
   # The acceptable format is as follows:
   # yum_repos:
@@ -304,6 +303,19 @@ module Simp::BeakerHelpers
   #       - <URL to GPGKEY1>
   #       - <URL to GPGKEY2>
   def enable_yum_repos_on( suts = hosts )
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(suts, :run_in_parallel => parallel) do |sut|
+      if sut['yum_repos']
+        sut['yum_repos'].each_pair do |repo, metadata|
+          repo_manifest = create_yum_resource( repo, metadata)
+
+          apply_manifest_on(sut, repo_manifest, :catch_failures => true)
+        end
+      end
+    end
+  end
+
+  def create_yum_resource( repo, metadata )
     repo_attrs = [
       :assumeyes,
       :bandwidth,
@@ -344,38 +356,29 @@ module Simp::BeakerHelpers
       :timeout
     ]
 
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(suts, :run_in_parallel => parallel) do |sut|
-      if sut['yum_repos']
-        sut['yum_repos'].each_pair do |repo, metadata|
-          repo_manifest = %(yumrepo { #{repo}:)
+      repo_manifest = %(yumrepo { #{repo}:)
 
-          repo_manifest_opts = []
+      repo_manifest_opts = []
 
-          # Legacy Support
-          urls = !metadata[:url].nil? ? metadata[:url] : metadata[:baseurl]
-          if urls
-            repo_manifest_opts << 'baseurl => ' + '"' + Array(urls).flatten.join('\n        ').gsub('$','\$') + '"'
-          end
+      # Legacy Support
+      urls = !metadata[:url].nil? ? metadata[:url] : metadata[:baseurl]
+      if urls
+        repo_manifest_opts << 'baseurl => ' + '"' + Array(urls).flatten.join('\n        ').gsub('$','\$') + '"'
+      end
 
-          # Legacy Support
-          gpgkeys = !metadata[:gpgkeys].nil? ? metadata[:gpgkeys] : metadata[:gpgkey]
-          if gpgkeys
-            repo_manifest_opts << 'gpgkey => ' + '"' + Array(gpgkeys).flatten.join('\n       ').gsub('$','\$') + '"'
-          end
+      # Legacy Support
+      gpgkeys = !metadata[:gpgkeys].nil? ? metadata[:gpgkeys] : metadata[:gpgkey]
+      if gpgkeys
+        repo_manifest_opts << 'gpgkey => ' + '"' + Array(gpgkeys).flatten.join('\n       ').gsub('$','\$') + '"'
+      end
 
-          repo_attrs.each do |attr|
-            if metadata[attr]
-              repo_manifest_opts << "#{attr} => '#{metadata[attr]}'"
-            end
-          end
-
-          repo_manifest = repo_manifest + %(\n#{repo_manifest_opts.join(",\n")}) + "\n}"
-
-          apply_manifest_on(sut, repo_manifest, :catch_failures => true)
+      repo_attrs.each do |attr|
+        if metadata[attr]
+          repo_manifest_opts << "#{attr} => '#{metadata[attr]}'"
         end
       end
-    end
+
+      repo_manifest = repo_manifest + %(\n#{repo_manifest_opts.join(",\n")}) + "\n}\n"
   end
 
   def linux_errata( sut )
@@ -562,7 +565,6 @@ module Simp::BeakerHelpers
     end
   end
 
-
   # Copy a single SUT's PKI certs (with cacerts) onto an SUT.
   #
   # This simulates the result of pki::copy
@@ -656,7 +658,6 @@ done
     end
   end
 
-
   ## Inline Hiera Helpers ##
   ## These will be integrated into core Beaker at some point ##
 
@@ -680,7 +681,6 @@ done
       clear_temp_hieradata
     end
   end
-
 
   # Writes a YAML file in the Hiera :datadir of a Beaker::Host.
   #
@@ -946,4 +946,63 @@ done
 
     run_puppet_install_helper(install_info[:puppet_install_type], install_info[:puppet_install_version])
   end
+
+  # Configure all SIMP repos on a host and enable all but those listed in the disable list
+  #
+  # @param sut Host on which to configure SIMP repos
+  # @param disable List of SIMP repos to disable
+  # @raise if disable contains an invalid repo name.
+  #
+  # Examples:
+  #  install_simp_repos( myhost )           # install all the repos an enable them.
+  #  install_simp_repos( myhost, ['simp'])  # install the repos but disable the simp repo.
+  #
+  # Current set of valid SIMP repo names:
+  #  'simp'
+  #  'simp_deps'
+  #
+  def install_simp_repos(sut, disable = [] )
+ 
+    repos = {
+      'simp' => {
+        :baseurl   => 'https://packagecloud.io/simp-project/6_X/el/$releasever/$basearch',
+        :gpgkey    => ['https://raw.githubusercontent.com/NationalSecurityAgency/SIMP/master/GPGKEYS/RPM-GPG-KEY-SIMP',
+                    'https://download.simp-project.com/simp/GPGKEYS/RPM-GPG-KEY-SIMP-6'
+                     ],
+        :gpgcheck  => 1,
+        :sslverify => 1,
+        :sslcacert => '/etc/pki/tls/certs/ca-bundle.crt',
+        :metadata_expire => 300
+      },
+      'simp_deps' => {
+        :baseurl   => 'https://packagecloud.io/simp-project/6_X_Dependencies/el/$releasever/$basearch',
+        :gpgkey    => ['https://raw.githubusercontent.com/NationalSecurityAgency/SIMP/master/GPGKEYS/RPM-GPG-KEY-SIMP',
+                    'https://yum.puppet.com/RPM-GPG-KEY-puppetlabs',
+                    'https://yum.puppet.com/RPM-GPG-KEY-puppet',
+                    'https://apt.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-96',
+                    'https://artifacts.elastic.co/GPG-KEY-elasticsearch',
+                    'https://grafanarel.s3.amazonaws.com/RPM-GPG-KEY-grafana',
+                    'https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-$releasever'
+                   ],
+        :gpgcheck  => 1,
+        :sslverify => 1,
+        :sslcacert => '/etc/pki/tls/certs/ca-bundle.crt',
+        :metadata_expire => 300
+      }
+    }
+    # Verify that the repos passed to disable are in the list of valid repos
+    disable.each { |d|
+      unless repos.has_key?(d)
+        raise("ERROR: install_simp_repo - disable contains invalid SIMP repo '#{d}'.")
+      end
+    }
+    repo_manifest = ''
+    repos.each { | repo, metadata|
+      metadata[:enabled] = disable.include?(repo) ? 0 : 1
+      repo_manifest << create_yum_resource(repo, metadata)
+    }
+    apply_manifest_on(sut, repo_manifest, :catch_failures => true)
+  end
 end
+
+
