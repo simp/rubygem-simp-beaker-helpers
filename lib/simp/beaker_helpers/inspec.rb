@@ -57,11 +57,15 @@ module Simp::BeakerHelpers
     def run
       sut_inspec_results = '/tmp/inspec_results.json'
 
-      # TODO: Add logic to detect if we are below inspec 4.x where this command would fail.
-      # aka: v3.9.0 or lower does not require this
-      # v4.0.8 or higher does
-      # see: https://github.com/inspec/inspec/pull/3935
-      inspec_cmd = "inspec exec '#{@test_dir}' --chef-license accept --reporter json > #{sut_inspec_results}"
+      inspec_version = Gem::Version.new(on(@sut, 'inspec --version').output.lines.first.strip)
+
+      # See: https://github.com/inspec/inspec/pull/3935
+      if inspec_version <= Gem::Version.new('3.9.0')
+        inspec_cmd = "inspec exec '#{@test_dir}' --reporter json > #{sut_inspec_results}"
+      else
+        inspec_cmd = "inspec exec '#{@test_dir}' --chef-license accept --reporter json > #{sut_inspec_results}"
+      end
+
       result = on(@sut, inspec_cmd, :accept_all_exit_codes => true)
 
       tmpdir = Dir.mktmpdir
