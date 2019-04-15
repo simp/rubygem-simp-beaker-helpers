@@ -1,3 +1,6 @@
+### 1.14.1 / 2019-04-15
+* Handle license acceptance option needed for new versions of inspec.
+
 ### 1.14.0 / 2019-04-08
 * Added function, install_simp_repo, to install the simp online repos.
   The repos are defined in a hash in the function. All the repos
