@@ -19,7 +19,7 @@ module Simp::BeakerHelpers
   #
   # This is done so that we know if some new thing that we're using breaks the
   # oldest system that we support.
-  DEFAULT_PUPPET_AGENT_VERSION = '1.10.4'
+  DEFAULT_PUPPET_AGENT_VERSION = '~> 5.0'
 
   # We can't cache this because it may change during a run
   def fips_enabled(sut)
@@ -889,7 +889,7 @@ done
     return result
   end
 
-  # returns hash with :puppet_install_version, :beaker_puppet_collection,
+  # returns hash with :puppet_install_version, :puppet_collection,
   # and :puppet_install_type keys determined from environment variables,
   # host settings, and/or defaults
   #
@@ -916,7 +916,7 @@ done
           raise("Error: Puppet Collection '#{puppet_collection}' must match /puppet(\\d+)/")
         end
       else
-        puppet_agent_version = DEFAULT_PUPPET_AGENT_VERSION
+        puppet_agent_version = latest_puppet_agent_version_for(DEFAULT_PUPPET_AGENT_VERSION)
       end
     end
 
@@ -925,9 +925,10 @@ done
       puppet_collection = "puppet#{base_version}" if base_version >= 5
     end
 
-    { :puppet_install_version   => puppet_agent_version,
-      :beaker_puppet_collection => puppet_collection,
-      :puppet_install_type      => ENV.fetch('PUPPET_INSTALL_TYPE', 'agent')
+    {
+      :puppet_install_version => puppet_agent_version,
+      :puppet_collection      => puppet_collection,
+      :puppet_install_type    => ENV.fetch('PUPPET_INSTALL_TYPE', 'agent')
     }
   end
 
@@ -938,7 +939,7 @@ done
 
     # In case  Beaker needs this info internally
     ENV['PUPPET_INSTALL_VERSION'] = install_info[:puppet_install_version]
-    unless install_info[:puppet_collection].nil?
+    if install_info[:puppet_collection]
       ENV['BEAKER_PUPPET_COLLECTION'] = install_info[:puppet_collection]
     end
 

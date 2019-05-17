@@ -14,8 +14,8 @@ hosts.each do |host|
           expect(client_puppet_version.split('.').first).to eq(puppet_collection_version)
         end
       else
-        it 'should not be running puppet 5+' do
-          expect(client_puppet_version.split('.').first).to be < '5'
+        it 'should not be running puppet 5' do
+          expect(client_puppet_version.split('.').first).to eq '5'
         end
       end
     end
