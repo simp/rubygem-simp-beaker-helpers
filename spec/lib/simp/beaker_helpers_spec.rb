@@ -123,7 +123,7 @@ describe 'Simp::BeakerHelpers' do
       ENV['PUPPET_INSTALL_VERSION']= '5.5.0'
       expected = {
         :puppet_install_version   => '5.5.0',
-        :puppet_collection => 'puppet5',
+        :puppet_collection        => 'puppet5',
         :puppet_install_type      => 'agent'
       }
       expect( @helper.get_puppet_install_info ).to eq expected
@@ -135,7 +135,7 @@ describe 'Simp::BeakerHelpers' do
       ENV['BEAKER_PUPPET_COLLECTION']= 'puppet6'
       expected = {
         :puppet_install_version   => '5.5.0',
-        :puppet_collection => 'puppet5',
+        :puppet_collection        => 'puppet5',
         :puppet_install_type      => 'agent'
       }
       expect( @helper.get_puppet_install_info ).to eq expected
@@ -147,7 +147,7 @@ describe 'Simp::BeakerHelpers' do
       @helper.host.options = {'puppet_collection' => 'puppet6'}
       expected = {
         :puppet_install_version   => '5.5.0',
-        :puppet_collection => 'puppet5',
+        :puppet_collection        => 'puppet5',
         :puppet_install_type      => 'agent'
       }
       expect( @helper.get_puppet_install_info ).to eq expected
@@ -157,7 +157,7 @@ describe 'Simp::BeakerHelpers' do
       ENV['BEAKER_PUPPET_AGENT_VERSION']= '4.10.5'
       expected = {
         :puppet_install_version   => '1.10.5',
-        :puppet_collection => nil,
+        :puppet_collection        => nil,
         :puppet_install_type      => 'agent'
       }
       expect( @helper.get_puppet_install_info ).to eq expected
@@ -167,7 +167,7 @@ describe 'Simp::BeakerHelpers' do
       ENV['PUPPET_VERSION']= '4.10.5'
       expected = {
         :puppet_install_version   => '1.10.5',
-        :puppet_collection => nil,
+        :puppet_collection        => nil,
         :puppet_install_type      => 'agent'
       }
       expect( @helper.get_puppet_install_info ).to eq expected
@@ -178,7 +178,7 @@ describe 'Simp::BeakerHelpers' do
       ENV['BEAKER_PUPPET_COLLECTION']= 'puppet5'
       expected = {
         :puppet_install_version   => '5.5.1',
-        :puppet_collection => 'puppet5',
+        :puppet_collection        => 'puppet5',
         :puppet_install_type      => 'agent'
       }
       expect( @helper.get_puppet_install_info ).to eq expected
@@ -189,7 +189,7 @@ describe 'Simp::BeakerHelpers' do
       @helper.host.options = {'puppet_collection' => 'puppet5'}
       expected = {
         :puppet_install_version   => '5.5.1',
-        :puppet_collection => 'puppet5',
+        :puppet_collection        => 'puppet5',
         :puppet_install_type      => 'agent'
       }
       expect( @helper.get_puppet_install_info ).to eq expected
