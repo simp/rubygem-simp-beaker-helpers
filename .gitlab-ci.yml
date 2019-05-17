@@ -98,21 +98,6 @@ default:
     - beaker
   <<: *cache_bundler
   <<: *setup_bundler_env
-  variables:
-    PUPPET_VERSION: '~> 4.10.10'
-  script:
-    - bundle exec rake spec_clean
-    - bundle exec rake beaker:suites[default]
-
-default-puppet5:
-  stage: acceptance
-  tags:
-    - beaker
-  <<: *cache_bundler
-  <<: *setup_bundler_env
-  variables:
-    PUPPET_VERSION: '~> 5.3'
-    BEAKER_PUPPET_COLLECTION: 'puppet5'
   script:
     - bundle exec rake spec_clean
     - bundle exec rake beaker:suites[default]

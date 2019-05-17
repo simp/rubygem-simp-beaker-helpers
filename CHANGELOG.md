@@ -1,3 +1,10 @@
+### 1.14.2 / 2019-05-16
+* Move the minimum supported puppet version to Puppet 5 since Puppet 4 has been
+  removed from the download servers completely. Beaker may re-add support for
+  the new location so not removing the mappings at this time.
+* Fixed a bug where a hash item was incorrect and not properly passing along
+  configuration items.
+
 ### 1.14.1 / 2019-04-15
 * Handle license acceptance option needed for new versions of inspec.
 
