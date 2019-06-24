@@ -1,3 +1,7 @@
+### 1.14.3 / 2019-06-24
+* Add RPM-GPG-KEY-SIMP-6 to the SIMP dependencies repo created
+  by install_simp_repo.
+
 ### 1.14.2 / 2019-05-16
 * Move the minimum supported puppet version to Puppet 5 since Puppet 4 has been
   removed from the download servers completely. Beaker may re-add support for

@@ -978,6 +978,7 @@ done
       'simp_deps' => {
         :baseurl   => 'https://packagecloud.io/simp-project/6_X_Dependencies/el/$releasever/$basearch',
         :gpgkey    => ['https://raw.githubusercontent.com/NationalSecurityAgency/SIMP/master/GPGKEYS/RPM-GPG-KEY-SIMP',
+                    'https://download.simp-project.com/simp/GPGKEYS/RPM-GPG-KEY-SIMP-6',
                     'https://yum.puppet.com/RPM-GPG-KEY-puppetlabs',
                     'https://yum.puppet.com/RPM-GPG-KEY-puppet',
                     'https://apt.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-96',
