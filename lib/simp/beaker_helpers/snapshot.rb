@@ -109,7 +109,6 @@ module Simp::BeakerHelpers
               :max_retries => 30,
               :retry_interval => 1
             )
-
           end
         end
       end
@@ -123,9 +122,9 @@ module Simp::BeakerHelpers
     def self.restore_to_base(host)
       if exist?(host, BASE_NAME)
         restore(host, BASE_NAME)
+      else
+        save(host, BASE_NAME)
       end
-
-      save(host, BASE_NAME)
     end
 
     private
