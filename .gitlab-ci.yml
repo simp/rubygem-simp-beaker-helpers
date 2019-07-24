@@ -149,3 +149,15 @@ windows:
   script:
     - bundle exec rake spec_clean
     - bundle exec rake beaker:suites[windows]
+
+snapshot:
+  stage: acceptance
+  tags:
+    - beaker
+  <<: *cache_bundler
+  <<: *setup_bundler_env
+  variables:
+    BEAKER_simp_snapshot: 'yes'
+  script:
+    - bundle exec rake spec_clean
+    - bundle exec rake beaker:suites[snapshot]
