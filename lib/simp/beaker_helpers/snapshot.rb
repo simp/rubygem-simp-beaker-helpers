@@ -2,7 +2,7 @@ module Simp::BeakerHelpers
   # Helpers for working with the SCAP Security Guide
   class Snapshot
     # The name of the base snapshot that is created if no snapshots currently exist
-    BASE_NAME = 'simp_beaker_base'
+    BASE_NAME = '_simp_beaker_base'
 
     # Save a snapshot
     #
@@ -18,7 +18,7 @@ module Simp::BeakerHelpers
 
         if vdir
           Dir.chdir(vdir) do
-            unless list(host).include?(BASE_NAME)
+            unless exist?(host, BASE_NAME)
               save(host, BASE_NAME)
             end
 
@@ -105,7 +105,7 @@ module Simp::BeakerHelpers
 
             retry_on(
               host,
-              'echo "restoring snapshot" > /dev/null',
+              %(echo "restoring snapshot '#{snap}'" > /dev/null),
               :max_retries => 30,
               :retry_interval => 1
             )
