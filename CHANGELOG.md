@@ -1,3 +1,6 @@
+### 1.14.4 / 2019-07-26
+* Bump the version of Highline to 2.0+ due to bugs in the latest 1.X series
+
 ### 1.14.3 / 2019-06-24
 * Add RPM-GPG-KEY-SIMP-6 to the SIMP dependencies repo created
   by install_simp_repo.
