@@ -45,6 +45,14 @@ Methods to assist beaker acceptance tests for SIMP.
 * [Examples](#examples)
   * [Prep OS, Generate and copy PKI certs to each SUT](#prep-os-generate-and-copy-pki-certs-to-each-sut)
   * [Specify the version of Puppet to run in the SUTs](#specify-the-version-of-puppet-to-run-in-the-suts)
+* [Experimental Features](#experimental-features)
+  * [Snapshot Support](#snapshot-support)
+    * [Running Tests with Snapshots](#running-tests-with-snapshots)
+    * [Adding Snapshots to your Tests](#adding-snapshots-to-your-tests)
+      * [Taking a Snapshot](#taking-a-snapshot)
+      * [Base Snapshots](#base-snapshots)
+      * [Restoring a Snapshot](#restoring-a-snapshot)
+      * [Listing Snapshots](#listing-snapshots)
 * [License](#license)
 
 <!-- vim-markdown-toc -->
@@ -438,6 +446,74 @@ PUPPET_VERSION="5" bundle exec rake beaker:suites
 # puppet-agent 1.10.4 will be installed in VMs
 bundle exec rake beaker:suites
 ```
+
+## Experimental Features
+
+### Snapshot Support
+
+Rudimentary support for snapshotting VMs has been added. This currently only
+works for local `vagrant` systems and relies on the underlying `vagrant
+snapshot` command working for the underlying hypervisor. VirtualBox is highly
+recommended and `libvirt` is known to not work due to limitiations in
+`vagrant`.
+
+This was added to attempt to be able to restart tests from given checkpoints
+that encompass extremely long running test segments. This is particularly
+relevant when you are trying to set up a large support infrastructure but need
+to debug later stages of your tests over time.
+
+#### Running Tests with Snapshots
+
+To enable snapshots during your initial test runs, run your test as follows:
+
+```bash
+BEAKER_destroy=no BEAKER_simp_snapshot=yes rake beaker:suites
+```
+
+Then, on subsequent runs, run your test as follows:
+
+```bash
+BEAKER_provision=no BEAKER_destroy=no BEAKER_simp_snapshot=yes rake beaker:suites
+```
+#### Adding Snapshots to your Tests
+
+The following demonstrates the general idea behind using snapshots. Note, the
+decision to directly call the module methods was made to ensure that people
+knew explicitly when this capability was being called since it affects the
+underlying OS configuration.
+
+##### Taking a Snapshot
+
+`Simp::BeakerHelpers::Snapshot.save(sut, '<name of snapshot>')` will save a
+snapshot with the given name. If the snapshot already exists, it will be
+forceably overwritten.
+
+
+##### Base Snapshots
+
+Any time a snapshot is saved, if an initial base snapshot doesn't exist, one
+will be created. You can restore back to the base snapshot using
+`Simp::BeakerHelpers::Snapshot.restore_to_base(sut)`.
+
+These are specifically created to ensure that we don't run into issues with
+trying to remove the parent of all snapshots since some hypervisors do not
+allow this.
+
+##### Restoring a Snapshot
+
+`Simp::BeakerHelpers::Snapshot.restore(sut, '<name of snapshot>)` will restore
+to the named snapshot.
+
+Attempting to restore to a snapshot that doesn't exist is an error.
+
+##### Listing Snapshots
+
+`Simp::BeakerHelpers::Snapshot.list(sut)` will return an Array of all snapshot
+names for that system.
+
+`Simp::BeakerHelpers::Snapshot.exist?(sut, '<name of snapshot>')` will return a
+Boolean based on whether or not the snapshot with the given name is present on
+the system.
 
 ## License
 See [LICENSE](LICENSE)
