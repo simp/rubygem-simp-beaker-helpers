@@ -1,10 +1,14 @@
 module Simp::BeakerHelpers
+  require 'simp/beaker_helpers/constants'
+
   # Helpers for working with the SCAP Security Guide
   class SSG
 
     if ENV['BEAKER_ssg_repo']
       GIT_REPO = ENV['BEAKER_ssg_repo']
     else
+      fail('You are offline: Set BEAKER_ssg_repo to point to the git repo that hosts the SSG content') unless ONLINE
+
       GIT_REPO = 'https://github.com/ComplianceAsCode/content.git'
     end
 

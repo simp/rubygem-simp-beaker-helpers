@@ -1,4 +1,6 @@
 module Simp::BeakerHelpers
+  require 'simp/beaker_helpers/constants'
+
   # Helpers for working with Inspec
   class Inspec
 

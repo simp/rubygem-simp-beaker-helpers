@@ -1,0 +1,26 @@
+HOSTS:
+  el7:
+    platform: el-7-x86_64
+    box: centos/7
+    # This doesn't work with any other hypervisor
+    hypervisor: 'vagrant_libvirt'
+    vagrant_memsize: 3072
+    vagrant_cpus: 4
+    # Necessary to prevent network overlap inside the spawned test set
+    ip: '172.16.251.111'
+    netmask: '255.255.255.0'
+
+CONFIG:
+  log_level: verbose
+  type: aio
+<% if ENV['BEAKER_PUPPET_COLLECTION'] -%>
+  puppet_collection: <%= ENV['BEAKER_PUPPET_COLLECTION'] %>
+<% end -%>
+  libvirt:
+    # Ensure that we use the best option available
+    'cpu_mode': 'host-passthrough'
+    # Make sure that vagrant knows that we're rolling nested virt
+    'nested': true
+    # Necessary to prevent network overlap inside the spawned test set
+    'management_network_name': 'beaker-mgmt'
+    'management_network_address': '172.16.250.1/24'
