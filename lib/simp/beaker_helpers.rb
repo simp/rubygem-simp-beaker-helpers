@@ -1,4 +1,5 @@
 require 'beaker-puppet'
+require 'bundler'
 
 module Simp; end
 
