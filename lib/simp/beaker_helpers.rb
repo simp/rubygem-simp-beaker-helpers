@@ -6,22 +6,17 @@ module Simp; end
 module Simp::BeakerHelpers
   include BeakerPuppet
 
-  require 'simp/beaker_helpers/version'
+  require 'simp/beaker_helpers/constants'
   require 'simp/beaker_helpers/inspec'
   require 'simp/beaker_helpers/snapshot'
   require 'simp/beaker_helpers/ssg'
+  require 'simp/beaker_helpers/version'
 
   # Stealing this from the Ruby 2.5 Dir::Tmpname workaround from Rails
   def self.tmpname
     t = Time.new.strftime("%Y%m%d")
     "simp-beaker-helpers-#{t}-#{$$}-#{rand(0x100000000).to_s(36)}.tmp"
   end
-
-  # This is the *oldest* version that the latest release of SIMP supports
-  #
-  # This is done so that we know if some new thing that we're using breaks the
-  # oldest system that we support.
-  DEFAULT_PUPPET_AGENT_VERSION = '~> 5.0'
 
   # We can't cache this because it may change during a run
   def fips_enabled(sut)
