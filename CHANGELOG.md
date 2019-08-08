@@ -1,3 +1,6 @@
+### 1.15.0 / 2019-08-08
+* Add the ability to handle registration of Red Hat hosts with the RHN.
+
 ### 1.14.4 / 2019-07-26
 * Bump the version of Highline to 2.0+ due to bugs in the latest 1.X series
 

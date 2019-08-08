@@ -42,6 +42,8 @@ Methods to assist beaker acceptance tests for SIMP.
     * [`BEAKER_use_fixtures_dir_for_modules`](#beaker_use_fixtures_dir_for_modules)
     * [`BEAKER_no_fix_interfaces`](#beaker_no_fix_interfaces)
     * [PUPPET_VERSION](#puppet_version)
+    * [BEAKER_RHSM_USER](#beaker_rhsm_user)
+    * [BEAKER_RHSM_PASS](#beaker_rhsm_pass)
 * [Examples](#examples)
   * [Prep OS, Generate and copy PKI certs to each SUT](#prep-os-generate-and-copy-pki-certs-to-each-sut)
   * [Specify the version of Puppet to run in the SUTs](#specify-the-version-of-puppet-to-run-in-the-suts)
@@ -383,8 +385,20 @@ The `PUPPET_VERSION` environment variable will install the latest
 `BEAKER_PUPPET_AGENT_VERSION` and `PUPPET_INSTALL_VERSION` are synonyms of
 `PUPPET_VERSION`.
 
-## Examples
+#### BEAKER_RHSM_USER
 
+The username to use with Red Hat Subscription Manager when dealing with a RHEL host.
+
+Will not be output to the screen.
+
+#### BEAKER_RHSM_PASS
+
+The password to use with Red Hat Subscription Manager when dealing with a RHEL host.
+
+Will not be output to the screen.
+
+
+## Examples
 
 ### Prep OS, Generate and copy PKI certs to each SUT
 This pattern serves to prepare component modules that use PKI
