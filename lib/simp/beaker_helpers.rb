@@ -18,6 +18,12 @@ module Simp::BeakerHelpers
     "simp-beaker-helpers-#{t}-#{$$}-#{rand(0x100000000).to_s(36)}.tmp"
   end
 
+  def is_windows?(sut)
+    @is_windows ||= fact_on(sut, 'osfamily').casecmp?('windows')
+
+    @is_windows
+  end
+
   # We can't cache this because it may change during a run
   def fips_enabled(sut)
     return on( sut,
@@ -95,7 +101,10 @@ module Simp::BeakerHelpers
 
   # Returns the modulepath on the SUT, as an Array
   def puppet_modulepath_on(sut, environment='production')
-    sut.puppet['modulepath'].split(':')
+    splitchar = ':'
+    splitchar = ';' if is_windows?(sut)
+
+    sut.puppet_configprint['modulepath'].split(splitchar)
   end
 
   # Return the path to the 'spec/fixtures' directory
@@ -203,24 +212,37 @@ module Simp::BeakerHelpers
           mod_root = File.expand_path( "spec/fixtures/modules", File.dirname( fixtures_yml_path ))
 
           Dir.chdir(mod_root) do
-            begin
-              tarfile = "#{Simp::BeakerHelpers.tmpname}.tar"
-
-              excludes = PUPPET_MODULE_INSTALL_IGNORE.map do |x|
-                x = "--exclude '*/#{x}'"
-              end.join(' ')
-
-              %x(tar -ch #{excludes} -f #{tarfile} *)
-
-              if File.exist?(tarfile)
-                copy_to(sut, tarfile, target_module_path, opts)
-              else
-                fail("Error: module tar file '#{tarfile}' could not be created at #{mod_root}")
+            # Have to do things the slow way on Windows
+            if is_windows?(sut)
+              Dir.glob('*') do |module_dir|
+                if File.directory?(module_dir)
+                  copy_module_to( sut, {
+                    :source             => module_dir,
+                    :module_name        => module_dir,
+                    :target_module_path => target_module_path
+                  })
+                end
               end
+            else
+              begin
+                tarfile = "#{Simp::BeakerHelpers.tmpname}.tar"
 
-              on(sut, "cd #{target_module_path} && tar -xf #{File.basename(tarfile)}")
-            ensure
-              FileUtils.remove_entry(tarfile, true)
+                excludes = PUPPET_MODULE_INSTALL_IGNORE.map do |x|
+                  x = "--exclude '*/#{x}'"
+                end.join(' ')
+
+                %x(tar -ch #{excludes} -f #{tarfile} *)
+
+                if File.exist?(tarfile)
+                  copy_to(sut, tarfile, target_module_path, opts)
+                else
+                  fail("Error: module tar file '#{tarfile}' could not be created at #{mod_root}")
+                end
+
+                on(sut, "cd #{target_module_path} && tar -xf #{File.basename(tarfile)}")
+              ensure
+                FileUtils.remove_entry(tarfile, true)
+              end
             end
           end
         end
@@ -735,11 +757,11 @@ done
     # This output lets us know where Hiera is configured to look on the system
     puppet_lookup_info = on(sut, 'puppet lookup --explain test__simp__test').output.strip.lines
 
-    if sut.puppet['manifest'].nil? || sut.puppet['manifest'].empty?
+    if sut.puppet_configprint['manifest'].nil? || sut.puppet_configprint['manifest'].empty?
       fail("No output returned from `puppet config print manifest` on #{sut}")
     end
 
-    puppet_env_path = File.dirname(sut.puppet['manifest'])
+    puppet_env_path = File.dirname(sut.puppet_configprint['manifest'])
 
     # We'll just take the first match since Hiera will find things there
     puppet_lookup_info = puppet_lookup_info.grep(/Path "/).grep(Regexp.new(puppet_env_path))
