@@ -1,3 +1,6 @@
+### 1.14.5 / 2019-08-14
+* Update the CentOS SSG hooks to properly work with CentOS 6
+
 ### 1.14.4 / 2019-07-26
 * Bump the version of Highline to 2.0+ due to bugs in the latest 1.X series
 

@@ -53,8 +53,8 @@ module Simp::BeakerHelpers
           'required_packages' => EL_PACKAGES,
           'ssg' => {
             'profile_target' => 'rhel6',
-            'build_target'   => 'rhel6',
-            'datastream'     => 'ssg-rhel6-ds.xml'
+            'build_target'   => 'centos6',
+            'datastream'     => 'ssg-centos6-ds.xml'
           }
         },
         '7' => {
