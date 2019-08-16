@@ -19,9 +19,7 @@ module Simp::BeakerHelpers
   end
 
   def is_windows?(sut)
-    @is_windows ||= fact_on(sut, 'osfamily').casecmp?('windows')
-
-    @is_windows
+    fact_on(sut, 'osfamily').casecmp?('windows')
   end
 
   # We can't cache this because it may change during a run
