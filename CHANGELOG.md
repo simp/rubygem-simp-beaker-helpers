@@ -1,5 +1,16 @@
+
 ### 1.15.0 / 2019-08-08
 * Add the ability to handle registration of Red Hat hosts with the RHN.
+
+### 1.14.6 / 2019-08-15
+* Add Windows client support to the beaker helpers functions
+  * Added an `is_windows?(sut)` function
+  * Work around issues with calling `sut.puppet` on Windows SUTs
+  * Update `copy_fixture_modules_to` to support Windows (slow copy)
+  * Add Windows support to `puppet_modulepath_on`
+
+### 1.14.5 / 2019-08-14
+* Update the CentOS SSG hooks to properly work with CentOS 6
 
 ### 1.14.4 / 2019-07-26
 * Bump the version of Highline to 2.0+ due to bugs in the latest 1.X series
