@@ -1,3 +1,7 @@
+
+### 1.15.0 / 2019-08-08
+* Add the ability to handle registration of Red Hat hosts with the RHN.
+
 ### 1.14.6 / 2019-08-15
 * Add Windows client support to the beaker helpers functions
   * Added an `is_windows?(sut)` function

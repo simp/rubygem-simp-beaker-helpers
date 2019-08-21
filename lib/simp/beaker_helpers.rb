@@ -434,7 +434,6 @@ module Simp::BeakerHelpers
 
       user_info = on(sut, 'getent passwd').stdout.lines
 
-      cmd = []
       # Hash of user => home_dir
       # Exclude silly directories
       #   * /
@@ -471,6 +470,18 @@ module Simp::BeakerHelpers
     end
 
     if fact_on(sut, 'osfamily') == 'RedHat'
+      if fact_on(sut, 'operatingsystem') == 'RedHat'
+        RSpec.configure do |c|
+          c.before(:all) do
+            rhel_rhsm_subscribe(sut)
+          end
+
+          c.after(:all) do
+            rhel_rhsm_unsubscribe(sut)
+          end
+        end
+      end
+
       enable_yum_repos_on(sut)
 
       # net-tools required for netstat utility being used by be_listening
@@ -484,6 +495,74 @@ module Simp::BeakerHelpers
       # Clean up YUM prior to starting our test runs.
       on(sut, 'yum clean all')
     end
+  end
+
+  # Register a RHEL system with a development license
+  #
+  # Must set BEAKER_RHSM_USER and BEAKER_RHSM_PASS environment variables or pass them in as
+  # parameters
+  def rhel_rhsm_subscribe(sut, *opts)
+    require 'securerandom'
+
+    rhsm_opts = {
+      :username => ENV['BEAKER_RHSM_USER'],
+      :password => ENV['BEAKER_RHSM_PASS'],
+      :system_name => "#{sut}_beaker_#{Time.now.to_i}_#{SecureRandom.uuid}",
+      :repo_list => {
+        '7' => [
+          'rhel-7-server-extras-rpms',
+          'rhel-7-server-optional-rpms',
+          'rhel-7-server-rh-common-rpms',
+          'rhel-7-server-rpms',
+          'rhel-7-server-supplementary-rpms'
+        ],
+        '8' => [
+          'rhel-8-for-x86_64-baseos-rpms',
+          'rhel-8-for-x86_64-supplementary-rpms'
+        ]
+      }
+    }
+
+    if opts && opts.is_a?(Hash)
+      rhsm_opts.merge!(opts)
+    end
+
+    os = fact_on(sut, 'operatingsystem').strip
+    os_release = fact_on(sut, 'operatingsystemmajrelease').strip
+
+    if os == 'RedHat'
+      unless rhsm_opts[:username] && rhsm_opts[:password]
+        fail("You must set BEAKER_RHSM_USER and BEAKER_RHSM_PASS environment variables to register RHEL systems")
+      end
+
+      sub_status = on(sut, 'subscription-manager status', :accept_all_exit_codes => true)
+      unless sub_status.exit_code == 0
+        logger.info("Registering #{sut} via subscription-manager")
+        on(sut, %{subscription-manager register --auto-attach --name='#{rhsm_opts[:system_name]}' --username='#{rhsm_opts[:username]}' --password='#{rhsm_opts[:password]}'}, :silent => true)
+      end
+
+      if rhsm_opts[:repo_list][os_release]
+        rhel_repo_enable(sut, rhsm_opts[:repo_list][os_release])
+      else
+        logger.warn("simp-beaker-helpers:#{__method__} => Default repos for RHEL '#{os_release}' not found")
+      end
+    end
+  end
+
+  def rhel_repo_enable(sut, repos)
+    Array(repos).each do |repo|
+      on(sut, %{subscription-manager repos --enable #{repo}})
+    end
+  end
+
+  def rhel_repo_disable(sut, repos)
+    Array(repos).each do |repo|
+      on(sut, %{subscription-manager repos --disable #{repo}}, :accept_all_exit_codes => true)
+    end
+  end
+
+  def rhel_rhsm_unsubscribe(sut)
+    on(sut, %{subscription-manager unregister}, :accept_all_exit_codes => true)
   end
 
   # Apply known OS fixes we need to run Beaker on each SUT
@@ -980,7 +1059,6 @@ done
   #  'simp_deps'
   #
   def install_simp_repos(sut, disable = [] )
- 
     repos = {
       'simp' => {
         :baseurl   => 'https://packagecloud.io/simp-project/6_X/el/$releasever/$basearch',
