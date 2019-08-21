@@ -397,6 +397,8 @@ The password to use with Red Hat Subscription Manager when dealing with a RHEL h
 
 Will not be output to the screen.
 
+Note:  When using Subscription Manager, make sure your nodeset has the setting validation: false.   Otherwise Beaker:Rspec
+might try to install packages before subscription manager is configured.
 
 ## Examples
 
