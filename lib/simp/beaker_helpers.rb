@@ -546,6 +546,10 @@ module Simp::BeakerHelpers
       else
         logger.warn("simp-beaker-helpers:#{__method__} => Default repos for RHEL '#{os_release}' not found")
       end
+
+      # Ensure that all users can access the entitlements since we don't know
+      # who we'll be running jobs as (often not root)
+      on(sut, 'chmod -R ugo+rX /etc/pki/entitlement', :accept_all_exit_codes => true)
     end
   end
 

@@ -1,3 +1,5 @@
+### 1.15.1 / 2019-08-26
+* Ensure that any user on the SUT can use the RedHat entitlements
 
 ### 1.15.0 / 2019-08-08
 * Add the ability to handle registration of Red Hat hosts with the RHN.
