@@ -1,3 +1,6 @@
+### 1.16.0 / 2019-09-23
+* Added a sosreport function to gather SOS Reports from EL systems
+
 ### 1.15.2 / 2019-09-13
 * Fix an issue where the inspec reports were not processed properly
 
