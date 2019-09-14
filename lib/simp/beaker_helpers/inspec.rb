@@ -196,31 +196,59 @@ module Simp::BeakerHelpers
 
           next unless title
 
-          stats[:profiles][profile_name][:controls][title] = {}
+          base_title = title.scan(/.{1,60}\W|.{1,60}/).map(&:strip).join("\n           ")
 
-          formatted_title = title.scan(/.{1,72}\W|.{1,72}/).map(&:strip).join("\n           ")
+          if control['results'] && (control['results'].size > 1)
+            control['results'].each do |result|
+              control_title = " => { #{result['code_desc']} }"
 
-          stats[:profiles][profile_name][:controls][title][:formatted_title] = formatted_title
+              full_title = title + control_title
+              formatted_title = base_title + control_title
 
-          if control['results'] && !control['results'].empty?
-            status = control['results'].first['status']
+              stats[:profiles][profile_name][:controls][full_title] = {}
 
-            if status == /^fail/
-              status = :failed
-              color = 'red'
-            else
-              status = :passed
-              color = 'green'
+              stats[:profiles][profile_name][:controls][full_title][:formatted_title] = formatted_title
+
+              if result['status'] =~ /^fail/
+                status = :failed
+                color = 'red'
+              else
+                status = :passed
+                color = 'green'
+              end
+
+              stats[:global][status] << formatted_title.color
+
+              stats[:profiles][profile_name][:controls][full_title][:status] = status
+              stats[:profiles][profile_name][:controls][full_title][:source] = control['source_location']['ref']
             end
           else
-            status = :skipped
-            color = 'yellow'
+            formatted_title = base_title
+
+            stats[:profiles][profile_name][:controls][title] = {}
+
+            stats[:profiles][profile_name][:controls][title][:formatted_title] = formatted_title
+
+            if control['results'] && !control['results'].empty?
+              status = :passed
+              color = 'green'
+
+              control['results'].each do |result|
+                if results['status'] =~ /^fail/
+                  status = :failed
+                  color = 'red'
+                end
+              end
+
+            else
+              status = :skipped
+            end
+
+            stats[:global][status] << formatted_title.color
+
+            stats[:profiles][profile_name][:controls][title][:status] = status
+            stats[:profiles][profile_name][:controls][title][:source] = control['source_location']['ref']
           end
-
-          stats[:global][status] << title.to_s.color
-
-          stats[:profiles][profile_name][:controls][title][:status] = status
-          stats[:profiles][profile_name][:controls][title][:source] = control['source_location']['ref']
         end
       end
 
