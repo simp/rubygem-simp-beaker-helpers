@@ -19,9 +19,17 @@ module Simp::BeakerHelpers
     #   The name of the profile against which to run
     #
     def initialize(sut, profile)
+      @inspec_version = ENV['BEAKER_inspec_version'] || '4.16.14'
+
       @sut = sut
 
-      @sut.install_package('inspec')
+      @sut.install_package('git')
+
+      if @inspec_version == 'latest'
+        @sut.install_package('inspec')
+      else
+        @sut.install_package("inspec-#{@inspec_version}")
+      end
 
       os = fact_on(@sut, 'operatingsystem')
       os_rel = fact_on(@sut, 'operatingsystemmajrelease')
@@ -179,6 +187,9 @@ module Simp::BeakerHelpers
       end
 
       if !profiles || profiles.empty?
+      require 'pry'
+      binding.pry
+
         fail("Error: Could not find 'profiles' in the passed results")
       end
 
