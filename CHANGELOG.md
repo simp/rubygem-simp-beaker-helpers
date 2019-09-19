@@ -1,3 +1,6 @@
+### 1.15.2 / 2019-09-13
+* Fix an issue where the inspec reports were not processed properly
+
 ### 1.15.1 / 2019-08-26
 * Ensure that any user on the SUT can use the RedHat entitlements
 
