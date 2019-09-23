@@ -553,6 +553,19 @@ module Simp::BeakerHelpers
     end
   end
 
+  def sosreport(sut, dest='sosreports')
+    sut.install_package('sos')
+    on(sut, 'sosreport --batch')
+
+    files = on(sut, 'ls /var/tmp/sosreport* /tmp/sosreport* 2>/dev/null', :accept_all_exit_codes => true).output.lines.map(&:strip)
+
+    FileUtils.mkdir_p(dest)
+
+    files.each do |file|
+      scp_from(sut, file, File.absolute_path(dest))
+    end
+  end
+
   def rhel_repo_enable(sut, repos)
     Array(repos).each do |repo|
       on(sut, %{subscription-manager repos --enable #{repo}})
