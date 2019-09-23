@@ -557,7 +557,7 @@ module Simp::BeakerHelpers
     sut.install_package('sos')
     on(sut, 'sosreport --batch')
 
-    files = on(sut, 'ls /var/tmp/sosreport* /tmp/sosreport* 2>/dev/null').output.lines.map(&:strip)
+    files = on(sut, 'ls /var/tmp/sosreport* /tmp/sosreport* 2>/dev/null', :accept_all_exit_codes => true).output.lines.map(&:strip)
 
     FileUtils.mkdir_p(dest)
 
