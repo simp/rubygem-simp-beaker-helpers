@@ -1,3 +1,6 @@
+### 1.16.1 / 2019-09-25
+* Remove debugging pry that was accidentally left in
+
 ### 1.16.0 / 2019-09-23
 * Added a sosreport function to gather SOS Reports from EL systems
 

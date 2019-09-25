@@ -187,9 +187,6 @@ module Simp::BeakerHelpers
       end
 
       if !profiles || profiles.empty?
-      require 'pry'
-      binding.pry
-
         fail("Error: Could not find 'profiles' in the passed results")
       end
 
