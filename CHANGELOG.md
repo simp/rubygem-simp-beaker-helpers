@@ -1,3 +1,6 @@
+### 1.16.2 / 2019-10-10
+* Pull latest inspec package now that the upstream bug is fixed
+
 ### 1.16.1 / 2019-09-25
 * Remove debugging pry that was accidentally left in
 
