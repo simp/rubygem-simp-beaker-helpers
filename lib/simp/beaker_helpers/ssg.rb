@@ -156,8 +156,16 @@ module Simp::BeakerHelpers
       end
     end
 
-    # Retrieve a subset of test results based on a match to
-    # filter
+    # Retrieve a subset of test results based on a match to filter
+    #
+    # @param filter [String, Array[String]]
+    #   A 'short name' filter that will be matched against the rule ID name
+    #
+    # @param exclusions [String, Array[String]]
+    #   A 'short name' filter of items that will be removed from the `filter`
+    #   matches
+    #
+    # @return [Hash] A Hash of statistics and a formatted report
     #
     # FIXME:
     # - This is a hack! Should be searching for rules based on a set
@@ -173,6 +181,16 @@ module Simp::BeakerHelpers
     end
 
     # Process the results of an SSG run
+    #
+    # @param result_file [String]
+    #   The oscap result XML file to process
+    #
+    # @param filter [String, Array[String]]
+    #   A 'short name' filter that will be matched against the rule ID name
+    #
+    # @param exclusions [String, Array[String]]
+    #   A 'short name' filter of items that will be removed from the `filter`
+    #   matches
     #
     # @return [Hash] A Hash of statistics and a formatted report
     #
@@ -221,7 +239,8 @@ module Simp::BeakerHelpers
 
         # XPATH to get the pertinent test results:
         #   Any node named 'rule-result' for which the attribute 'idref'
-        #   contains filter
+        #   contains any of the `filter` Strings and does not contain any of the
+        #   `exclusions` Strings
         result_nodes = doc.xpath(xpath_query)
       else
         result_nodes = doc.xpath('//rule-result')
