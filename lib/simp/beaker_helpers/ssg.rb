@@ -156,23 +156,45 @@ module Simp::BeakerHelpers
       end
     end
 
-    # Retrieve a subset of test results based on a match to
-    # filter
+    # Retrieve a subset of test results based on a match to filter
+    #
+    # @param filter [String, Array[String]]
+    #   A 'short name' filter that will be matched against the rule ID name
+    #
+    # @param exclusions [String, Array[String]]
+    #   A 'short name' filter of items that will be removed from the `filter`
+    #   matches
+    #
+    # @return [Hash] A Hash of statistics and a formatted report
     #
     # FIXME:
     # - This is a hack! Should be searching for rules based on a set
     #   set of STIG ids, but don't see those ids in the oscap results xml.
     #   Further mapping is required...
     # - Create the same report structure as inspec
-    def process_ssg_results(filter=nil)
-      self.class.process_ssg_results(File.join(@output_dir, @result_file) + '.xml', filter)
+    def process_ssg_results(filter=nil, exclusions=nil)
+      self.class.process_ssg_results(
+        File.join(@output_dir, @result_file) + '.xml',
+        filter,
+        exclusions
+      )
     end
 
     # Process the results of an SSG run
     #
+    # @param result_file [String]
+    #   The oscap result XML file to process
+    #
+    # @param filter [String, Array[String]]
+    #   A 'short name' filter that will be matched against the rule ID name
+    #
+    # @param exclusions [String, Array[String]]
+    #   A 'short name' filter of items that will be removed from the `filter`
+    #   matches
+    #
     # @return [Hash] A Hash of statistics and a formatted report
     #
-    def self.process_ssg_results(result_file, filter=nil)
+    def self.process_ssg_results(result_file, filter=nil, exclusions=nil)
       require 'highline'
       require 'nokogiri'
 
@@ -187,10 +209,39 @@ module Simp::BeakerHelpers
       doc.remove_namespaces!
 
       if filter
+        filter = Array(filter)
+
+        xpath_query = [
+          '//rule-result[(',
+        ]
+
+        xpath_query << filter.map do |flt|
+          "contains(@idref,'#{flt}')"
+        end.join(' or ')
+
+        xpath_query << ')' if filter.size > 1
+
+        if exclusions
+          exclusions = Array(exclusions)
+
+          xpath_query << 'and not('
+
+          xpath_query << exclusions.map do |exl|
+            "contains(@idref,'#{exl}')"
+          end.join(' or ')
+
+          xpath_query << ')' if exclusions.size > 1
+        end
+
+        xpath_query << ')]'
+
+        xpath_query = xpath_query.join(' ')
+
         # XPATH to get the pertinent test results:
         #   Any node named 'rule-result' for which the attribute 'idref'
-        #   contains filter
-        result_nodes = doc.xpath("//rule-result[contains(@idref,'#{filter}')]")
+        #   contains any of the `filter` Strings and does not contain any of the
+        #   `exclusions` Strings
+        result_nodes = doc.xpath(xpath_query)
       else
         result_nodes = doc.xpath('//rule-result')
       end

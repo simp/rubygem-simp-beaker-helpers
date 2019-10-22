@@ -1,3 +1,7 @@
+### 1.17.0 / 2019-10-22
+* Allow users to perform exclusion filters on SSG results
+* Allow users to pass Arrays of items to match for SSG results
+
 ### 1.16.2 / 2019-10-10
 * Pull latest inspec package now that the upstream bug is fixed
 
