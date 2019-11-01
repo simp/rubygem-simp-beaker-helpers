@@ -4,6 +4,31 @@ require 'rake/tasklib'
 require 'fileutils'
 require 'puppetlabs_spec_helper/rake_tasks'
 
+unless File.exists?('metadata.json')
+  # This is something just using beaker that wants the special sauce. In this
+  # case, we really don't want things that only have to do with puppet modules.
+  keep_tasks = [
+    '^spec$',
+    '^spec_',
+    '^rubocop',
+    '^parallel_',
+    '^beaker'
+  ].map{|x| Regexp.new(x)}
+
+  Rake::Task.tasks.each do |task|
+    unless keep_tasks.any?{ |regexp| regexp.match?(task.name) }
+      # Clearing the comments ensures that the tasks still exist but don't
+      # actually show up in the output of `rake -T`.
+      #
+      # You can still see them if you add `-A` and any future declaration of a
+      # task with the same name will generally do what the user wants. It's not
+      # perfect, but it does provide a better user experience when using the
+      # library with items that are not puppet modules.
+      task.clear_comments
+    end
+  end
+end
+
 module Simp; end
 module Simp::Rake
   class Beaker < ::Rake::TaskLib

@@ -1,3 +1,6 @@
+### 1.17.1 / 2019-11-1
+* Hide puppet-only tasks when not working on a puppet module
+
 ### 1.17.0 / 2019-10-22
 * Allow users to perform exclusion filters on SSG results
 * Allow users to pass Arrays of items to match for SSG results
