@@ -12,10 +12,6 @@ require 'simp/rake/beaker'
 
 Simp::Rake::Beaker.new(@rakefile_dir)
 
-['spec','syntax','syntax:hiera','syntax:manifests','syntax:templates','lint','metadata'].each do |task|
-  Rake::Task[task].clear
-end
-
 CLEAN.include "#{@package}-*.gem"
 CLEAN.include 'pkg'
 CLEAN.include 'dist'
