@@ -1,5 +1,8 @@
 ---
 fixtures:
+  # Needed for Hiera v5 to work
+  forge_modules:
+    compliance_markup: "simp/compliance_markup"
   repositories:
     stdlib: "https://github.com/simp/puppetlabs-stdlib"
 
