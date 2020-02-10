@@ -1,4 +1,16 @@
-### 1.17.1 / 2019-11-1
+### 1.18.0 / 2020-02-06
+* Update Windows support
+  * Add require beaker-windows and note installation of gem if missing
+  * Add geotrust global CA certificate in fix_eratta_on
+* Added convenience helper methods
+  * Add puppet_environment_path_on
+  * Add file_content_on which is multi-platform safe unlike the built-in
+    file_contents_on
+  * Add hiera_config_path_on
+  * Add get_hiera_config_on
+  * Add set_hiera_config_on
+
+### 1.17.1 / 2019-11-01
 * Only pull in the beaker rake tasks from the puppetlabs helpers
 
 ### 1.17.0 / 2019-10-22

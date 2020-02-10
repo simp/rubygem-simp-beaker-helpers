@@ -18,11 +18,11 @@ Gem::Specification.new do |s|
   s.metadata = {
                  'issue_tracker' => 'https://simp-project.atlassian.net'
                }
-  s.add_runtime_dependency 'beaker'                      , '~> 4.0'
+  s.add_runtime_dependency 'beaker'                      , ['>= 4.16.0', '< 5.0.0']
   s.add_runtime_dependency 'beaker-rspec'                , '~> 6.2'
-  s.add_runtime_dependency 'beaker-puppet'               , '~> 1.0'
+  s.add_runtime_dependency 'beaker-puppet'               , ['>= 1.18.12', '< 2.0.0']
   s.add_runtime_dependency 'beaker-docker'               , '~> 0.3'
-  s.add_runtime_dependency 'beaker-vagrant'              , '~> 0.5'
+  s.add_runtime_dependency 'beaker-vagrant'              , ['0.6.4', '< 2.0.0']
   s.add_runtime_dependency 'beaker-puppet_install_helper', '~> 0.9'
   s.add_runtime_dependency 'highline'                    , '~> 2.0'
   s.add_runtime_dependency 'nokogiri'                    , '~> 1.8'

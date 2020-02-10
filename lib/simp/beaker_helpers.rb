@@ -19,7 +19,23 @@ module Simp::BeakerHelpers
   end
 
   def is_windows?(sut)
-    fact_on(sut, 'osfamily').casecmp?('windows')
+    is_windows = fact_on(sut, 'osfamily').casecmp?('windows')
+
+    if is_windows
+      begin
+        require 'beaker-windows'
+      rescue LoadError
+        logger.error(%{You must include 'beaker-windows' in your Gemfile for windows support on #{host}})
+        exit 1
+      end
+
+      include BeakerWindows::Path
+      include BeakerWindows::Powershell
+      include BeakerWindows::Registry
+      include BeakerWindows::WindowsFeature
+    end
+
+    return is_windows
   end
 
   # We can't cache this because it may change during a run
@@ -102,11 +118,21 @@ module Simp::BeakerHelpers
     splitchar = ':'
     splitchar = ';' if is_windows?(sut)
 
-    sut.puppet_configprint['modulepath'].split(splitchar)
+    (
+      sut.puppet_configprint['modulepath'].split(splitchar) +
+      sut.puppet_configprint['basemodulepath'].split(splitchar)
+    ).uniq
+  end
+
+  # Return the default environment path
+  def puppet_environment_path_on(sut, environment='production')
+    File.dirname(sut.puppet_configprint['manifest'])
   end
 
   # Return the path to the 'spec/fixtures' directory
   def fixtures_path
+    return @fixtures_path if @fixtures_path
+
     STDERR.puts '  ** fixtures_path' if ENV['BEAKER_helpers_verbose']
     dir = RSpec.configuration.default_path
     dir = File.join('.', 'spec') unless dir
@@ -114,7 +140,8 @@ module Simp::BeakerHelpers
     dir = File.join(File.expand_path(dir), 'fixtures')
 
     if File.directory?(dir)
-      return dir
+      @fixtures_path = dir
+      return @fixtures_path
     else
       raise("Could not find fixtures directory at '#{dir}'")
     end
@@ -122,6 +149,8 @@ module Simp::BeakerHelpers
 
   # Locates .fixture.yml in or above this directory.
   def fixtures_yml_path
+    return @fixtures_yml_path if @fixtures_yml_path
+
     STDERR.puts '  ** fixtures_yml_path' if ENV['BEAKER_helpers_verbose']
 
     if ENV['FIXTURES_YML']
@@ -144,19 +173,26 @@ module Simp::BeakerHelpers
 
     STDERR.puts "  ** fixtures_yml_path:finished (file: '#{file}')" if ENV['BEAKER_helpers_verbose']
 
-    fixtures_yml
+    @fixtures_yml_path = fixtures_yml
+
+    return @fixtures_yml_path
   end
 
 
   # returns an Array of puppet modules declared in .fixtures.yml
   def pupmods_in_fixtures_yml
+    return @pupmods_in_fixtures_yml if @pupmods_in_fixtures_yml
+
     STDERR.puts '  ** pupmods_in_fixtures_yml' if ENV['BEAKER_helpers_verbose']
     fixtures_yml = fixtures_yml_path
     data         = YAML.load_file( fixtures_yml )
     repos        = data.fetch('fixtures').fetch('repositories', {}).keys || []
     symlinks     = data.fetch('fixtures').fetch('symlinks', {}).keys     || []
     STDERR.puts '  ** pupmods_in_fixtures_yml: finished' if ENV['BEAKER_helpers_verbose']
-    (repos + symlinks)
+
+    @pupmods_in_fixtures_yml = (repos + symlinks)
+
+    return @pupmods_in_fixtures_yml
   end
 
 
@@ -587,8 +623,33 @@ module Simp::BeakerHelpers
     parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
     block_on(suts, :run_in_parallel => parallel) do |sut|
       if sut[:platform] =~ /windows/
-        puts "  -- SKIPPING #{sut} because it is windows"
-        # DO NOTHING
+        # Install the necessary windows certificate for testing
+        #
+        # https://petersouter.xyz/testing-windows-with-beaker-without-cygwin/
+        geotrust_global_ca = <<~EOM.freeze
+        -----BEGIN CERTIFICATE-----
+        MIIDVDCCAjygAwIBAgIDAjRWMA0GCSqGSIb3DQEBBQUAMEIxCzAJBgNVBAYTAlVT
+        MRYwFAYDVQQKEw1HZW9UcnVzdCBJbmMuMRswGQYDVQQDExJHZW9UcnVzdCBHbG9i
+        YWwgQ0EwHhcNMDIwNTIxMDQwMDAwWhcNMjIwNTIxMDQwMDAwWjBCMQswCQYDVQQG
+        EwJVUzEWMBQGA1UEChMNR2VvVHJ1c3QgSW5jLjEbMBkGA1UEAxMSR2VvVHJ1c3Qg
+        R2xvYmFsIENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2swYYzD9
+        9BcjGlZ+W988bDjkcbd4kdS8odhM+KhDtgPpTSEHCIjaWC9mOSm9BXiLnTjoBbdq
+        fnGk5sRgprDvgOSJKA+eJdbtg/OtppHHmMlCGDUUna2YRpIuT8rxh0PBFpVXLVDv
+        iS2Aelet8u5fa9IAjbkU+BQVNdnARqN7csiRv8lVK83Qlz6cJmTM386DGXHKTubU
+        1XupGc1V3sjs0l44U+VcT4wt/lAjNvxm5suOpDkZALeVAjmRCw7+OC7RHQWa9k0+
+        bw8HHa8sHo9gOeL6NlMTOdReJivbPagUvTLrGAMoUgRx5aszPeE4uwc2hGKceeoW
+        MPRfwCvocWvk+QIDAQABo1MwUTAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBTA
+        ephojYn7qwVkDBF9qn1luMrMTjAfBgNVHSMEGDAWgBTAephojYn7qwVkDBF9qn1l
+        uMrMTjANBgkqhkiG9w0BAQUFAAOCAQEANeMpauUvXVSOKVCUn5kaFOSPeCpilKIn
+        Z57QzxpeR+nBsqTP3UEaBU6bS+5Kb1VSsyShNwrrZHYqLizz/Tt1kL/6cdjHPTfS
+        tQWVYrmm3ok9Nns4d0iXrKYgjy6myQzCsplFAMfOEVEiIuCl6rYVSAlk6l5PdPcF
+        PseKUgzbFbS9bZvlxrFUaKnjaZC2mqUPuLk/IH2uSrW4nOQdtqvmlKXBx4Ot2/Un
+        hw4EbNX/3aBd7YdStysVAq45pmp06drE57xNNB6pXE0zX5IJL4hmXXeXxx12E6nV
+        5fEWCRE11azbJHFwLJhWC9kXtNHjUStedejV0NxPNO3CBWaAocvmMw==
+        -----END CERTIFICATE-----
+        EOM
+
+        install_cert_on_windows(sut, 'geotrustglobal', geotrust_global_ca)
       else
         linux_errata(sut)
       end
@@ -795,10 +856,61 @@ done
     end
   end
 
+  # Return the contents of a file on the remote host
+  #
+  # @param sut [Host] the host upon which to operate
+  # @param path [String] the path to the target file
+  # @param trim [Boolean] remove leading and trailing whitespace
+  #
+  # @return [String, nil] the contents of the remote file
+  def file_content_on(sut, path, trim=true)
+    file_content = nil
+
+    if file_exists_on(sut, path)
+      Dir.mktempdir do |dir|
+        scp_from(host, path, dir)
+
+        file_content = File.read(File.basename(path))
+      end
+    end
+
+    return file_content
+  end
+
+  # Retrieve the default hiera.yaml path
+  #
+  # @param sut [Host] one host to act upon
+  #
+  # @returns [Hash] path to the default environment's hiera.yaml
+  def hiera_config_path_on(sut)
+    File.join(puppet_environment_path_on(sut), 'hiera.yaml')
+  end
+
+  # Retrieve the default environment hiera.yaml
+  #
+  # @param sut [Host] one host to act upon
+  #
+  # @returns [Hash] content of the default environment's hiera.yaml
+  def get_hiera_config_on(sut)
+    file_content_on(sut, hiera_config_path_on(sut))
+  end
+
+  # Updates the default environment hiera.yaml
+  #
+  # @param sut [Host] One host to act upon
+  # @param hiera_yaml [Hash, String] The data to place into hiera.yaml
+  #
+  # @returns [void]
+  def set_hiera_config_on(sut, hiera_yaml)
+    hiera_yaml = hiera_yaml.to_yaml if hiera_yaml.is_a?(Hash)
+
+    create_remote_file(sut, hiera_config_path_on(sut), hiera_yaml)
+  end
+
   # Writes a YAML file in the Hiera :datadir of a Beaker::Host.
   #
   # @note This is useless unless Hiera is configured to use the data file.
-  #   @see `#write_hiera_config_on`
+  #   @see `#set_hiera_config_on`
   #
   # @param sut  [Array<Host>, String, Symbol] One or more hosts to act upon.
   #
@@ -844,7 +956,7 @@ done
   # Note: This may not work if you've shoved data somewhere that is not the
   # default and/or are manipulating the default hiera.yaml.
   #
-  # @param sut  [Host] One host to act upon
+  # @param sut [Host] One host to act upon
   #
   # @returns [String] Path to the Hieradata directory on the target system
   def hiera_datadir(sut)
@@ -855,7 +967,7 @@ done
       fail("No output returned from `puppet config print manifest` on #{sut}")
     end
 
-    puppet_env_path = File.dirname(sut.puppet_configprint['manifest'])
+    puppet_env_path = puppet_environment_path_on(sut)
 
     # We'll just take the first match since Hiera will find things there
     puppet_lookup_info = puppet_lookup_info.grep(/Path "/).grep(Regexp.new(puppet_env_path))

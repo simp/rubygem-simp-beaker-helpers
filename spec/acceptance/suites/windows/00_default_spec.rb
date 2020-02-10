@@ -6,11 +6,6 @@ require 'simp/beaker_helpers'
 include Simp::BeakerHelpers
 
 require 'beaker/puppet_install_helper'
-require 'beaker-windows'
-include BeakerWindows::Path
-include BeakerWindows::Powershell
-include BeakerWindows::Registry
-include BeakerWindows::WindowsFeature
 
 unless ENV['BEAKER_provision'] == 'no'
   hosts.each do |host|
@@ -25,39 +20,6 @@ unless ENV['BEAKER_provision'] == 'no'
   end
 end
 
-hosts.each do |host|
-  unless Simp::BeakerHelpers::Snapshot.exist?(host, 'puppet_installed')
-    # https://petersouter.co.uk/testing-windows-puppet-with-beaker/
-    case host['platform']
-    when /windows/
-      GEOTRUST_GLOBAL_CA = <<-EOM.freeze
-  -----BEGIN CERTIFICATE-----
-  MIIDVDCCAjygAwIBAgIDAjRWMA0GCSqGSIb3DQEBBQUAMEIxCzAJBgNVBAYTAlVT
-  MRYwFAYDVQQKEw1HZW9UcnVzdCBJbmMuMRswGQYDVQQDExJHZW9UcnVzdCBHbG9i
-  YWwgQ0EwHhcNMDIwNTIxMDQwMDAwWhcNMjIwNTIxMDQwMDAwWjBCMQswCQYDVQQG
-  EwJVUzEWMBQGA1UEChMNR2VvVHJ1c3QgSW5jLjEbMBkGA1UEAxMSR2VvVHJ1c3Qg
-  R2xvYmFsIENBMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA2swYYzD9
-  9BcjGlZ+W988bDjkcbd4kdS8odhM+KhDtgPpTSEHCIjaWC9mOSm9BXiLnTjoBbdq
-  fnGk5sRgprDvgOSJKA+eJdbtg/OtppHHmMlCGDUUna2YRpIuT8rxh0PBFpVXLVDv
-  iS2Aelet8u5fa9IAjbkU+BQVNdnARqN7csiRv8lVK83Qlz6cJmTM386DGXHKTubU
-  1XupGc1V3sjs0l44U+VcT4wt/lAjNvxm5suOpDkZALeVAjmRCw7+OC7RHQWa9k0+
-  bw8HHa8sHo9gOeL6NlMTOdReJivbPagUvTLrGAMoUgRx5aszPeE4uwc2hGKceeoW
-  MPRfwCvocWvk+QIDAQABo1MwUTAPBgNVHRMBAf8EBTADAQH/MB0GA1UdDgQWBBTA
-  ephojYn7qwVkDBF9qn1luMrMTjAfBgNVHSMEGDAWgBTAephojYn7qwVkDBF9qn1l
-  uMrMTjANBgkqhkiG9w0BAQUFAAOCAQEANeMpauUvXVSOKVCUn5kaFOSPeCpilKIn
-  Z57QzxpeR+nBsqTP3UEaBU6bS+5Kb1VSsyShNwrrZHYqLizz/Tt1kL/6cdjHPTfS
-  tQWVYrmm3ok9Nns4d0iXrKYgjy6myQzCsplFAMfOEVEiIuCl6rYVSAlk6l5PdPcF
-  PseKUgzbFbS9bZvlxrFUaKnjaZC2mqUPuLk/IH2uSrW4nOQdtqvmlKXBx4Ot2/Un
-  hw4EbNX/3aBd7YdStysVAq45pmp06drE57xNNB6pXE0zX5IJL4hmXXeXxx12E6nV
-  5fEWCRE11azbJHFwLJhWC9kXtNHjUStedejV0NxPNO3CBWaAocvmMw==
-  -----END CERTIFICATE-----
-      EOM
-      install_cert_on_windows(host, 'geotrustglobal', GEOTRUST_GLOBAL_CA)
-    end
-  end
-end
-
-
 RSpec.configure do |c|
   # ensure that environment OS is ready on each host
   fix_errata_on(hosts)
@@ -68,10 +30,11 @@ RSpec.configure do |c|
   # Configure all nodes in nodeset
   c.before :suite do
     begin
+      copy_fixture_modules_to( hosts )
+
       nonwin = hosts.dup
       nonwin.delete_if {|h| h[:platform] =~ /windows/ }
-      # Install modules and dependencies from spec/fixtures/modules
-      copy_fixture_modules_to( nonwin )
+
       begin
         server = only_host_with_role(nonwin, 'server')
       rescue ArgumentError => e
@@ -95,17 +58,61 @@ RSpec.configure do |c|
   end
 end
 
-hosts.each do |host|
-  if Simp::BeakerHelpers::Snapshot.exist?(host, 'puppet_installed')
-    Simp::BeakerHelpers::Snapshot.restore(host, 'puppet_installed')
-  else
-    Simp::BeakerHelpers::Snapshot.save(host, 'puppet_installed')
-  end
+describe 'windows' do
 
-  describe 'windows hosts coexising with linux hosts' do
+  let(:hieradata){{
+    'test::foo' => 'test'
+  }}
+
+  let(:manifest){ 'notify { "test": message => lookup("test::foo")}' }
+
+  hosts.each do |host|
     context "on #{host}" do
-      it 'should have puppet installed' do
-        on(host, 'puppet --version')
+
+      let(:hiera_config){{
+        'version' => 5,
+        'hierarchy' => [
+          {
+            'name' => 'Common',
+            'path' => 'common.yaml'
+          },
+          {
+            'name' => 'SIMP Compliance Engine',
+            'lookup_key' => 'compliance_markup::enforcement'
+          }
+        ],
+        'defaults' => {
+          'data_hash' => 'yaml_data',
+          'datadir' => hiera_datadir(host)
+        }
+      }}
+
+      if Simp::BeakerHelpers::Snapshot.exist?(host, 'puppet_installed')
+        Simp::BeakerHelpers::Snapshot.restore(host, 'puppet_installed')
+      else
+        Simp::BeakerHelpers::Snapshot.save(host, 'puppet_installed')
+      end
+
+      describe 'windows hosts coexising with linux hosts' do
+        context "on #{host}" do
+          it 'should have puppet installed' do
+            on(host, 'puppet --version')
+          end
+
+          it 'should be able to set the hiera config' do
+            set_hiera_config_on(host, hiera_config)
+          end
+
+          it 'should be able to set the hieradata' do
+            set_hieradata_on(host, hieradata)
+          end
+
+          it 'should be able to run puppet' do
+            output = apply_manifest_on(host, manifest).stdout
+
+            expect(output).to include "defined 'message' as 'test'"
+          end
+        end
       end
     end
   end
