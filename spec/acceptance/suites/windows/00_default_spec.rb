@@ -110,7 +110,7 @@ describe 'windows' do
           it 'should be able to run puppet' do
             output = apply_manifest_on(host, manifest).stdout
 
-            expect(output).to_include "defined 'message' as 'test'"
+            expect(output).to include "defined 'message' as 'test'"
           end
         end
       end
