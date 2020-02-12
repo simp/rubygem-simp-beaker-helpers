@@ -1,3 +1,6 @@
+### 1.18.1 / 2020-02-12
+* Fix gemspec dependencies
+
 ### 1.18.0 / 2020-02-06
 * Update Windows support
   * Add require beaker-windows and note installation of gem if missing
