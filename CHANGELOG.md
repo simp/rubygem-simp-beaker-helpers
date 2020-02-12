@@ -1,5 +1,6 @@
 ### 1.18.1 / 2020-02-12
 * Fix gemspec dependencies
+* Fix the windows library loading location
 
 ### 1.18.0 / 2020-02-06
 * Update Windows support

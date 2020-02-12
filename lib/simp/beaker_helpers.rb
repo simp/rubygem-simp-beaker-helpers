@@ -11,6 +11,7 @@ module Simp::BeakerHelpers
   require 'simp/beaker_helpers/snapshot'
   require 'simp/beaker_helpers/ssg'
   require 'simp/beaker_helpers/version'
+  require 'simp/beaker_helpers/windows'
 
   # Stealing this from the Ruby 2.5 Dir::Tmpname workaround from Rails
   def self.tmpname
@@ -18,9 +19,7 @@ module Simp::BeakerHelpers
     "simp-beaker-helpers-#{t}-#{$$}-#{rand(0x100000000).to_s(36)}.tmp"
   end
 
-  def is_windows?(sut)
-    is_windows = fact_on(sut, 'osfamily').casecmp?('windows')
-
+  def load_windows_requirements
     if is_windows
       begin
         require 'beaker-windows'
@@ -36,6 +35,10 @@ module Simp::BeakerHelpers
     end
 
     return is_windows
+  end
+
+  def is_windows?(sut)
+    is_windows = fact_on(sut, 'osfamily').casecmp?('windows')
   end
 
   # We can't cache this because it may change during a run
