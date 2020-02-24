@@ -1,3 +1,14 @@
+### 1.18.3 / 2020-02-24
+* Fix the Windows library loading location.
+  * No longer attempt to load windows libraries by default unless the system is
+    actually Windows
+
+### 1.18.2 / 2020-02-24
+
+* The previous location for loading the Windows libraries would not work in a
+  `:before` block. This moves it into its own module space.
+* Bump to the working version of beaker and beaker-puppet
+
 ### 1.18.1 / 2020-02-12
 * Fix gemspec dependencies
 * Fix the windows library loading location
