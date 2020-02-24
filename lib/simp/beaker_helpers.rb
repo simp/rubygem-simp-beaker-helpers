@@ -11,7 +11,6 @@ module Simp::BeakerHelpers
   require 'simp/beaker_helpers/snapshot'
   require 'simp/beaker_helpers/ssg'
   require 'simp/beaker_helpers/version'
-  require 'simp/beaker_helpers/windows'
 
   # Stealing this from the Ruby 2.5 Dir::Tmpname workaround from Rails
   def self.tmpname
@@ -19,26 +18,8 @@ module Simp::BeakerHelpers
     "simp-beaker-helpers-#{t}-#{$$}-#{rand(0x100000000).to_s(36)}.tmp"
   end
 
-  def load_windows_requirements
-    if is_windows
-      begin
-        require 'beaker-windows'
-      rescue LoadError
-        logger.error(%{You must include 'beaker-windows' in your Gemfile for windows support on #{host}})
-        exit 1
-      end
-
-      include BeakerWindows::Path
-      include BeakerWindows::Powershell
-      include BeakerWindows::Registry
-      include BeakerWindows::WindowsFeature
-    end
-
-    return is_windows
-  end
-
   def is_windows?(sut)
-    is_windows = fact_on(sut, 'osfamily').casecmp?('windows')
+    sut[:platform] =~ /windows/i
   end
 
   # We can't cache this because it may change during a run
@@ -299,7 +280,7 @@ module Simp::BeakerHelpers
     parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
 
     block_on(suts, :run_in_parallel => parallel) do |sut|
-      if sut[:platform] =~ /windows/
+      if is_windows?(sut)
         puts "  -- SKIPPING #{sut} because it is windows"
         next
       end
@@ -625,7 +606,10 @@ module Simp::BeakerHelpers
   def fix_errata_on( suts = hosts )
     parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
     block_on(suts, :run_in_parallel => parallel) do |sut|
-      if sut[:platform] =~ /windows/
+      if is_windows?(sut)
+        # Load the Windows requirements
+        require 'simp/beaker_helpers/windows'
+
         # Install the necessary windows certificate for testing
         #
         # https://petersouter.xyz/testing-windows-with-beaker-without-cygwin/
