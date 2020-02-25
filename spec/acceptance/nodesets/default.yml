@@ -13,6 +13,7 @@ HOSTS:
       - master
       - el7
     platform: el-7-x86_64
+    packaging_platform: el-7-x86_64
     box: centos/7
     hypervisor: <%= hypervisor %>
 
@@ -20,6 +21,7 @@ HOSTS:
     roles:
       - el6
     platform: el-6-x86_64
+    packaging_platform: el-6-x86_64
     box: centos/6
     hypervisor: <%= hypervisor %>
 
