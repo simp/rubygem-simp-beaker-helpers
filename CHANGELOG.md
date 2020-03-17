@@ -1,3 +1,6 @@
+### 1.19.3 / 2020-03-17
+* Add two network-related helpers:  host_networks() and internal_network_info()
+
 ### 1.18.3 / 2020-02-24
 * Fix the Windows library loading location.
   * No longer attempt to load windows libraries by default unless the system is

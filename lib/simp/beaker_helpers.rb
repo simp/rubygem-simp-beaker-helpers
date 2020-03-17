@@ -11,6 +11,9 @@ module Simp::BeakerHelpers
   require 'simp/beaker_helpers/snapshot'
   require 'simp/beaker_helpers/ssg'
   require 'simp/beaker_helpers/version'
+  require 'simp/beaker_helpers/network'
+
+  include Simp::BeakerHelpers::Network
 
   # Stealing this from the Ruby 2.5 Dir::Tmpname workaround from Rails
   def self.tmpname
