@@ -1,3 +1,6 @@
+### 1.18.4 /2020-03-31
+* Fix capturing error messages when inspec fails to generate results
+
 ### 1.18.3 / 2020-02-24
 * Fix the Windows library loading location.
   * No longer attempt to load windows libraries by default unless the system is
