@@ -116,7 +116,7 @@ module Simp::BeakerHelpers
         FileUtils.remove_entry_secure tmpdir
       end
 
-      unless @results
+      if @results.nil? || @results.empty?
         File.open(@result_file + '.err', 'w') do |fh|
           fh.puts(result.stderr.strip)
         end
