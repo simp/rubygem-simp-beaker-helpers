@@ -1,4 +1,7 @@
-### 1.18.4 /2020-03-31
+### 1.18.5 / 2020-06-02
+* Allow Vagrant to connect to EL8+ hosts in FIPS mode
+
+### 1.18.4 / 2020-03-31
 * Fix capturing error messages when inspec fails to generate results
 
 ### 1.18.3 / 2020-02-24
