@@ -29,6 +29,17 @@ module Simp::BeakerHelpers
       'python-jinja2'
     ]
 
+    EL8_PACKAGES = [
+      'python3',
+      'python3-pyyaml',
+      'cmake',
+      'git',
+      'openscap-python3',
+      'openscap-utils',
+      'python3-lxml',
+      'python3-jinja2'
+    ]
+
     OS_INFO = {
       'RedHat' => {
         '6' => {
@@ -45,6 +56,14 @@ module Simp::BeakerHelpers
             'profile_target' => 'rhel7',
             'build_target'   => 'rhel7',
             'datastream'     => 'ssg-rhel7-ds.xml'
+          }
+        },
+        '8' => {
+          'required_packages' => EL8_PACKAGES,
+          'ssg' => {
+            'profile_target' => 'rhel8',
+            'build_target'   => 'rhel8',
+            'datastream'     => 'ssg-rhel8-ds.xml'
           }
         }
       },
@@ -64,6 +83,14 @@ module Simp::BeakerHelpers
             'build_target'   => 'centos7',
             'datastream'     => 'ssg-centos7-ds.xml'
           }
+        },
+        '8' => {
+          'required_packages' => EL8_PACKAGES,
+          'ssg' => {
+            'profile_target' => 'rhel8',
+            'build_target'   => 'centos8',
+            'datastream'     => 'ssg-centos8-ds.xml'
+          }
         }
       },
       'OracleLinux' => {
@@ -73,7 +100,15 @@ module Simp::BeakerHelpers
             'profile_target' => 'ol7',
             'build_target'   => 'ol7',
             'datastream'     => 'ssg-ol7-ds.xml'
+          },
+        '8' => {
+          'required_packages' => EL8_PACKAGES,
+          'ssg' => {
+            'profile_target' => 'ol8',
+            'build_target'   => 'ol8',
+            'datastream'     => 'ssg-ol8-ds.xml'
           }
+        }
         }
       }
     }
