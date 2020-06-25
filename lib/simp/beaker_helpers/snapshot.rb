@@ -1,5 +1,5 @@
 module Simp::BeakerHelpers
-  # Helpers for working with the SCAP Security Guide
+  # Helpers for managing Vagrant snapshots
   class Snapshot
     # The name of the base snapshot that is created if no snapshots currently exist
     BASE_NAME = '_simp_beaker_base'
@@ -18,9 +18,7 @@ module Simp::BeakerHelpers
 
         if vdir
           Dir.chdir(vdir) do
-            unless exist?(host, BASE_NAME)
-              save(host, BASE_NAME)
-            end
+            save(host, BASE_NAME) unless exist?(host, BASE_NAME)
 
             snap = "#{host.name}_#{snapshot_name}"
 
@@ -67,7 +65,7 @@ module Simp::BeakerHelpers
         Dir.chdir(vdir) do
           output = %x(vagrant snapshot list #{host.name}).lines
           output.map! do |x|
-            x.split(/^#{host.name}_/).last.strip
+            x.split(/^#{host.name}_/).last.split(':').first.delete('==>').strip
           end
         end
       end

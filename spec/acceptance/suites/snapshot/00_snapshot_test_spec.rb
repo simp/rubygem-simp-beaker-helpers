@@ -57,7 +57,7 @@ hosts.each do |host|
       end
 
       it 'can list the snapshots' do
-        expect(Simp::BeakerHelpers::Snapshot.list(host)).to eq ['test', 'test2']
+        expect(Simp::BeakerHelpers::Snapshot.list(host)).to eq ["#{host}", 'test', 'test2']
       end
 
       it 'can query for a specific snapshot' do

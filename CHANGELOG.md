@@ -1,3 +1,6 @@
+### 1.18.6 / 2020-06-24
+* Fix Vagrant snapshot issues
+
 ### 1.18.5 / 2020-06-24
 * Allow Vagrant to connect to EL8+ hosts in FIPS mode
 * Add EL8 support to the SSG scans
