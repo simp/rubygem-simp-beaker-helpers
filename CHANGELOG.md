@@ -1,3 +1,6 @@
+### 1.18.7 / 2020-07-07
+* Fix host reference bug when switching to FIPS mode
+
 ### 1.18.6 / 2020-06-24
 * Fix Vagrant snapshot issues
 
