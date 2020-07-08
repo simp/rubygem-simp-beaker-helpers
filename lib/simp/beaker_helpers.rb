@@ -297,7 +297,7 @@ module Simp::BeakerHelpers
       # TODO Use simp-ssh Puppet module appropriately (i.e., in a fashion
       #      that doesn't break vagrant access and is appropriate for
       #      typical module tests.)
-      fips_ssh_ciphers = [ 'aes256-cbc','aes192-cbc','aes128-cbc']
+      fips_ssh_ciphers = [ 'aes256-ctr','aes192-ctr','aes128-ctr']
       on(sut, %(sed -i '/Ciphers /d' /etc/ssh/sshd_config))
       on(sut, %(echo 'Ciphers #{fips_ssh_ciphers.join(',')}' >> /etc/ssh/sshd_config))
 

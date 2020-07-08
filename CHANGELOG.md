@@ -1,5 +1,6 @@
 ### 1.18.7 / 2020-07-07
 * Fix host reference bug when switching to FIPS mode
+* Ensure that net-ssh 6+ can access older FIPS systems
 
 ### 1.18.6 / 2020-06-24
 * Fix Vagrant snapshot issues
