@@ -1,3 +1,6 @@
+### 1.18.8 / 2020-07-14
+* Allow the beaker version to be pinned by environment variable
+
 ### 1.18.7 / 2020-07-07
 * Fix host reference bug when switching to FIPS mode
 * Ensure that net-ssh 6+ can access older FIPS systems
