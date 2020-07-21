@@ -26,7 +26,7 @@ group :system_tests do
     begin
       gem 'beaker', Hash[
         beaker_gem_options.split(',').map do |x| # Split passed options on k/v pairs
-          x.strip.split(/:\s|\s+=>\s+/) # Allow for either format hash keys
+          x.gsub('"', '').strip.split(/:\s|\s+=>\s+/) # Allow for either format hash keys
         end.map do |k,v|
           [
             k.delete(':').to_sym, # Convert all keys to symbols
