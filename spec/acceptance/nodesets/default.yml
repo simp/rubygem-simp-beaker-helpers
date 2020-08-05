@@ -9,6 +9,7 @@ HOSTS:
   server-el7:
     roles:
       - server
+      - master
       - default
       - el7
     platform: el-7-x86_64
