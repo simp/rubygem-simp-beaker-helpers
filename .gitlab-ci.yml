@@ -90,7 +90,6 @@ puppet5_collections:
   <<: *setup_bundler_env
   variables:
     PUPPET_VERSION: '~> 5.3'
-    BEAKER_PUPPET_COLLECTION: 'puppet5'
   script:
     - bundle exec rake spec_clean
     - bundle exec rake beaker:suites[puppet_collections]
@@ -102,7 +101,6 @@ puppet6_collections:
   <<: *cache_bundler
   <<: *setup_bundler_env
   variables:
-    PUPPET_VERSION: '~> 6.0'
     BEAKER_PUPPET_COLLECTION: 'puppet6'
   script:
     - bundle exec rake spec_clean
@@ -120,6 +118,8 @@ windows:
 
 snapshot:
   stage: acceptance
+  # This is prone to breakage in the underlying system
+  allow_failure: true
   tags:
     - beaker
   <<: *cache_bundler
