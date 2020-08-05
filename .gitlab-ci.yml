@@ -50,27 +50,6 @@ stages:
 # Puppet 4.10 for PE 2017.2 support (EOL:2018-02-21)
 # See: https://puppet.com/misc/puppet-enterprise-lifecycle
 # --------------------------------------
-2_1-validation:
-  stage: validation
-  tags:
-    - docker
-  image: ruby:2.1
-  <<: *cache_bundler
-  <<: *setup_bundler_env
-  <<: *validation_checks
-
-2_1-unit:
-  stage: unit
-  tags:
-    - docker
-  image: ruby:2.1
-  <<: *cache_bundler
-  <<: *setup_bundler_env
-  <<: *spec_tests
-
-# Puppet 4.10 for PE 2017.2 support (EOL:2018-02-21)
-# See: https://puppet.com/misc/puppet-enterprise-lifecycle
-# --------------------------------------
 2_4-validation:
   stage: validation
   tags:
