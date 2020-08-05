@@ -1,3 +1,6 @@
+### 1.18.9 / 2020-08-04
+* Increase test CA bits to 4096
+
 ### 1.18.8 / 2020-07-14
 * Allow the beaker version to be pinned by environment variable
 

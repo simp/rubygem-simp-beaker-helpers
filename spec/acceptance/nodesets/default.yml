@@ -9,8 +9,8 @@ HOSTS:
   server-el7:
     roles:
       - server
-      - default
       - master
+      - default
       - el7
     platform: el-7-x86_64
     box: centos/7
@@ -21,6 +21,13 @@ HOSTS:
       - el6
     platform: el-6-x86_64
     box: centos/6
+    hypervisor: <%= hypervisor %>
+
+  server-el8:
+    roles:
+      - el8
+    platform: el-8-x86_64
+    box: centos/8
     hypervisor: <%= hypervisor %>
 
 CONFIG:

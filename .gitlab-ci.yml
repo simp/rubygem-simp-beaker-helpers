@@ -20,16 +20,6 @@
     - 'rm -rf pkg/ || :'
     - bundle check || rm -f Gemfile.lock && ("${BUNDLER_INSTALL[@]}" --local || "${BUNDLER_INSTALL[@]}")
 
-
-.validation_checks: &validation_checks
-  script:
-    - bundle exec rake syntax
-    - bundle exec rake check:dot_underscore
-    - bundle exec rake check:test_file
-    - bundle exec rake lint
-    # - bundle exec rake pkg:check_version
-    # - bundle exec rake pkg:compare_latest_tag
-
 .spec_tests: &spec_tests
   script:
     - bundle exec rake spec
@@ -42,43 +32,8 @@
       - $SIMP_FULL_MATRIX
 
 stages:
-  - validation
   - unit
   - acceptance
-  - deploy
-
-# Puppet 4.10 for PE 2017.2 support (EOL:2018-02-21)
-# See: https://puppet.com/misc/puppet-enterprise-lifecycle
-# --------------------------------------
-2_1-validation:
-  stage: validation
-  tags:
-    - docker
-  image: ruby:2.1
-  <<: *cache_bundler
-  <<: *setup_bundler_env
-  <<: *validation_checks
-
-2_1-unit:
-  stage: unit
-  tags:
-    - docker
-  image: ruby:2.1
-  <<: *cache_bundler
-  <<: *setup_bundler_env
-  <<: *spec_tests
-
-# Puppet 4.10 for PE 2017.2 support (EOL:2018-02-21)
-# See: https://puppet.com/misc/puppet-enterprise-lifecycle
-# --------------------------------------
-2_4-validation:
-  stage: validation
-  tags:
-    - docker
-  image: ruby:2.4
-  <<: *cache_bundler
-  <<: *setup_bundler_env
-  <<: *validation_checks
 
 2_4-unit:
   stage: unit
@@ -127,7 +82,7 @@ fips_from_fixtures:
     - bundle exec rake spec_clean
     - bundle exec rake beaker:suites[fips_from_fixtures]
 
-puppet_collections:
+puppet5_collections:
   stage: acceptance
   tags:
     - beaker
@@ -135,7 +90,18 @@ puppet_collections:
   <<: *setup_bundler_env
   variables:
     PUPPET_VERSION: '~> 5.3'
-    BEAKER_PUPPET_COLLECTION: 'puppet5'
+  script:
+    - bundle exec rake spec_clean
+    - bundle exec rake beaker:suites[puppet_collections]
+
+puppet6_collections:
+  stage: acceptance
+  tags:
+    - beaker
+  <<: *cache_bundler
+  <<: *setup_bundler_env
+  variables:
+    BEAKER_PUPPET_COLLECTION: 'puppet6'
   script:
     - bundle exec rake spec_clean
     - bundle exec rake beaker:suites[puppet_collections]
@@ -152,6 +118,8 @@ windows:
 
 snapshot:
   stage: acceptance
+  # This is prone to breakage in the underlying system
+  allow_failure: true
   tags:
     - beaker
   <<: *cache_bundler
