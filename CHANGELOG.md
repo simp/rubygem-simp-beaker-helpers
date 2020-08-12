@@ -1,4 +1,6 @@
 ### 1.18.9 / 2020-08-04
+* Change windows 2012r2 VM to work around issues where the old image had
+  duplicate ports trying to be opened
 * Increase test CA bits to 4096
 
 ### 1.18.8 / 2020-07-14
