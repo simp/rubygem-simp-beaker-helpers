@@ -16,6 +16,9 @@ HOSTS:
     vagrant_cpus: 2
     user: vagrant
     is_cygwin: false
+    ssh:
+      config:
+        host_key: ssh-dss
 
   el7:
     roles:
