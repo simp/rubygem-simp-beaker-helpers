@@ -17,8 +17,7 @@ HOSTS:
     user: vagrant
     is_cygwin: false
     ssh:
-      config:
-        host_key: ssh-dss
+      host_key: ssh-dss
 
   el7:
     roles:
