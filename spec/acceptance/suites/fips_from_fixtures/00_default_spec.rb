@@ -31,7 +31,10 @@ ScrubFixtures.new
 ENV['BEAKER_fips'] = 'yes'
 ENV['FIXTURES_YML'] = alt_fixtures
 
+beaker_gem_options = ENV['BEAKER_GEM_OPTIONS']
+
 Bundler.with_clean_env{
+  ENV['BEAKER_GEM_OPTIONS'] = beaker_gem_options
   ENV['FIXTURES_YML'] = alt_fixtures
 
   %x{bundle exec rake spec_prep}
