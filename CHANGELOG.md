@@ -1,3 +1,12 @@
+### 1.19.0 / 2020-09-30
+* Fixed:
+  * rsync handling has a better check to see if rsync actually works prior to
+  * using it.  The old method had the potential to try and use rsync even if it
+  * no longer worked (FIPS flipped for example).
+* Changed:
+  * Migrated from PackageCloud to the SIMP download server for updates moving
+    forward.
+
 ### 1.18.9 / 2020-08-04
 * Change windows 2012r2 VM to work around issues where the old image had
   duplicate ports trying to be opened

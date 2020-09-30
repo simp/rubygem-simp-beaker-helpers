@@ -2,42 +2,35 @@ require 'spec_helper_acceptance'
 
 hosts.each do |host|
   describe '#write_hieradata_to' do
+    expect_failures = false
+    if hosts_with_role(hosts, 'el8').include?(host)
+      expect_failures = true
+    end
 
     it 'should install yum utils' do
       host.install_package('yum-utils')
     end
 
-    context 'defailt settings' do
+    context 'default settings' do
       before(:all) { install_simp_repos(host) }
 
-      it 'creates the repo' do
-        on host, 'test -f /etc/yum.repos.d/simp.repo'
-        on host, 'test -f /etc/yum.repos.d/simp_deps.repo'
-      end
-
       it 'enables the correct repos' do
-        simp6info = on(host, '/usr/bin/yum repolist -v simp | grep ^Repo-status').stdout.strip
-        expect(simp6info).to match(/.*Repo-status.*enabled.*/)
-        simp6depsinfo = on(host, 'yum repolist -v simp_deps| grep ^Repo-status').stdout.strip
-        expect(simp6depsinfo).to match(/.*Repo-status.*enabled.*/)
+        skip "#{host} is not supported yet" if expect_failures
+        on(host, 'yum -y list simp')
       end
     end
 
     context 'when passed a disabled list ' do
-      before(:all) { install_simp_repos(host, ['simp'] ) }
-
-      it 'creates the repo' do
-        on host, 'test -f /etc/yum.repos.d/simp.repo'
-        on host, 'test -f /etc/yum.repos.d/simp_deps.repo'
-      end
+      before(:all) { install_simp_repos(host, ['simp-community-simp'] ) }
 
       it 'enables the correct repos' do
-        simp6info = on(host, 'yum repolist -v simp | grep ^Repo-status').stdout.strip
-        expect(simp6info).to match(/.*Repo-status.*disabled.*/)
-        simp6depsinfo = on(host, 'yum repolist -v simp_deps| grep ^Repo-status').stdout.strip
-        expect(simp6depsinfo).to match(/.*Repo-status.*enabled.*/)
+        skip "#{host} is not supported yet" if expect_failures
+        on(host, 'yum -y list postgresql96')
+      end
+
+      it 'disables the correct repos' do
+        on(host, 'yum -y list simp', :acceptable_exit_codes => [1])
       end
     end
-
   end
 end

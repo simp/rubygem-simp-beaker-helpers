@@ -30,16 +30,38 @@ module Simp::BeakerHelpers
              ).output.strip == '1'
   end
 
+  def rsync_functional_on?(sut)
+    # We have to check if rsync *still* works otherwise
+    return false if (@rsync_functional == false)
+
+    require 'facter'
+    unless Facter::Util::Resolution.which('rsync')
+      @rsync_functional = false
+      return @rsync_functional
+    end
+
+    require 'tempfile'
+
+    testfile = Tempfile.new('rsync_check')
+    testfile.puts('test')
+    testfile.close
+
+    begin
+      rsync_to(sut, testfile.path, sut.system_temp_path)
+    rescue Beaker::Host::CommandFailure
+      @rsync_functional = false
+      return false
+    ensure
+      testfile.unlink
+    end
+
+    return true
+  end
+
   # Figure out the best method to copy files to a host and use it
   #
   # Will create the directories leading up to the target if they don't exist
   def copy_to(sut, src, dest, opts={})
-    unless fips_enabled(sut) || @has_rsync
-      %x{which rsync 2>/dev/null}.strip
-
-      @has_rsync = !$?.nil? && $?.success?
-    end
-
     sut.mkdir_p(File.dirname(dest))
 
     if sut[:hypervisor] == 'docker'
@@ -57,7 +79,7 @@ module Simp::BeakerHelpers
         container_id = sut.host_hash[:docker_container_id]
       end
       %x(tar #{exclude_list.join(' ')} -hcf - -C "#{File.dirname(src)}" "#{File.basename(src)}" | docker exec -i "#{container_id}" tar -C "#{dest}" -xf -)
-    elsif @has_rsync && sut.check_for_command('rsync')
+    elsif rsync_functional_on?(sut)
       # This makes rsync_to work like beaker and scp usually do
       exclude_hack = %(__-__' -L --exclude '__-__)
 
@@ -584,7 +606,7 @@ module Simp::BeakerHelpers
   end
 
   def sosreport(sut, dest='sosreports')
-    sut.install_package('sos')
+    on(sut, 'puppet resource package simp-release-community source="https://download.simp-project.com/simp-release-community.rpm" ensure=latest provider=rpm')
     on(sut, 'sosreport --batch')
 
     files = on(sut, 'ls /var/tmp/sosreport* /tmp/sosreport* 2>/dev/null', :accept_all_exit_codes => true).output.lines.map(&:strip)
@@ -1170,11 +1192,12 @@ done
     run_puppet_install_helper(install_info[:puppet_install_type], install_info[:puppet_install_version])
   end
 
-  # Configure all SIMP repos on a host and enable all but those listed in the disable list
+  # Configure all SIMP repos on a host and disable all repos in the disable
+  # Array
   #
-  # @param sut Host on which to configure SIMP repos
-  # @param disable List of SIMP repos to disable
-  # @raise if disable contains an invalid repo name.
+  # @param sut [Beaker::Host]  Host on which to configure SIMP repos
+  # @param disable [Array[String]] List of repos to disable
+  # @raise [StandardError] if disable contains an invalid repo name.
   #
   # Examples:
   #  install_simp_repos( myhost )           # install all the repos an enable them.
@@ -1184,48 +1207,22 @@ done
   #  'simp'
   #  'simp_deps'
   #
-  def install_simp_repos(sut, disable = [] )
-    repos = {
-      'simp' => {
-        :baseurl   => 'https://packagecloud.io/simp-project/6_X/el/$releasever/$basearch',
-        :gpgkey    => ['https://raw.githubusercontent.com/NationalSecurityAgency/SIMP/master/GPGKEYS/RPM-GPG-KEY-SIMP',
-                    'https://download.simp-project.com/simp/GPGKEYS/RPM-GPG-KEY-SIMP-6'
-                     ],
-        :gpgcheck  => 1,
-        :sslverify => 1,
-        :sslcacert => '/etc/pki/tls/certs/ca-bundle.crt',
-        :metadata_expire => 300
-      },
-      'simp_deps' => {
-        :baseurl   => 'https://packagecloud.io/simp-project/6_X_Dependencies/el/$releasever/$basearch',
-        :gpgkey    => ['https://raw.githubusercontent.com/NationalSecurityAgency/SIMP/master/GPGKEYS/RPM-GPG-KEY-SIMP',
-                    'https://download.simp-project.com/simp/GPGKEYS/RPM-GPG-KEY-SIMP-6',
-                    'https://yum.puppet.com/RPM-GPG-KEY-puppetlabs',
-                    'https://yum.puppet.com/RPM-GPG-KEY-puppet',
-                    'https://apt.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-96',
-                    'https://artifacts.elastic.co/GPG-KEY-elasticsearch',
-                    'https://grafanarel.s3.amazonaws.com/RPM-GPG-KEY-grafana',
-                    'https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-$releasever'
-                   ],
-        :gpgcheck  => 1,
-        :sslverify => 1,
-        :sslcacert => '/etc/pki/tls/certs/ca-bundle.crt',
-        :metadata_expire => 300
-      }
-    }
-    # Verify that the repos passed to disable are in the list of valid repos
-    disable.each { |d|
-      unless repos.has_key?(d)
-        raise("ERROR: install_simp_repo - disable contains invalid SIMP repo '#{d}'.")
+  def install_simp_repos(sut, disable = [])
+    on(sut, 'puppet resource package simp-release-community source="https://download.simp-project.com/simp-release-community.rpm" ensure=latest provider=rpm')
+
+    unless disable.empty?
+      available_repos = YAML.safe_load(on(sut, 'puppet resource yumrepo --to-yaml').stdout)['yumrepo']
+
+      invalid_repos = (disable - available_repos.keys)
+
+      # Verify that the repos passed to disable are in the list of valid repos
+      unless invalid_repos.empty?
+        raise(%{ERROR: install_simp_repo - disable contains invalid repo(s) '#{invalid_repos.join("', '")}'.})
       end
-    }
-    repo_manifest = ''
-    repos.each { | repo, metadata|
-      metadata[:enabled] = disable.include?(repo) ? 0 : 1
-      repo_manifest << create_yum_resource(repo, metadata)
-    }
-    apply_manifest_on(sut, repo_manifest, :catch_failures => true)
+
+      disable.each do |repo|
+        on(sut, %{puppet resource yumrepo "#{repo}" enabled=0})
+      end
+    end
   end
 end
-
-
