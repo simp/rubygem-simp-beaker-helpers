@@ -606,7 +606,7 @@ module Simp::BeakerHelpers
   end
 
   def sosreport(sut, dest='sosreports')
-    on(sut, 'puppet resource package simp-release-community source="https://download.simp-project.com/simp-release-community.rpm" ensure=latest provider=rpm')
+    on(sut, 'puppet resource package sos ensure=latest')
     on(sut, 'sosreport --batch')
 
     files = on(sut, 'ls /var/tmp/sosreport* /tmp/sosreport* 2>/dev/null', :accept_all_exit_codes => true).output.lines.map(&:strip)
