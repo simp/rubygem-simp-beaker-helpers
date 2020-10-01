@@ -1192,8 +1192,7 @@ done
     run_puppet_install_helper(install_info[:puppet_install_type], install_info[:puppet_install_version])
   end
 
-  # Configure all SIMP repos on a host and disable all repos in the disable
-  # Array
+  # Configure all SIMP repos on a host and disable all repos in the disable Array
   #
   # @param sut [Beaker::Host]  Host on which to configure SIMP repos
   # @param disable [Array[String]] List of repos to disable
@@ -1203,14 +1202,35 @@ done
   #  install_simp_repos( myhost )           # install all the repos an enable them.
   #  install_simp_repos( myhost, ['simp'])  # install the repos but disable the simp repo.
   #
-  # Current set of valid SIMP repo names:
-  #  'simp'
-  #  'simp_deps'
+  # Valid repo names include any repository available on the system.
+  #
+  # For backwards compatibility purposes, the following translations are
+  # automatically performed:
+  #
+  #  * 'simp'
+  #    * 'simp-community-simp'
+  #
+  #  * 'simp_deps'
+  #    * 'simp-community-epel'
+  #    * 'simp-community-postgres'
+  #    * 'simp-community-puppet'
   #
   def install_simp_repos(sut, disable = [])
     on(sut, 'puppet resource package simp-release-community source="https://download.simp-project.com/simp-release-community.rpm" ensure=latest provider=rpm')
 
     unless disable.empty?
+      if disable.include?('simp')
+        disable.delete('simp')
+        disable << 'simp-community-simp'
+      end
+
+      if disable.include?('simp_deps')
+        disable.delete('simp_deps')
+        disable << 'simp-community-epel'
+        disable << 'simp-community-postgres'
+        disable << 'simp-community-puppet'
+      end
+
       available_repos = YAML.safe_load(on(sut, 'puppet resource yumrepo --to-yaml').stdout)['yumrepo']
 
       invalid_repos = (disable - available_repos.keys)
