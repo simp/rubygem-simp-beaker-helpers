@@ -1218,6 +1218,10 @@ done
   def install_simp_repos(sut, disable = [])
     # NOTE: Do *NOT* use puppet in this method since it may not be available yet
 
+    if on(sut, 'rpm -q yum-utils', :accept_all_exit_codes => true).exit_code != 0
+      on(sut, 'yum -y install yum-utils')
+    end
+
     if on(sut, 'rpm -q simp-release-community', :accept_all_exit_codes => true).exit_code != 0
       on(sut, 'yum -y install "https://download.simp-project.com/simp-release-community.rpm"')
     end
@@ -1237,16 +1241,16 @@ done
         to_disable << 'simp-community-puppet'
       end
 
-      available_repos = on(sut, 'yum-config-manager').stdout.lines.grep(/\A\[(.+)\]\Z/){|x| $1}
+      available_repos = on(sut, %{yum-config-manager --enablerepo="*"}).stdout.lines.grep(/\A\[(.+)\]\Z/){|x| $1}
 
       invalid_repos = (to_disable - available_repos)
 
       # Verify that the repos passed to disable are in the list of valid repos
       unless invalid_repos.empty?
-        raise(%{ERROR: install_simp_repo - disable contains invalid repo(s) '#{invalid_repos.join("', '")}'.})
+        logger.warn(%{WARN: install_simp_repo - requested repos to disable do not exist on the target system '#{invalid_repos.join("', '")}'.})
       end
 
-      disable.each do |repo|
+      (to_disable - invalid_repos).each do |repo|
         on(sut, %{yum-config-manager --disable "#{repo}"})
       end
     end
