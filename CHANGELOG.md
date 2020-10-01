@@ -1,8 +1,8 @@
 ### 1.19.0 / 2020-09-30
 * Fixed:
   * rsync handling has a better check to see if rsync actually works prior to
-  * using it.  The old method had the potential to try and use rsync even if it
-  * no longer worked (FIPS flipped for example).
+    using it.  The old method had the potential to try and use rsync even if it
+    no longer worked (FIPS flipped for example).
 * Changed:
   * Migrated from PackageCloud to the SIMP download server for updates moving
     forward.
