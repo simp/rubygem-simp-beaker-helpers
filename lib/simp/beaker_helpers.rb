@@ -1241,6 +1241,9 @@ done
         to_disable << 'simp-community-puppet'
       end
 
+      # NOTE: This --enablerepo enables the repos for listing and is inherited
+      # from YUM. This does not actually "enable" the repos, that would require
+      # the "--enable" option (from yum-config-manager) :-D.
       available_repos = on(sut, %{yum-config-manager --enablerepo="*"}).stdout.lines.grep(/\A\[(.+)\]\Z/){|x| $1}
 
       invalid_repos = (to_disable - available_repos)
