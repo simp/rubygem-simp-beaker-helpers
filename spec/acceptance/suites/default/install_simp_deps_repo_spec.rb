@@ -17,6 +17,7 @@ hosts.each do |host|
       it 'enables the correct repos' do
         skip "#{host} is not supported yet" if expect_failures
         on(host, 'yum -y list simp')
+        on(host, 'yum -y list postgresql96')
       end
     end
 
