@@ -1216,24 +1216,30 @@ done
   #    * 'simp-community-puppet'
   #
   def install_simp_repos(sut, disable = [])
-    on(sut, 'puppet resource package simp-release-community source="https://download.simp-project.com/simp-release-community.rpm" ensure=latest provider=rpm')
+    # NOTE: Do *NOT* use puppet in this method since it may not be available yet
 
-    unless disable.empty?
-      if disable.include?('simp')
-        disable.delete('simp')
-        disable << 'simp-community-simp'
+    if on(sut, 'rpm -q simp-release-community', :accept_all_exit_codes => true).exit_code != 0
+      on(sut, 'yum -y install "https://download.simp-project.com/simp-release-community.rpm"')
+    end
+
+    to_disable = disable.dup
+
+    unless to_disable.empty?
+      if to_disable.include?('simp')
+        to_disable.delete('simp')
+        to_disable << 'simp-community-simp'
       end
 
-      if disable.include?('simp_deps')
-        disable.delete('simp_deps')
-        disable << 'simp-community-epel'
-        disable << 'simp-community-postgres'
-        disable << 'simp-community-puppet'
+      if to_disable.include?('simp_deps')
+        to_disable.delete('simp_deps')
+        to_disable << 'simp-community-epel'
+        to_disable << 'simp-community-postgres'
+        to_disable << 'simp-community-puppet'
       end
 
-      available_repos = YAML.safe_load(on(sut, 'puppet resource yumrepo --to-yaml').stdout)['yumrepo']
+      available_repos = on(sut, 'yum-config-manager').stdout.lines.grep(/\A\[(.+)\]\Z/){|x| $1}
 
-      invalid_repos = (disable - available_repos.keys)
+      invalid_repos = (to_disable - available_repos)
 
       # Verify that the repos passed to disable are in the list of valid repos
       unless invalid_repos.empty?
@@ -1241,7 +1247,7 @@ done
       end
 
       disable.each do |repo|
-        on(sut, %{puppet resource yumrepo "#{repo}" enabled=0})
+        on(sut, %{yum-config-manager --disable "#{repo}"})
       end
     end
   end
