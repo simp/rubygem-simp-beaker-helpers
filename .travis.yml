@@ -11,8 +11,14 @@ rvm:
   - 2.4.4
 env:
   - SIMP_SKIP_NON_SIMPOS_TESTS=1
-script:
-  - bundle exec rake spec
+###  Testing on Travis CI is indefinitely disabled
+###
+###  See:
+###    * https://blog.travis-ci.com/2020-11-02-travis-ci-new-billing
+###    * https://simp-project.atlassian.net/browse/SIMP-8703
+###
+### script:
+###   - bundle exec rake spec
 before_deploy:
   - bundle exec rake clobber
   - "export GEM_VERSION=`ruby -r ./lib/simp/beaker_helpers/version.rb -e 'puts Simp::BeakerHelpers::VERSION'`"
