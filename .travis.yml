@@ -1,42 +1,42 @@
 ---
-language: ruby
-cache: bundler
-sudo: false
-before_install:
-  - rm Gemfile.lock || true
-bundler_args: "--without development --path .vendor"
+language: shell
 notifications:
   email: false
-rvm:
-  - 2.4.4
-env:
-  - SIMP_SKIP_NON_SIMPOS_TESTS=1
+stages:
+  - name: deploy
+    if: 'tag IS present'
+
 ###  Testing on Travis CI is indefinitely disabled
 ###
 ###  See:
 ###    * https://blog.travis-ci.com/2020-11-02-travis-ci-new-billing
 ###    * https://simp-project.atlassian.net/browse/SIMP-8703
-###
-### script:
-###   - bundle exec rake spec
-before_deploy:
-  - bundle exec rake clobber
-  - "export GEM_VERSION=`ruby -r ./lib/simp/beaker_helpers/version.rb -e 'puts Simp::BeakerHelpers::VERSION'`"
-  - '[[ $TRAVIS_TAG =~ ^${GEM_VERSION}$ ]]'
-deploy:
-  - provider: rubygems
-    gemspec: simp-beaker-helpers.gemspec
-    gem: simp-beaker-helpers
-    api_key:
-      secure: "AlnBx0dBSxn+S97n0h14ltKUOA+6v0bc7QZPIcwGJV9nnf1hKH3pf9La1TVknEx7XgpAcM9jusQJ7hBlqvSq8z8SFF0bZk1EgSRIKc1cuYPLiGyUM2O7+AFHyCy3iCnPvKeoQmE/BJb5O1dGnbmSbf4A0fqLxA7jiHG1j7z+cnmJB1i67wovDfl13TsOXyBfbespWBMMc0BKAw56FPs9XggAk2cNusS3hd5tqW1AZPT2/xwt+d8ngkmO96u8QcichYRFQ+w+XW4H0w935wNg/dWiskJlt7TIYVAh4Ko5s2DZKf52Tne8TugALSn0LhRatpp7sw1FTTpteCW8UqK8uwGC2hM4pZViAOv4P1YObz2IPOZPriBl+cCayJdMKnotkUJliAMnw5TLiSWKLou+S0Pdj2h3fJZWdOEwRPMzIVoJtsOHG3GdNcPL6f7iU0vP/wr6FeR3uWa+fA7NHRi2Du955O8JpogjdrW08ahcAEwhtI3A4mrA08wN09axsrwr093uDRm/5h4FHyAhExJ0YiA/6kcPpUvILcLStyHe0RQDICQMdsQo2DSbnL65w3QjFa2fML2Shf9cRwX06+ia2BxozWzFD/6p3RiRtPxphnbFiUdjYSGWcwCcUgbJx9SW04lSSxOhpyItuXgxZqiybkzstXd6riu5zwg1R8TWk34="
-    on:
-      tags: true
-      rvm: 2.4.4
-      condition: "($SKIP_PUBLISH != true)"
-  - provider: releases
-    api_key:
-      secure: "I41p4aqjkrNDHJhZ5gWC4gzn7BVwEYRm5Q3PAxQRSIUDB/QTVgNqZx8YptkuIvSGpw8kIywyZg3NKdzGUO8aJJ0NlXapL7e9qQIigkYhdaCZjZFG5zIxdOFs4sVoz/6vnQT9JIcGWy7uS5xiNOulGvfEWU78+e+I9yPdT74RApve5VAVT/km5lV5ldRnwwehLnTx+volUlnOD8rwfizoVLqFTrfRfr4cVMF605UYyaiVxHF50hywFRZoAdVcMEhlLQnQXfz/ZsLMJLJm9eCpjQ989N0oX6theSLCcv7QtHcWMXydjWMcpuTfBZSFrwUVbC23uMOKTJVEWq5LMG3m2L6hP3//2gvUzGhOVLvoGuC+erboB7QoXdcoOgXY+dTZPMcPBxpArdDLWVQSLTvPs05QzpaUdRLVMC/kD1d1EudlEicgkNgNDBhBn3089nVmvKndbKLvj+23a5AQVVbs+8C0x+SJvTc9N2N+bmuH7jIJPrEvWK4xwcQa+g2M/EBv05jaEdSErlVa6B6UKCH0Lea9rpy1se9vn5OzpaaMCCJIpcpQqHDjo0PMAQXBSbqjKcBei6lR5fIFl5UO9gWP1v8PGPuCzGTBivQ92XlgV1TWXmdbJHwIuSbJx3Ali7Wp19RR4E4uHC+TPFssvgkh9ZLkORnWWS35wzzU1LkwWx0="
-    on:
-      tags: true
-      rvm: 2.4.4
-      condition: "($SKIP_PUBLISH != true)"
+jobs:
+  include:
+    - stage: deploy
+      script: skip
+      cache: bundler
+      before_install:
+        - rm Gemfile.lock || true
+      bundler_args: "--without development --path .vendor"
+      language: ruby
+      rvm: 2.4.5
+      before_deploy:
+        - bundle exec rake clobber
+        - "export GEM_VERSION=`ruby -r ./lib/simp/beaker_helpers/version.rb -e 'puts Simp::BeakerHelpers::VERSION'`"
+        - '[[ $TRAVIS_TAG =~ ^${GEM_VERSION}$ ]]'
+      deploy:
+        - provider: rubygems
+          gemspec: simp-beaker-helpers.gemspec
+          gem: simp-beaker-helpers
+          token:
+            secure: "AlnBx0dBSxn+S97n0h14ltKUOA+6v0bc7QZPIcwGJV9nnf1hKH3pf9La1TVknEx7XgpAcM9jusQJ7hBlqvSq8z8SFF0bZk1EgSRIKc1cuYPLiGyUM2O7+AFHyCy3iCnPvKeoQmE/BJb5O1dGnbmSbf4A0fqLxA7jiHG1j7z+cnmJB1i67wovDfl13TsOXyBfbespWBMMc0BKAw56FPs9XggAk2cNusS3hd5tqW1AZPT2/xwt+d8ngkmO96u8QcichYRFQ+w+XW4H0w935wNg/dWiskJlt7TIYVAh4Ko5s2DZKf52Tne8TugALSn0LhRatpp7sw1FTTpteCW8UqK8uwGC2hM4pZViAOv4P1YObz2IPOZPriBl+cCayJdMKnotkUJliAMnw5TLiSWKLou+S0Pdj2h3fJZWdOEwRPMzIVoJtsOHG3GdNcPL6f7iU0vP/wr6FeR3uWa+fA7NHRi2Du955O8JpogjdrW08ahcAEwhtI3A4mrA08wN09axsrwr093uDRm/5h4FHyAhExJ0YiA/6kcPpUvILcLStyHe0RQDICQMdsQo2DSbnL65w3QjFa2fML2Shf9cRwX06+ia2BxozWzFD/6p3RiRtPxphnbFiUdjYSGWcwCcUgbJx9SW04lSSxOhpyItuXgxZqiybkzstXd6riu5zwg1R8TWk34="
+          on:
+            tags: true
+            condition: "($SKIP_PUBLISH != true)"
+        - provider: releases
+          token:
+            secure: "I41p4aqjkrNDHJhZ5gWC4gzn7BVwEYRm5Q3PAxQRSIUDB/QTVgNqZx8YptkuIvSGpw8kIywyZg3NKdzGUO8aJJ0NlXapL7e9qQIigkYhdaCZjZFG5zIxdOFs4sVoz/6vnQT9JIcGWy7uS5xiNOulGvfEWU78+e+I9yPdT74RApve5VAVT/km5lV5ldRnwwehLnTx+volUlnOD8rwfizoVLqFTrfRfr4cVMF605UYyaiVxHF50hywFRZoAdVcMEhlLQnQXfz/ZsLMJLJm9eCpjQ989N0oX6theSLCcv7QtHcWMXydjWMcpuTfBZSFrwUVbC23uMOKTJVEWq5LMG3m2L6hP3//2gvUzGhOVLvoGuC+erboB7QoXdcoOgXY+dTZPMcPBxpArdDLWVQSLTvPs05QzpaUdRLVMC/kD1d1EudlEicgkNgNDBhBn3089nVmvKndbKLvj+23a5AQVVbs+8C0x+SJvTc9N2N+bmuH7jIJPrEvWK4xwcQa+g2M/EBv05jaEdSErlVa6B6UKCH0Lea9rpy1se9vn5OzpaaMCCJIpcpQqHDjo0PMAQXBSbqjKcBei6lR5fIFl5UO9gWP1v8PGPuCzGTBivQ92XlgV1TWXmdbJHwIuSbJx3Ali7Wp19RR4E4uHC+TPFssvgkh9ZLkORnWWS35wzzU1LkwWx0="
+          on:
+            tags: true
+            condition: "($SKIP_PUBLISH != true)"
