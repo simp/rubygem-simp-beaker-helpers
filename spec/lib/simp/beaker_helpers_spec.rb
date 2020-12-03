@@ -103,19 +103,9 @@ describe 'Simp::BeakerHelpers' do
     end
 
     it 'uses defaults when no environment variables are set' do
-      expect( @helper.get_puppet_install_info[:puppet_install_version] ).to match(/^5\./)
-      expect( @helper.get_puppet_install_info[:puppet_collection] ).to eq('puppet5')
+      expect( @helper.get_puppet_install_info[:puppet_install_version] ).to match(/^6\./)
+      expect( @helper.get_puppet_install_info[:puppet_collection] ).to eq('puppet6')
       expect( @helper.get_puppet_install_info[:puppet_install_type] ).to eq('agent')
-    end
-
-    it 'extracts info from PUPPET_INSTALL_VERSION for Puppet 4' do
-      ENV['PUPPET_INSTALL_VERSION']= '4.10.5'
-      expected = {
-        :puppet_install_version => '1.10.5',
-        :puppet_collection      => nil,
-        :puppet_install_type    => 'agent'
-      }
-      expect( @helper.get_puppet_install_info ).to eq expected
     end
 
     it 'extracts info from PUPPET_INSTALL_VERSION for Puppet 5' do
@@ -153,26 +143,6 @@ describe 'Simp::BeakerHelpers' do
       expect( @helper.get_puppet_install_info ).to eq expected
     end
 
-    it 'extracts info from BEAKER_PUPPET_AGENT_VERSION' do
-      ENV['BEAKER_PUPPET_AGENT_VERSION']= '4.10.5'
-      expected = {
-        :puppet_install_version   => '1.10.5',
-        :puppet_collection        => nil,
-        :puppet_install_type      => 'agent'
-      }
-      expect( @helper.get_puppet_install_info ).to eq expected
-    end
-
-    it 'extracts info from PUPPET_VERSION' do
-      ENV['PUPPET_VERSION']= '4.10.5'
-      expected = {
-        :puppet_install_version   => '1.10.5',
-        :puppet_collection        => nil,
-        :puppet_install_type      => 'agent'
-      }
-      expect( @helper.get_puppet_install_info ).to eq expected
-    end
-
     it 'extracts info from BEAKER_PUPPET_COLLECTION' do
       allow(@helper).to receive(:`).with('gem search -ra -e puppet').and_return(gem_search_results)
       ENV['BEAKER_PUPPET_COLLECTION']= 'puppet5'
@@ -198,9 +168,9 @@ describe 'Simp::BeakerHelpers' do
     it 'extracts info from PUPPET_INSTALL_TYPE' do
       ENV['PUPPET_INSTALL_TYPE'] = 'pe'
 
-      expect( @helper.get_puppet_install_info[:puppet_collection] ).to eq('puppet5')
+      expect( @helper.get_puppet_install_info[:puppet_collection] ).to eq('puppet6')
       expect( @helper.get_puppet_install_info[:puppet_install_type] ).to eq('pe')
-      expect( @helper.get_puppet_install_info[:puppet_install_version] ).to match(/^5\./)
+      expect( @helper.get_puppet_install_info[:puppet_install_version] ).to match(/^6\./)
     end
 
     it 'fails when BEAKER_PUPPET_COLLECTION is invalid' do

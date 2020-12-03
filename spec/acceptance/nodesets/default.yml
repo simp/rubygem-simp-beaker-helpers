@@ -16,13 +16,6 @@ HOSTS:
     box: centos/7
     hypervisor: <%= hypervisor %>
 
-  server-el6:
-    roles:
-      - el6
-    platform: el-6-x86_64
-    box: centos/6
-    hypervisor: <%= hypervisor %>
-
   server-el8:
     roles:
       - el8
