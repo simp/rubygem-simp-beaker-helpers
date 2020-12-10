@@ -1,3 +1,10 @@
+### 1.19.1 / 2020-12-02
+* Fixed:
+  * Bumped the core puppet version to 6.X
+  * Fixed the file_content_on method
+  * Removed EL 6 support from the tests since the core repos are defunct
+  * Started removing some of the puppet 4 tests
+
 ### 1.19.0 / 2020-09-30
 * Fixed:
   * rsync handling has a better check to see if rsync actually works prior to

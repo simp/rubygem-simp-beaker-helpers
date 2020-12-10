@@ -886,10 +886,10 @@ done
     file_content = nil
 
     if file_exists_on(sut, path)
-      Dir.mktempdir do |dir|
-        scp_from(host, path, dir)
+      Dir.mktmpdir do |dir|
+        scp_from(sut, path, dir)
 
-        file_content = File.read(File.basename(path))
+        file_content = File.read(File.join(dir,File.basename(path)))
       end
     end
 
@@ -1244,7 +1244,10 @@ done
       # NOTE: This --enablerepo enables the repos for listing and is inherited
       # from YUM. This does not actually "enable" the repos, that would require
       # the "--enable" option (from yum-config-manager) :-D.
-      available_repos = on(sut, %{yum-config-manager --enablerepo="*"}).stdout.lines.grep(/\A\[(.+)\]\Z/){|x| $1}
+      #
+      # Note: Certain versions of EL8 do not dump by default and EL7 does not
+      # have the '--dump' option.
+      available_repos = on(sut, %{yum-config-manager --enablerepo="*" || yum-config-manager --enablerepo="*" --dump}).stdout.lines.grep(/\A\[(.+)\]\Z/){|x| $1}
 
       invalid_repos = (to_disable - available_repos)
 
