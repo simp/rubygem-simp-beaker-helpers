@@ -114,7 +114,7 @@ module Simp::BeakerHelpers
 
   # use the `puppet fact` face to look up facts on an SUT
   def pfact_on(sut, fact_name)
-    facts_json = on(sut,'puppet facts find xxx').output
+    facts_json = on(sut,'puppet facts find xxx').stdout
     facts      = JSON.parse(facts_json).fetch( 'values' )
     facts.fetch(fact_name)
   end
