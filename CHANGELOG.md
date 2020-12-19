@@ -4,6 +4,7 @@
   * Fixed the file_content_on method
   * Removed EL 6 support from the tests since the core repos are defunct
   * Started removing some of the puppet 4 tests
+  * Fixed an issue with pfact_on
 
 ### 1.19.0 / 2020-09-30
 * Fixed:
