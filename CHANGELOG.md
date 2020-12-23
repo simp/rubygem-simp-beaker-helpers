@@ -1,5 +1,11 @@
 ### 1.19.2 / 2020-12-19
 * Fixed:
+  * `rhel_rhsm_subscribe`:  Prevent exposing sensitive `BEAKER_RHSM_*` data
+    on the SUT command line by passing the data as SUT-side environment
+    variables
+
+### 1.19.2 / 2020-12-19
+* Fixed:
   * Fixed an issue with pfact_on
 
 ### 1.19.1 / 2020-12-02
