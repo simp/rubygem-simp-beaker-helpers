@@ -590,7 +590,17 @@ module Simp::BeakerHelpers
       sub_status = on(sut, 'subscription-manager status', :accept_all_exit_codes => true)
       unless sub_status.exit_code == 0
         logger.info("Registering #{sut} via subscription-manager")
-        on(sut, %{subscription-manager register --auto-attach --name='#{rhsm_opts[:system_name]}' --username='#{rhsm_opts[:username]}' --password='#{rhsm_opts[:password]}'}, :silent => true)
+        on(sut,
+          %Q[subscription-manager register --auto-attach \
+            --name='#{rhsm_opts[:system_name]}' \
+            --username="$BEAKER_RHSM_USER" \
+            --password="$BEAKER_RHSM_PASS"],
+          :environment => {
+            'BEAKER_RHSM_USER' => rhsm_opts[:username],
+            'BEAKER_RHSM_PASS' => rhsm_opts[:password],
+          },
+          :silent => true
+        )
       end
 
       if rhsm_opts[:repo_list][os_release]
