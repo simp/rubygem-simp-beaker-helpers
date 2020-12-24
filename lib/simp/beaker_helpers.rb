@@ -590,17 +590,27 @@ module Simp::BeakerHelpers
       sub_status = on(sut, 'subscription-manager status', :accept_all_exit_codes => true)
       unless sub_status.exit_code == 0
         logger.info("Registering #{sut} via subscription-manager")
-        on(sut,
-          %Q[subscription-manager register --auto-attach \
-            --name='#{rhsm_opts[:system_name]}' \
+        sub_status = on(sut,
+          %Q[sh -c 'subscription-manager register --auto-attach \
+            --name="#{rhsm_opts[:system_name]}" \
             --username="$BEAKER_RHSM_USER" \
-            --password="$BEAKER_RHSM_PASS"],
+            --password="$BEAKER_RHSM_PASS" |& tee /tmp/rhsm_subscribe_output.log'].gsub(/ {3,}/,' '),
           :environment => {
             'BEAKER_RHSM_USER' => rhsm_opts[:username],
             'BEAKER_RHSM_PASS' => rhsm_opts[:password],
           },
-          :silent => true
+          :silent => true,
         )
+      end
+
+      logger.info("Output from `subscription-manager register`:")
+      on(sut,'cat /tmp/rhsm_subscribe_output.log')
+
+      sub_status = on(sut, 'subscription-manager status', :accept_all_exit_codes => true)
+      unless sub_status.exit_code == 0
+        # Make sure borked registration is freed up
+        on(sut, 'subscription-manager unregister', :accept_all_exit_codes => true)
+        fail("Error: RHSM subscription registration failed on '#{sut}'")
       end
 
       if rhsm_opts[:repo_list][os_release]
