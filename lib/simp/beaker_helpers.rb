@@ -477,6 +477,39 @@ module Simp::BeakerHelpers
       repo_manifest = repo_manifest + %(\n#{repo_manifest_opts.join(",\n")}) + "\n}\n"
   end
 
+  # Enable EPEL if appropriate to do so and the system is online
+  #
+  # Can be disabled by setting BEAKER_enable_epel=no
+  def enable_epel_on(sut)
+    if ONLINE && (ENV['BEAKER_stringify_facts'] != 'no')
+      os_info = fact_on(sut, 'os')
+      os_maj_rel = os_info['release']['major']
+
+      # This is based on the official EPEL docs https://fedoraproject.org/wiki/EPEL
+      if ['RedHat', 'CentOS'].include?(os_info['name'])
+        on sut, %{puppet resource package epel-release source=https://dl.fedoraproject.org/pub/epel/epel-release-latest-#{os_maj_rel}.noarch.rpm}
+
+        if os_info['name'] == 'RedHat'
+          if os_maj_rel == '7'
+            on sut, %{subscription-manager repos --enable "rhel-*-optional-rpms"}
+            on sut, %{subscription-manager repos --enable "rhel-*-extras-rpms"}
+            on sut, %{subscription-manager repos --enable "rhel-ha-for-rhel-*-server-rpms"}
+          end
+
+          if os_maj_rel == '8'
+            on sut, %{subscription-manager repos --enable "codeready-builder-for-rhel-8-#{os_info['architecture']}-rpms"}
+          end
+        end
+
+        if os_info['name'] == 'CentOS'
+          if os_maj_rel == '8'
+            on sut, %{dnf config-manager --set-enabled powertools}
+          end
+        end
+      end
+    end
+  end
+
   def linux_errata( sut )
     # We need to be able to flip between server and client without issue
     on sut, 'puppet resource group puppet gid=52'
@@ -562,6 +595,7 @@ module Simp::BeakerHelpers
       end
 
       enable_yum_repos_on(sut)
+      enable_epel_on(sut)
 
       # net-tools required for netstat utility being used by be_listening
       if fact_on(sut, 'operatingsystemmajrelease') == '7'

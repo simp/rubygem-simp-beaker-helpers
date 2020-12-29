@@ -1,3 +1,11 @@
+### 1.20.0 / 2021-01-05
+* Added:
+  * A `enable_epel_on` function that follows the instructions on the EPEL
+    website to properly enable EPEL on hosts. May be disabled using
+    `BEAKER_enable_epel=no`.
+  * An Ubuntu nodeset to make sure our default settings don't destroy other
+    Linux systems.
+
 ### 1.19.4 / 2021-01-05
 * Fixed:
   * Only return a default empty string when `pfact_on` finds a `nil` value

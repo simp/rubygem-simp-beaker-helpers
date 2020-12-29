@@ -6,19 +6,9 @@
   end
 -%>
 HOSTS:
-  el7:
-    roles:
-      - el7
-      - master
-    platform: el-7-x86_64
-    box: centos/7
-    hypervisor: <%= hypervisor %>
-
-  el8:
-    roles:
-      - el8
-    platform: el-8-x86_64
-    box: centos/8
+  focal:
+    platform: ubuntu-20.04-x86_64
+    box: ubuntu/focal64
     hypervisor: <%= hypervisor %>
 
 CONFIG:

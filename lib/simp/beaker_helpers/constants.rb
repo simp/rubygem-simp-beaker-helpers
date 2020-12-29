@@ -17,7 +17,11 @@ module Simp::BeakerHelpers
     require 'open-uri'
 
     begin
-      ONLINE = true if open('http://google.com')
+      if URI.respond_to?(:open)
+        ONLINE = true if URI.open('http://google.com')
+      else
+        ONLINE = true if open('http://google.com')
+      end
     rescue
       ONLINE = false
     end
