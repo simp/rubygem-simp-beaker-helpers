@@ -66,6 +66,8 @@ module Simp::BeakerHelpers
 
     if sut[:hypervisor] == 'docker'
       exclude_list = []
+      opts[:silent] ||= true
+
       if opts.has_key?(:ignore) && !opts[:ignore].empty?
         opts[:ignore].each do |value|
           exclude_list << "--exclude '#{value}'"
@@ -116,9 +118,13 @@ module Simp::BeakerHelpers
   def pfact_on(sut, fact_name)
     require 'ostruct'
 
-    facts_json = on(sut,'puppet facts find xxx').stdout
-    facts      = JSON.parse(facts_json, object_class: OpenStruct).values
-    facts.dig(*(fact_name.split('.')))
+    if sut.which('puppet').empty?
+      fact_on(sut, fact_name, :silent => true)
+    else
+      facts_json = on(sut,'puppet facts find garbage_xxx', :silent => true).stdout
+      facts      = JSON.parse(facts_json, object_class: OpenStruct).values
+      facts.dig(*(fact_name.split('.'))) || ''
+    end
   end
 
   # Returns the modulepath on the SUT, as an Array
@@ -982,7 +988,7 @@ done
   # @returns [String] Path to the Hieradata directory on the target system
   def hiera_datadir(sut)
     # This output lets us know where Hiera is configured to look on the system
-    puppet_lookup_info = on(sut, 'puppet lookup --explain test__simp__test').output.strip.lines
+    puppet_lookup_info = on(sut, 'puppet lookup --explain test__simp__test', :silent => true).output.strip.lines
 
     if sut.puppet_configprint['manifest'].nil? || sut.puppet_configprint['manifest'].empty?
       fail("No output returned from `puppet config print manifest` on #{sut}")
