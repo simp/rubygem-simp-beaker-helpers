@@ -114,9 +114,11 @@ module Simp::BeakerHelpers
 
   # use the `puppet fact` face to look up facts on an SUT
   def pfact_on(sut, fact_name)
+    require 'ostruct'
+
     facts_json = on(sut,'puppet facts find xxx').stdout
-    facts      = JSON.parse(facts_json).fetch( 'values' )
-    facts.fetch(fact_name)
+    facts      = JSON.parse(facts_json, object_class: OpenStruct).values
+    facts.dig(*(fact_name.split('.')))
   end
 
   # Returns the modulepath on the SUT, as an Array

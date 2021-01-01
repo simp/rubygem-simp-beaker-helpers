@@ -1,3 +1,7 @@
+### 1.19.3 / 2021-01-01
+* Fixed:
+  * Ensure that `pfact_on` can handle fact dot notation
+
 ### 1.19.2 / 2020-12-19
 * Fixed:
   * Fixed an issue with pfact_on

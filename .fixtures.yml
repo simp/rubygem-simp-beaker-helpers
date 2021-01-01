@@ -2,5 +2,6 @@
 fixtures:
   repositories:
     stdlib: https://github.com/simp/puppetlabs-stdlib
+    simplib: https://github.com/simp/pupmod-simp-simplib
     compliance_markup: https://github.com/simp/pupmod-simp-compliance_markup
 
