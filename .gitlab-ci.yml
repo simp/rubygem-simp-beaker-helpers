@@ -324,10 +324,8 @@ default:
 default-fips:
   <<: *pup_6
   <<: *acceptance_base
-  variables:
-    BEAKER_fips: 'yes'
   script:
-    - bundle exec rake beaker:suites[default]
+    - BEAKER_fips=yes bundle exec rake beaker:suites[default]
 
 fips_from_fixtures:
   <<: *pup_6
@@ -364,7 +362,5 @@ snapshot:
   <<: *acceptance_base
   # This is prone to breakage in the underlying system
   allow_failure: true
-  variables:
-    BEAKER_simp_snapshot: 'yes'
   script:
-    - bundle exec rake beaker:suites[snapshot]
+    - BEAKER_simp_snapshot=yes bundle exec rake beaker:suites[snapshot]
