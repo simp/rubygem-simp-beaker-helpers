@@ -8,15 +8,25 @@ context 'after copy_fixture_modules_to( hosts )' do
 
   describe "fact_on(master,'root_home')" do
     it 'should not return value of `root_home`' do
-      puts fact = fact_on(master, 'root_home')
-      expect( fact ).to eq ''
+      expect(fact_on(master, 'root_home')).to eq ''
     end
   end
 
   describe "pfact_on(master,'root_home')" do
     it 'should return value of `root_home`' do
-      puts fact = pfact_on(master, 'root_home')
-      expect( fact ).to eq '/root'
+      expect(pfact_on(master, 'root_home')).to eq '/root'
+    end
+  end
+
+  describe "pfact_on(master,'os.release.major')" do
+    it 'should return the value of `os.release.major`' do
+      expect(pfact_on(master, 'os.release.major')).to match(/.+/)
+    end
+  end
+
+  describe "pfact_on(master,'os.release.foo')" do
+    it 'should not return the value of `os.release.foo`' do
+      expect(pfact_on(master, 'os.release.foo')).to eq ''
     end
   end
 end
