@@ -487,7 +487,7 @@ module Simp::BeakerHelpers
 
       # This is based on the official EPEL docs https://fedoraproject.org/wiki/EPEL
       if ['RedHat', 'CentOS'].include?(os_info['name'])
-        on sut, %{puppet resource package epel-release source=https://dl.fedoraproject.org/pub/epel/epel-release-latest-#{os_maj_rel}.noarch.rpm}
+        on sut, %{yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-#{os_maj_rel}.noarch.rpm}
 
         if os_info['name'] == 'RedHat'
           if os_maj_rel == '7'
