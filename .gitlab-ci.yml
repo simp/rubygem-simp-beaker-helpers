@@ -97,6 +97,8 @@ variables:
   changes:
     - .gitlab-ci.yml
     - .fixtures.yml
+    - .rspec
+    - metadata.json
     - "spec/spec_helper.rb"
     - "spec/{classes,unit,defines,type_aliases,types,hosts}/**/*.rb"
     - "{manifests,files,types}/**/*"
@@ -106,11 +108,12 @@ variables:
     - "SIMP/**/*"
     - "data/**/*"
   exists:
-    - "spec/{classes,unit,defines,type_aliases,types,hosts}/**/*_spec.rb"
+    - "spec/{classes,unit,defines,type_aliases,types,hosts,lib}/**/*_spec.rb"
 
 .relevant_file_conditions_trigger_acceptance_tests: &relevant_file_conditions_trigger_acceptance_tests
   changes:
     - .gitlab-ci.yml
+    - .fixtures.yml
     - "spec/spec_helper_acceptance.rb"
     - "spec/acceptance/**/*"
     - "{manifests,files,types}/**/*"
@@ -286,21 +289,14 @@ variables:
 pup5-unit:
   <<: *pup_5
   <<: *unit_tests
-  <<: *with_SIMP_SPEC_MATRIX_LEVEL_2
 
 pup6-unit:
   <<: *pup_6
-  <<: *unit_tests
-  <<: *with_SIMP_SPEC_MATRIX_LEVEL_2
-
-pup6.18.0-unit:
-  <<: *pup_6_18_0
   <<: *unit_tests
 
 pup7-unit:
   <<: *pup_7
   <<: *unit_tests
-  <<: *with_SIMP_SPEC_MATRIX_LEVEL_2
 
 # ------------------------------------------------------------------------------
 #             NOTICE: **This file is maintained with puppetsync**
