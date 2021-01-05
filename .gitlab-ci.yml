@@ -100,7 +100,7 @@ variables:
     - .rspec
     - metadata.json
     - "spec/spec_helper.rb"
-    - "spec/{classes,unit,defines,type_aliases,types,hosts}/**/*.rb"
+    - "spec/{classes,unit,defines,type_aliases,types,hosts,lib}/**/*.rb"
     - "{SIMP,data,manifests,files,types,lib}/**/*"
     - "templates/**/*.{erb,epp}"
     - "Gemfile"
