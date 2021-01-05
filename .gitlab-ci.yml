@@ -101,12 +101,9 @@ variables:
     - metadata.json
     - "spec/spec_helper.rb"
     - "spec/{classes,unit,defines,type_aliases,types,hosts}/**/*.rb"
-    - "{manifests,files,types}/**/*"
-    - "templates/*.{erb,epp}"
-    - "lib/**/*"
+    - "{SIMP,data,manifests,files,types,lib}/**/*"
+    - "templates/**/*.{erb,epp}"
     - "Gemfile"
-    - "SIMP/**/*"
-    - "data/**/*"
   exists:
     - "spec/{classes,unit,defines,type_aliases,types,hosts,lib}/**/*_spec.rb"
 
@@ -116,12 +113,9 @@ variables:
     - .fixtures.yml
     - "spec/spec_helper_acceptance.rb"
     - "spec/acceptance/**/*"
-    - "{manifests,files,types}/**/*"
-    - "templates/*.{erb,epp}"
-    - "lib/**/*"
+    - "{SIMP,data,manifests,files,types,lib}/**/*"
+    - "templates/**/*.{erb,epp}"
     - "Gemfile"
-    - "SIMP/**/*"
-    - "data/**/*"
   exists:
     - "spec/acceptance/**/*_spec.rb"
 
