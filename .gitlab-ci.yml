@@ -302,6 +302,26 @@ pup7-unit:
 # Repo-specific content
 # ==============================================================================
 
+#=======================================================================
+# Packaging test
+
+pup5-pkg:
+  <<: *pup_5
+  <<: *unit_tests
+  script:
+    'bundle exec rake pkg:gem'
+
+pup6-pkg:
+  <<: *pup_6
+  <<: *unit_tests
+  script:
+    'bundle exec rake pkg:gem'
+
+pup7-pkg:
+  <<: *pup_7
+  <<: *unit_tests
+  script:
+    'bundle exec rake pkg:gem'
 
 #=======================================================================
 # Acceptance tests
