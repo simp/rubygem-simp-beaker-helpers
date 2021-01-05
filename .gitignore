@@ -1,3 +1,4 @@
+.fips_fixtures.yml
 *.gem
 *.swp
 Gemfile.lock

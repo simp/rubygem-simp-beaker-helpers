@@ -118,12 +118,31 @@ module Simp::BeakerHelpers
   def pfact_on(sut, fact_name)
     require 'ostruct'
 
+    # If puppet is not installed, there are no puppet facts to fetch
     if sut.which('puppet').empty?
       fact_on(sut, fact_name, :silent => true)
     else
-      facts_json = on(sut,'puppet facts find garbage_xxx', :silent => true).stdout
-      facts      = JSON.parse(facts_json, object_class: OpenStruct).values
-      facts.dig(*(fact_name.split('.'))) || ''
+      facts_json = nil
+      begin
+        cmd_output = on(sut, 'facter -p --json', :silent => true)
+
+        # Facter 4+
+        raise('skip facter -p') if (cmd_output.stderr =~ /no longer supported/)
+
+        facts = JSON.parse(cmd_output.stdout, object_class: OpenStruct)
+      rescue StandardError
+        # If *anything* fails, we need to fall back to `puppet facts`
+
+        facts_json = on(sut, 'puppet facts find garbage_xxx', :silent => true).stdout
+        facts = JSON.parse(facts_json, object_class: OpenStruct).values
+      end
+
+      found_fact = facts.dig(*(fact_name.split('.')))
+
+      # Fall back to the behavior in fact_on
+      found_fact = '' if found_fact.nil?
+
+      return found_fact
     end
   end
 

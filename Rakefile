@@ -30,7 +30,7 @@ task :chmod do
   gemspec = File.expand_path( "#{@package}.gemspec", @rakefile_dir ).strip
   spec = Gem::Specification::load( gemspec )
   spec.files.each do |file|
-    FileUtils.chmod 'go=r', file
+    FileUtils.chmod 'go=r', file unless File.symlink?(file)
   end
 end
 
