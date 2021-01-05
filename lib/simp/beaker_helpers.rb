@@ -503,7 +503,8 @@ module Simp::BeakerHelpers
 
         if os_info['name'] == 'CentOS'
           if os_maj_rel == '8'
-            on sut, %{dnf config-manager --set-enabled powertools}
+            # 8.0 fallback
+            on sut, %{dnf config-manager --set-enabled powertools || dnf config-manager --set-enabled PowerTools}
           end
         end
       end
