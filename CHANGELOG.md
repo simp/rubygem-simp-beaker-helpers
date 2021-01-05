@@ -1,3 +1,12 @@
+### 1.19.4 / 2021-01-05
+* Fixed:
+  * Only return a default empty string when `pfact_on` finds a `nil` value
+    * Added an acceptance test to validate this
+  * Ensure that we start with `facter -p` for `facter` < 4.0 and continue to
+      `puppet facts` otherwise
+  * Updated the Rakefile to skip symlinks in chmods which fixes the ability to
+    build gems
+
 ### 1.19.3 / 2021-01-01
 * Fixed:
   * Ensure that `pfact_on` can handle fact dot notation
