@@ -31,7 +31,7 @@ context 'after copy_fixture_modules_to( hosts )' do
   end
 
   describe "pfact_on(master,'fips_enabled')" do
-    it 'should not return "false"' do
+    it 'should return false' do
       expect(pfact_on(master, 'fips_enabled')).to eq false
     end
   end
