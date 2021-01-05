@@ -31,8 +31,10 @@ context 'after copy_fixture_modules_to( hosts )' do
   end
 
   describe "pfact_on(master,'fips_enabled')" do
+    expected = (ENV['BEAKER_fips'] == 'yes')
+
     it 'should return false' do
-      expect(pfact_on(master, 'fips_enabled')).to eq false
+      expect(pfact_on(master, 'fips_enabled')).to eq expected
     end
   end
 end
