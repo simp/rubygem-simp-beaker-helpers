@@ -374,6 +374,14 @@ module Simp::BeakerHelpers
         on(sut, module_install_cmd)
       end
 
+      crypto_policies = '/etc/crypto-policies'
+      has_crypto_policies = file_exists_on(sut, "#{crypto_policies}/config")
+
+      if has_crypto_policies
+        # Needed because various versions of crypto-policies are broken
+        on(sut, "puppet resource package crypto-policies ensure=latest")
+      end
+
       # Enable FIPS and then reboot to finish.
       on(sut, %(puppet apply --verbose #{fips_enable_modulepath} -e "class { 'fips': enabled => true }"))
 
@@ -381,8 +389,7 @@ module Simp::BeakerHelpers
       #
       # Hopefully, Vagrant will update the used ciphers at some point but who
       # knows when that will be
-      crypto_policies = '/etc/crypto-policies'
-      if file_exists_on(sut, "#{crypto_policies}/config")
+      if has_crypto_policies
         on(sut, "sed --follow-symlinks -i 's/PubkeyAcceptedKeyTypes=/PubkeyAcceptedKeyTypes=ssh-rsa,/' #{crypto_policies}/back-ends/*")
         on(sut, "sed --follow-symlinks -i 's/PubkeyAcceptedKeyTypes /PubkeyAcceptedKeyTypes ssh-rsa,/' #{crypto_policies}/back-ends/*")
       end
