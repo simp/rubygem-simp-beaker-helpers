@@ -382,7 +382,7 @@ module Simp::BeakerHelpers
       # Hopefully, Vagrant will update the used ciphers at some point but who
       # knows when that will be
       crypto_backend_path = '/etc/crypto-policies/back-ends'
-      if file_exists_on(sut, crypto_backend_path)
+      if file_exists_on(sut, "#{crypto_backend_path}/config")
         on(sut, "sed --follow-symlinks -i 's/PubkeyAcceptedKeyTypes=/PubkeyAcceptedKeyTypes=ssh-rsa,/' #{crypto_backend_path}/*")
         on(sut, "sed --follow-symlinks -i 's/PubkeyAcceptedKeyTypes /PubkeyAcceptedKeyTypes ssh-rsa,/' #{crypto_backend_path}/*")
       end
