@@ -5,6 +5,8 @@
     `BEAKER_enable_epel=no`.
   * An Ubuntu nodeset to make sure our default settings don't destroy other
     Linux systems.
+* Fixed:
+  * Modify all crypto-policy backend files to support ssh-rsa keys
 
 ### 1.19.4 / 2021-01-05
 * Fixed:
