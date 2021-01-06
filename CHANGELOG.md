@@ -5,8 +5,13 @@
     `BEAKER_enable_epel=no`.
   * An Ubuntu nodeset to make sure our default settings don't destroy other
     Linux systems.
+  * Added has_crypto_policies method for determining if crypto policies are
+    present on the SUT
+  * Added munge_ssh_crypto_policies to allow vagrant to SSH back into systems
+    with restrictive crypto policies (usually FIPS)
 * Fixed:
   * Modify all crypto-policy backend files to support ssh-rsa keys
+  * Try harder when doing yum installations
 
 ### 1.19.4 / 2021-01-05
 * Fixed:

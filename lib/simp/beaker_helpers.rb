@@ -321,6 +321,14 @@ module Simp::BeakerHelpers
     pluginsync_on(suts) if opts[:pluginsync]
   end
 
+  def has_crypto_policies(sut)
+    file_exists_on(sut, '/etc/crypto-policies/config')
+  end
+
+  def munge_ssh_crypto_policies(sut, key_types=['ssh-rsa'])
+    on(sut, "sed --follow-symlinks -i 's/PubkeyAcceptedKeyTypes=/PubkeyAcceptedKeyTypes=#{key_types.join(',')},/' /etc/crypto-policies/back-ends/*", :accept_all_exit_codes => true)
+    on(sut, "sed --follow-symlinks -i 's/PubkeyAcceptedKeyTypes /PubkeyAcceptedKeyTypes #{key_types.join(',')},/' /etc/crypto-policies/back-ends/*", :accept_all_exit_codes => true)
+  end
 
   # Configure and reboot SUTs into FIPS mode
   def enable_fips_mode_on( suts = hosts )
@@ -374,13 +382,8 @@ module Simp::BeakerHelpers
         on(sut, module_install_cmd)
       end
 
-      crypto_policies = '/etc/crypto-policies'
-      has_crypto_policies = file_exists_on(sut, "#{crypto_policies}/config")
-
-      if has_crypto_policies
-        # Needed because various versions of crypto-policies are broken
-        on(sut, "puppet resource package crypto-policies ensure=latest")
-      end
+      # Needed because various versions of crypto-policies are broken
+      on(sut, "puppet resource package crypto-policies ensure=latest") if has_crypto_policies(sut)
 
       # Enable FIPS and then reboot to finish.
       on(sut, %(puppet apply --verbose #{fips_enable_modulepath} -e "class { 'fips': enabled => true }"))
@@ -389,10 +392,7 @@ module Simp::BeakerHelpers
       #
       # Hopefully, Vagrant will update the used ciphers at some point but who
       # knows when that will be
-      if has_crypto_policies
-        on(sut, "sed --follow-symlinks -i 's/PubkeyAcceptedKeyTypes=/PubkeyAcceptedKeyTypes=ssh-rsa,/' #{crypto_policies}/back-ends/*")
-        on(sut, "sed --follow-symlinks -i 's/PubkeyAcceptedKeyTypes /PubkeyAcceptedKeyTypes ssh-rsa,/' #{crypto_policies}/back-ends/*")
-      end
+      munge_ssh_crypto_policies(sut)
 
       sut.reboot
     end
@@ -495,7 +495,12 @@ module Simp::BeakerHelpers
 
       # This is based on the official EPEL docs https://fedoraproject.org/wiki/EPEL
       if ['RedHat', 'CentOS'].include?(os_info['name'])
-        on sut, %{yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-#{os_maj_rel}.noarch.rpm}
+        on(
+          sut,
+          %{yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-#{os_maj_rel}.noarch.rpm},
+          :max_retries => 3,
+          :retry_interval => 10
+        )
 
         if os_info['name'] == 'RedHat'
           if os_maj_rel == '7'
@@ -1289,11 +1294,21 @@ done
     # NOTE: Do *NOT* use puppet in this method since it may not be available yet
 
     if on(sut, 'rpm -q yum-utils', :accept_all_exit_codes => true).exit_code != 0
-      on(sut, 'yum -y install yum-utils')
+      on(
+        sut,
+        'yum -y install yum-utils',
+        :max_retries => 3,
+        :retry_interval => 10
+      )
     end
 
     if on(sut, 'rpm -q simp-release-community', :accept_all_exit_codes => true).exit_code != 0
-      on(sut, 'yum -y install "https://download.simp-project.com/simp-release-community.rpm"')
+      on(
+        sut,
+        'yum -y install "https://download.simp-project.com/simp-release-community.rpm"',
+        :max_retries => 3,
+        :retry_interval => 10
+      )
     end
 
     to_disable = disable.dup
