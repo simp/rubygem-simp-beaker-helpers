@@ -326,8 +326,13 @@ module Simp::BeakerHelpers
   end
 
   def munge_ssh_crypto_policies(sut, key_types=['ssh-rsa'])
-    on(sut, "sed --follow-symlinks -i 's/PubkeyAcceptedKeyTypes=/PubkeyAcceptedKeyTypes=#{key_types.join(',')},/' /etc/crypto-policies/back-ends/*", :accept_all_exit_codes => true)
-    on(sut, "sed --follow-symlinks -i 's/PubkeyAcceptedKeyTypes /PubkeyAcceptedKeyTypes #{key_types.join(',')},/' /etc/crypto-policies/back-ends/*", :accept_all_exit_codes => true)
+    if has_crypto_policies(sut)
+      on(sut, "yum update -y crypto-policies", :accept_all_exit_codes => true)
+
+      # Since we may be doing this prior to having a box flip into FIPS mode, we
+      # need to find and modify *all* of the affected policies
+      on( sut, %{sed --follow-symlinks -i 's/PubkeyAcceptedKeyTypes\\(.\\)/PubkeyAcceptedKeyTypes\\1#{key_types.join(',')},/' $( grep -L ssh-rsa $( find /etc/crypto-policies /usr/share/crypto-policies -type f -a \\( -name '*.txt' -o -name '*.config' \\) -exec grep -l PubkeyAcceptedKeyTypes {} \\; ) ) })
+    end
   end
 
   # Configure and reboot SUTs into FIPS mode
@@ -382,17 +387,14 @@ module Simp::BeakerHelpers
         on(sut, module_install_cmd)
       end
 
-      # Needed because various versions of crypto-policies are broken
-      on(sut, "puppet resource package crypto-policies ensure=latest") if has_crypto_policies(sut)
-
-      # Enable FIPS and then reboot to finish.
-      on(sut, %(puppet apply --verbose #{fips_enable_modulepath} -e "class { 'fips': enabled => true }"))
-
       # Work around Vagrant and cipher restrictions in EL8+
       #
       # Hopefully, Vagrant will update the used ciphers at some point but who
       # knows when that will be
       munge_ssh_crypto_policies(sut)
+
+      # Enable FIPS and then reboot to finish.
+      on(sut, %(puppet apply --verbose #{fips_enable_modulepath} -e "class { 'fips': enabled => true }"))
 
       sut.reboot
     end
