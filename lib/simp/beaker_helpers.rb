@@ -321,6 +321,19 @@ module Simp::BeakerHelpers
     pluginsync_on(suts) if opts[:pluginsync]
   end
 
+  def has_crypto_policies(sut)
+    file_exists_on(sut, '/etc/crypto-policies/config')
+  end
+
+  def munge_ssh_crypto_policies(sut, key_types=['ssh-rsa'])
+    if has_crypto_policies(sut)
+      on(sut, "yum update -y crypto-policies", :accept_all_exit_codes => true)
+
+      # Since we may be doing this prior to having a box flip into FIPS mode, we
+      # need to find and modify *all* of the affected policies
+      on( sut, %{sed --follow-symlinks -i 's/PubkeyAcceptedKeyTypes\\(.\\)/PubkeyAcceptedKeyTypes\\1#{key_types.join(',')},/' $( grep -L ssh-rsa $( find /etc/crypto-policies /usr/share/crypto-policies -type f -a \\( -name '*.txt' -o -name '*.config' \\) -exec grep -l PubkeyAcceptedKeyTypes {} \\; ) ) })
+    end
+  end
 
   # Configure and reboot SUTs into FIPS mode
   def enable_fips_mode_on( suts = hosts )
@@ -374,17 +387,14 @@ module Simp::BeakerHelpers
         on(sut, module_install_cmd)
       end
 
-      # Enable FIPS and then reboot to finish.
-      on(sut, %(puppet apply --verbose #{fips_enable_modulepath} -e "class { 'fips': enabled => true }"))
-
       # Work around Vagrant and cipher restrictions in EL8+
       #
       # Hopefully, Vagrant will update the used ciphers at some point but who
       # knows when that will be
-      opensshserver_config = '/etc/crypto-policies/back-ends/opensshserver.config'
-      if file_exists_on(sut, opensshserver_config)
-        on(sut, "sed --follow-symlinks -i 's/PubkeyAcceptedKeyTypes=/PubkeyAcceptedKeyTypes=ssh-rsa,/' #{opensshserver_config}")
-      end
+      munge_ssh_crypto_policies(sut)
+
+      # Enable FIPS and then reboot to finish.
+      on(sut, %(puppet apply --verbose #{fips_enable_modulepath} -e "class { 'fips': enabled => true }"))
 
       sut.reboot
     end
@@ -477,6 +487,45 @@ module Simp::BeakerHelpers
       repo_manifest = repo_manifest + %(\n#{repo_manifest_opts.join(",\n")}) + "\n}\n"
   end
 
+  # Enable EPEL if appropriate to do so and the system is online
+  #
+  # Can be disabled by setting BEAKER_enable_epel=no
+  def enable_epel_on(sut)
+    if ONLINE && (ENV['BEAKER_stringify_facts'] != 'no')
+      os_info = fact_on(sut, 'os')
+      os_maj_rel = os_info['release']['major']
+
+      # This is based on the official EPEL docs https://fedoraproject.org/wiki/EPEL
+      if ['RedHat', 'CentOS'].include?(os_info['name'])
+        on(
+          sut,
+          %{yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-#{os_maj_rel}.noarch.rpm},
+          :max_retries => 3,
+          :retry_interval => 10
+        )
+
+        if os_info['name'] == 'RedHat'
+          if os_maj_rel == '7'
+            on sut, %{subscription-manager repos --enable "rhel-*-optional-rpms"}
+            on sut, %{subscription-manager repos --enable "rhel-*-extras-rpms"}
+            on sut, %{subscription-manager repos --enable "rhel-ha-for-rhel-*-server-rpms"}
+          end
+
+          if os_maj_rel == '8'
+            on sut, %{subscription-manager repos --enable "codeready-builder-for-rhel-8-#{os_info['architecture']}-rpms"}
+          end
+        end
+
+        if os_info['name'] == 'CentOS'
+          if os_maj_rel == '8'
+            # 8.0 fallback
+            on sut, %{dnf config-manager --set-enabled powertools || dnf config-manager --set-enabled PowerTools}
+          end
+        end
+      end
+    end
+  end
+
   def linux_errata( sut )
     # We need to be able to flip between server and client without issue
     on sut, 'puppet resource group puppet gid=52'
@@ -562,6 +611,7 @@ module Simp::BeakerHelpers
       end
 
       enable_yum_repos_on(sut)
+      enable_epel_on(sut)
 
       # net-tools required for netstat utility being used by be_listening
       if fact_on(sut, 'operatingsystemmajrelease') == '7'
@@ -1246,11 +1296,21 @@ done
     # NOTE: Do *NOT* use puppet in this method since it may not be available yet
 
     if on(sut, 'rpm -q yum-utils', :accept_all_exit_codes => true).exit_code != 0
-      on(sut, 'yum -y install yum-utils')
+      on(
+        sut,
+        'yum -y install yum-utils',
+        :max_retries => 3,
+        :retry_interval => 10
+      )
     end
 
     if on(sut, 'rpm -q simp-release-community', :accept_all_exit_codes => true).exit_code != 0
-      on(sut, 'yum -y install "https://download.simp-project.com/simp-release-community.rpm"')
+      on(
+        sut,
+        'yum -y install "https://download.simp-project.com/simp-release-community.rpm"',
+        :max_retries => 3,
+        :retry_interval => 10
+      )
     end
 
     to_disable = disable.dup
