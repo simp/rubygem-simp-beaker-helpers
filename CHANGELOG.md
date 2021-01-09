@@ -1,3 +1,9 @@
+### 1.20.1 / 2021-01-08
+* Fixed:
+  * Ensure that yum calls commands appropriately depending on whether or not
+    packages are already installed.
+  * Also change all HostKeyAlgorithms settings for SSH connections
+
 ### 1.20.0 / 2021-01-05
 * Added:
   * A `enable_epel_on` function that follows the instructions on the EPEL
