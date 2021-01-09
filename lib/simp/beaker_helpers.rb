@@ -331,7 +331,7 @@ module Simp::BeakerHelpers
 
       # Since we may be doing this prior to having a box flip into FIPS mode, we
       # need to find and modify *all* of the affected policies
-      on( sut, %{sed --follow-symlinks -i 's/PubkeyAcceptedKeyTypes\\(.\\)/PubkeyAcceptedKeyTypes\\1#{key_types.join(',')},/' $( grep -L ssh-rsa $( find /etc/crypto-policies /usr/share/crypto-policies -type f -a \\( -name '*.txt' -o -name '*.config' \\) -exec grep -l PubkeyAcceptedKeyTypes {} \\; ) ) })
+      on( sut, %{sed --follow-symlinks -i 's/\\(HostKeyAlgorithms\\|PubkeyAcceptedKeyTypes\\)\\(.\\)/\\1\\2#{key_types.join(',')},/g' $( grep -L ssh-rsa $( find /etc/crypto-policies /usr/share/crypto-policies -type f -a \\( -name '*.txt' -o -name '*.config' \\) -exec grep -l PubkeyAcceptedKeyTypes {} \\; ) ) })
     end
   end
 
@@ -497,9 +497,13 @@ module Simp::BeakerHelpers
 
       # This is based on the official EPEL docs https://fedoraproject.org/wiki/EPEL
       if ['RedHat', 'CentOS'].include?(os_info['name'])
+        # EL7 returns 1 if install is called and there is nothing to do
+        yum_operation = 'install'
+        yum_operation = 'update' if sut.check_for_package('epel-release')
+
         on(
           sut,
-          %{yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-#{os_maj_rel}.noarch.rpm},
+          %{yum #{yum_operation} -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-#{os_maj_rel}.noarch.rpm},
           :max_retries => 3,
           :retry_interval => 10
         )
@@ -1295,23 +1299,27 @@ done
   def install_simp_repos(sut, disable = [])
     # NOTE: Do *NOT* use puppet in this method since it may not be available yet
 
-    if on(sut, 'rpm -q yum-utils', :accept_all_exit_codes => true).exit_code != 0
-      on(
-        sut,
-        'yum -y install yum-utils',
-        :max_retries => 3,
-        :retry_interval => 10
-      )
-    end
+    # EL7 returns 1 if install is called and there is nothing to do
+    yum_operation = 'install'
+    yum_operation = 'update' if sut.check_for_package('yum-utils')
 
-    if on(sut, 'rpm -q simp-release-community', :accept_all_exit_codes => true).exit_code != 0
-      on(
-        sut,
-        'yum -y install "https://download.simp-project.com/simp-release-community.rpm"',
-        :max_retries => 3,
-        :retry_interval => 10
-      )
-    end
+    on(
+      sut,
+      "yum -y #{yum_operation} yum-utils",
+      :max_retries => 3,
+      :retry_interval => 10
+    )
+
+    # EL7 returns 1 if install is called and there is nothing to do
+    yum_operation = 'install'
+    yum_operation = 'update' if sut.check_for_package('simp-release-community')
+
+    on(
+      sut,
+      %{yum -y #{yum_operation} "https://download.simp-project.com/simp-release-community.rpm"},
+      :max_retries => 3,
+      :retry_interval => 10
+    )
 
     to_disable = disable.dup
 
