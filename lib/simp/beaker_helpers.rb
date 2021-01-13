@@ -18,6 +18,30 @@ module Simp::BeakerHelpers
     "simp-beaker-helpers-#{t}-#{$$}-#{rand(0x100000000).to_s(36)}.tmp"
   end
 
+  def install_latest_package_on(sut, package_name, package_source=nil, opts={})
+    default_opts = {
+      max_retries: 3,
+      retry_interval: 10
+    }
+
+    package_source = package_name unless package_source
+
+    if sut.check_for_package(package_name)
+      sut.upgrade_package(
+        package_source,
+        '',
+        default_opts.merge(opts)
+      )
+    else
+      sut.install_package(
+        package_source,
+        '',
+        nil,
+        default_opts.merge(opts)
+      )
+    end
+  end
+
   def is_windows?(sut)
     sut[:platform] =~ /windows/i
   end
@@ -327,7 +351,7 @@ module Simp::BeakerHelpers
 
   def munge_ssh_crypto_policies(sut, key_types=['ssh-rsa'])
     if has_crypto_policies(sut)
-      on(sut, "yum update -y crypto-policies", :accept_all_exit_codes => true)
+      install_latest_package_on(sut, 'crypto-policies', nil, :accept_all_exit_codes => true)
 
       # Since we may be doing this prior to having a box flip into FIPS mode, we
       # need to find and modify *all* of the affected policies
@@ -497,15 +521,10 @@ module Simp::BeakerHelpers
 
       # This is based on the official EPEL docs https://fedoraproject.org/wiki/EPEL
       if ['RedHat', 'CentOS'].include?(os_info['name'])
-        # EL7 returns 1 if install is called and there is nothing to do
-        yum_operation = 'install'
-        yum_operation = 'update' if sut.check_for_package('epel-release')
-
-        on(
+        install_latest_package_on(
           sut,
-          %{yum #{yum_operation} -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-#{os_maj_rel}.noarch.rpm},
-          :max_retries => 3,
-          :retry_interval => 10
+          'epel-release',
+          "https://dl.fedoraproject.org/pub/epel/epel-release-latest-#{os_maj_rel}.noarch.rpm",
         )
 
         if os_info['name'] == 'RedHat'
@@ -530,10 +549,18 @@ module Simp::BeakerHelpers
     end
   end
 
+  def update_package_from_centos_stream(sut, package_name)
+    sut.install_package('centos-release-stream') unless sut.check_for_package('centos-release-stream')
+    install_latest_package_on(sut, package_name)
+    sut.uninstall_package('centos-release-stream')
+  end
+
   def linux_errata( sut )
     # We need to be able to flip between server and client without issue
     on sut, 'puppet resource group puppet gid=52'
     on sut, 'puppet resource user puppet comment="Puppet" gid="52" uid="52" home="/var/lib/puppet" managehome=true'
+
+    os_info = fact_on(sut, 'os')
 
     # Make sure we have a domain on our host
     current_domain = fact_on(sut, 'domain').strip
@@ -601,8 +628,9 @@ module Simp::BeakerHelpers
       configure_type_defaults_on(sut)
     end
 
-    if fact_on(sut, 'osfamily') == 'RedHat'
-      if fact_on(sut, 'operatingsystem') == 'RedHat'
+    if os_info['family'] == 'RedHat'
+      # OS-specific items
+      if os_info['name'] == 'RedHat'
         RSpec.configure do |c|
           c.before(:all) do
             rhel_rhsm_subscribe(sut)
@@ -614,19 +642,28 @@ module Simp::BeakerHelpers
         end
       end
 
-      enable_yum_repos_on(sut)
-      enable_epel_on(sut)
+      if ['CentOS','RedHat','OracleLinux'].include?(os_info['name'])
+        enable_yum_repos_on(sut)
+        enable_epel_on(sut)
 
-      # net-tools required for netstat utility being used by be_listening
-      if fact_on(sut, 'operatingsystemmajrelease') == '7'
-        pp = <<-EOS
-          package { 'net-tools': ensure => installed }
-        EOS
-        apply_manifest_on(sut, pp, :catch_failures => false)
+        # net-tools required for netstat utility being used by be_listening
+        if os_info['release']['major'].to_i >= 7
+          pp = <<-EOS
+            package { 'net-tools': ensure => installed }
+          EOS
+          apply_manifest_on(sut, pp, :catch_failures => false)
+        end
+
+        if (os_info['name'] == 'CentOS') && (os_info['release']['major'].to_i >= 8)
+          if os_info['release']['minor'].to_i == 3
+            update_package_from_centos_stream(sut, 'kernel')
+            sut.reboot
+          end
+        end
+
+        # Clean up YUM prior to starting our test runs.
+        on(sut, 'yum clean all')
       end
-
-      # Clean up YUM prior to starting our test runs.
-      on(sut, 'yum clean all')
     end
   end
 
@@ -687,7 +724,7 @@ module Simp::BeakerHelpers
   end
 
   def sosreport(sut, dest='sosreports')
-    on(sut, 'puppet resource package sos ensure=latest')
+    install_latest_package_on(sut, 'sos')
     on(sut, 'sosreport --batch')
 
     files = on(sut, 'ls /var/tmp/sosreport* /tmp/sosreport* 2>/dev/null', :accept_all_exit_codes => true).output.lines.map(&:strip)
@@ -873,18 +910,18 @@ module Simp::BeakerHelpers
       # Need to hash all of the CA certificates so that apps can use them
       # properly! This must happen on the host itself since it needs to match
       # the native hashing algorithms.
-      hash_cmd = <<-EOM.strip
-cd #{sut_pki_dir}/cacerts; \
-for x in *; do \
-  if [ ! -h "$x" ]; then \
-    `openssl x509 -in $x >/dev/null 2>&1`; \
-    if [ $? -eq 0 ]; then \
-      hash=`openssl x509 -in $x -hash | head -1`; \
-      ln -sf $x $hash.0; \
-    fi; \
-   fi; \
-done
-      EOM
+      hash_cmd = <<~EOM.strip
+        cd #{sut_pki_dir}/cacerts; \
+        for x in *; do \
+          if [ ! -h "$x" ]; then \
+            `openssl x509 -in $x >/dev/null 2>&1`; \
+            if [ $? -eq 0 ]; then \
+              hash=`openssl x509 -in $x -hash | head -1`; \
+              ln -sf $x $hash.0; \
+            fi; \
+           fi; \
+        done
+        EOM
 
       on(sut, hash_cmd)
   end
@@ -1299,26 +1336,11 @@ done
   def install_simp_repos(sut, disable = [])
     # NOTE: Do *NOT* use puppet in this method since it may not be available yet
 
-    # EL7 returns 1 if install is called and there is nothing to do
-    yum_operation = 'install'
-    yum_operation = 'update' if sut.check_for_package('yum-utils')
-
-    on(
+    install_latest_package_on(sut, 'yum-utils')
+    install_latest_package_on(
       sut,
-      "yum -y #{yum_operation} yum-utils",
-      :max_retries => 3,
-      :retry_interval => 10
-    )
-
-    # EL7 returns 1 if install is called and there is nothing to do
-    yum_operation = 'install'
-    yum_operation = 'update' if sut.check_for_package('simp-release-community')
-
-    on(
-      sut,
-      %{yum -y #{yum_operation} "https://download.simp-project.com/simp-release-community.rpm"},
-      :max_retries => 3,
-      :retry_interval => 10
+      'yum-utils',
+      "https://download.simp-project.com/simp-release-community.rpm",
     )
 
     to_disable = disable.dup
