@@ -1339,7 +1339,7 @@ module Simp::BeakerHelpers
     install_latest_package_on(sut, 'yum-utils')
     install_latest_package_on(
       sut,
-      'yum-utils',
+      'simp-release-community',
       "https://download.simp-project.com/simp-release-community.rpm",
     )
 
