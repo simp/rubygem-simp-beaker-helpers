@@ -1,3 +1,7 @@
+### 1.21.2 / 2021-01-15
+* Fixed version mismatch.  1.21.1 was tagged with an incorrect version
+  in version.rb.
+
 ### 1.21.1 / 2021-01-13
 * Added:
   * update_package_from_centos_stream method
