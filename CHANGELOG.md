@@ -1,3 +1,12 @@
+### 1.21.1 / 2021-01-13
+* Added:
+  * update_package_from_centos_stream method
+  * install_latest_package_on method
+* Fixed:
+  * Removed some of the extraneous calls to facter
+  * Automatically pull the CentOS 8 kernel to the latest version in
+    CentOS-Stream to work around issues on FIPS systems
+
 ### 1.20.1 / 2021-01-08
 * Fixed:
   * Ensure that yum calls commands appropriately depending on whether or not
