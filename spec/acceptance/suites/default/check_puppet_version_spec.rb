@@ -5,7 +5,7 @@ hosts.each do |host|
     context "on #{host}" do
       puppet_collection = host.options[:puppet_collection]
 
-      client_puppet_version = on(host, 'puppet --version').output.strip
+      client_puppet_version = on(host, 'puppet --version').stdout.strip
 
       if puppet_collection =~ /puppet(\d+)/
         puppet_collection_version = $1

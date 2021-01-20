@@ -37,4 +37,10 @@ context 'after copy_fixture_modules_to( hosts )' do
       expect(pfact_on(master, 'fips_enabled')).to eq expected
     end
   end
+
+  describe "pfact_on returns a hash" do
+    it 'should return a Hash' do
+      expect(pfact_on(master, 'os')).to be_a(Hash)
+    end
+  end
 end
