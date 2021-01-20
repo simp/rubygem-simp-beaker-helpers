@@ -1,7 +1,7 @@
 ### 1.21.3 / 2021-01-20
 * Fixed:
   * Allow all methods that can safely take SUT arrays to do so
-  * Ensure thta pfact_on returns a Hash if appropriate
+  * Ensure that pfact_on returns a Hash if appropriate
   * Fix container support in copy_to
 * Added:
   * Explicitly support podman local and remote in copy_to
