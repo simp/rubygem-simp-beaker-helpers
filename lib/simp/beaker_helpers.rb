@@ -18,27 +18,30 @@ module Simp::BeakerHelpers
     "simp-beaker-helpers-#{t}-#{$$}-#{rand(0x100000000).to_s(36)}.tmp"
   end
 
-  def install_latest_package_on(sut, package_name, package_source=nil, opts={})
+  def install_latest_package_on(suts, package_name, package_source=nil, opts={})
     default_opts = {
       max_retries: 3,
       retry_interval: 10
     }
 
-    package_source = package_name unless package_source
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(suts, :run_in_parallel => parallel) do |sut|
+      package_source = package_name unless package_source
 
-    if sut.check_for_package(package_name)
-      sut.upgrade_package(
-        package_source,
-        '',
-        default_opts.merge(opts)
-      )
-    else
-      sut.install_package(
-        package_source,
-        '',
-        nil,
-        default_opts.merge(opts)
-      )
+      if sut.check_for_package(package_name)
+        sut.upgrade_package(
+          package_source,
+          '',
+          default_opts.merge(opts)
+        )
+      else
+        sut.install_package(
+          package_source,
+          '',
+          nil,
+          default_opts.merge(opts)
+        )
+      end
     end
   end
 
@@ -104,7 +107,30 @@ module Simp::BeakerHelpers
       else
         container_id = sut.host_hash[:docker_container_id]
       end
-      %x(tar #{exclude_list.join(' ')} -hcf - -C "#{File.dirname(src)}" "#{File.basename(src)}" | docker exec -i "#{container_id}" tar -C "#{dest}" -xf -)
+
+      if ENV['BEAKER_docker_cmd']
+        docker_cmd = ENV['BEAKER_docker_cmd']
+      else
+        docker_cmd = 'docker'
+
+        if ::Docker.version['Components'].any?{|x| x['Name'] =~ /podman/i}
+          docker_cmd = 'podman'
+
+          if ENV['CONTAINER_HOST']
+            docker_cmd = 'podman --remote'
+          elsif ENV['DOCKER_HOST']
+            docker_cmd = "podman --remote --url=#{ENV['DOCKER_HOST']}"
+          end
+        end
+      end
+
+      unless directory_exists_on(sut, dest)
+        dest = File.dirname(dest)
+        sut.mkdir_p(dest)
+      end
+
+      %x(tar #{exclude_list.join(' ')} -hcf - -C "#{File.dirname(src)}" "#{File.basename(src)}" | #{docker_cmd} exec -i "#{container_id}" tar -C "#{dest}" -xf -)
+
     elsif rsync_functional_on?(sut)
       # This makes rsync_to work like beaker and scp usually do
       exclude_hack = %(__-__' -L --exclude '__-__)
@@ -142,9 +168,10 @@ module Simp::BeakerHelpers
   def pfact_on(sut, fact_name)
     require 'ostruct'
 
+    found_fact = nil
     # If puppet is not installed, there are no puppet facts to fetch
     if sut.which('puppet').empty?
-      fact_on(sut, fact_name, :silent => true)
+      found_fact = fact_on(sut, fact_name)
     else
       facts_json = nil
       begin
@@ -163,11 +190,13 @@ module Simp::BeakerHelpers
 
       found_fact = facts.dig(*(fact_name.split('.')))
 
-      # Fall back to the behavior in fact_on
-      found_fact = '' if found_fact.nil?
-
-      return found_fact
+      # If we did not find a fact, we should use the upstream function since
+      # puppet may be installed via a gem or through some other means.
+      found_fact = fact_on(sut, fact_name) if found_fact.nil?
     end
+
+    # Ensure that Hashes return as Hash objects
+    found_fact.is_a?(OpenStruct) ? found_fact.marshal_dump : found_fact
   end
 
   # Returns the modulepath on the SUT, as an Array
@@ -349,13 +378,16 @@ module Simp::BeakerHelpers
     file_exists_on(sut, '/etc/crypto-policies/config')
   end
 
-  def munge_ssh_crypto_policies(sut, key_types=['ssh-rsa'])
-    if has_crypto_policies(sut)
-      install_latest_package_on(sut, 'crypto-policies', nil, :accept_all_exit_codes => true)
+  def munge_ssh_crypto_policies(suts, key_types=['ssh-rsa'])
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(suts, :run_in_parallel => parallel) do |sut|
+      if has_crypto_policies(sut)
+        install_latest_package_on(sut, 'crypto-policies', nil, :accept_all_exit_codes => true)
 
-      # Since we may be doing this prior to having a box flip into FIPS mode, we
-      # need to find and modify *all* of the affected policies
-      on( sut, %{sed --follow-symlinks -i 's/\\(HostKeyAlgorithms\\|PubkeyAcceptedKeyTypes\\)\\(.\\)/\\1\\2#{key_types.join(',')},/g' $( grep -L ssh-rsa $( find /etc/crypto-policies /usr/share/crypto-policies -type f -a \\( -name '*.txt' -o -name '*.config' \\) -exec grep -l PubkeyAcceptedKeyTypes {} \\; ) ) })
+        # Since we may be doing this prior to having a box flip into FIPS mode, we
+        # need to find and modify *all* of the affected policies
+        on( sut, %{sed --follow-symlinks -i 's/\\(HostKeyAlgorithms\\|PubkeyAcceptedKeyTypes\\)\\(.\\)/\\1\\2#{key_types.join(',')},/g' $( grep -L ssh-rsa $( find /etc/crypto-policies /usr/share/crypto-policies -type f -a \\( -name '*.txt' -o -name '*.config' \\) -exec grep -l PubkeyAcceptedKeyTypes {} \\; ) ) })
+      end
     end
   end
 
@@ -365,7 +397,10 @@ module Simp::BeakerHelpers
     puts '  -- (use BEAKER_fips=no to disable)'
     parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
 
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
     block_on(suts, :run_in_parallel => parallel) do |sut|
+      next if sut[:hypervisor] == 'docker'
+
       if is_windows?(sut)
         puts "  -- SKIPPING #{sut} because it is windows"
         next
@@ -514,155 +549,167 @@ module Simp::BeakerHelpers
   # Enable EPEL if appropriate to do so and the system is online
   #
   # Can be disabled by setting BEAKER_enable_epel=no
-  def enable_epel_on(sut)
-    if ONLINE && (ENV['BEAKER_stringify_facts'] != 'no')
+  def enable_epel_on(suts)
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(suts, :run_in_parallel => parallel) do |sut|
+      if ONLINE && (ENV['BEAKER_stringify_facts'] != 'no')
+        os_info = fact_on(sut, 'os')
+        os_maj_rel = os_info['release']['major']
+
+        # This is based on the official EPEL docs https://fedoraproject.org/wiki/EPEL
+        if ['RedHat', 'CentOS'].include?(os_info['name'])
+          install_latest_package_on(
+            sut,
+            'epel-release',
+            "https://dl.fedoraproject.org/pub/epel/epel-release-latest-#{os_maj_rel}.noarch.rpm",
+          )
+
+          if os_info['name'] == 'RedHat'
+            if os_maj_rel == '7'
+              on sut, %{subscription-manager repos --enable "rhel-*-optional-rpms"}
+              on sut, %{subscription-manager repos --enable "rhel-*-extras-rpms"}
+              on sut, %{subscription-manager repos --enable "rhel-ha-for-rhel-*-server-rpms"}
+            end
+
+            if os_maj_rel == '8'
+              on sut, %{subscription-manager repos --enable "codeready-builder-for-rhel-8-#{os_info['architecture']}-rpms"}
+            end
+          end
+
+          if os_info['name'] == 'CentOS'
+            if os_maj_rel == '8'
+              # 8.0 fallback
+              install_latest_package_on(sut, 'dnf-plugins-core')
+              on sut, %{dnf config-manager --set-enabled powertools || dnf config-manager --set-enabled PowerTools}
+            end
+          end
+        end
+      end
+    end
+  end
+
+  def update_package_from_centos_stream(suts, package_name)
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(suts, :run_in_parallel => parallel) do |sut|
+      sut.install_package('centos-release-stream') unless sut.check_for_package('centos-release-stream')
+      install_latest_package_on(sut, package_name)
+      sut.uninstall_package('centos-release-stream')
+    end
+  end
+
+  def linux_errata( suts )
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(suts, :run_in_parallel => parallel) do |sut|
+      # We need to be able to flip between server and client without issue
+      on sut, 'puppet resource group puppet gid=52'
+      on sut, 'puppet resource user puppet comment="Puppet" gid="52" uid="52" home="/var/lib/puppet" managehome=true'
+
       os_info = fact_on(sut, 'os')
-      os_maj_rel = os_info['release']['major']
 
-      # This is based on the official EPEL docs https://fedoraproject.org/wiki/EPEL
-      if ['RedHat', 'CentOS'].include?(os_info['name'])
-        install_latest_package_on(
-          sut,
-          'epel-release',
-          "https://dl.fedoraproject.org/pub/epel/epel-release-latest-#{os_maj_rel}.noarch.rpm",
-        )
+      # Make sure we have a domain on our host
+      current_domain = fact_on(sut, 'domain').strip
+      hostname = fact_on(sut, 'hostname').strip
 
+      if current_domain.empty?
+        new_fqdn = hostname + '.beaker.test'
+
+        on(sut, "sed -i 's/#{hostname}.*/#{new_fqdn} #{hostname}/' /etc/hosts")
+        on(sut, "echo '#{new_fqdn}' > /etc/hostname", :accept_all_exit_codes => true)
+        on(sut, "hostname #{new_fqdn}", :accept_all_exit_codes => true)
+
+        if sut.file_exist?('/etc/sysconfig/network')
+          on(sut, "sed -s '/HOSTNAME=/d' /etc/sysconfig/network")
+          on(sut, "echo 'HOSTNAME=#{new_fqdn}' >> /etc/sysconfig/network")
+        end
+      end
+
+      if fact_on(sut, 'domain').strip.empty?
+        fail("Error: hosts must have an FQDN, got domain='#{current_domain}'")
+      end
+
+      # This may not exist in docker so just skip the whole thing
+      if sut.file_exist?('/etc/ssh')
+        # SIMP uses a central ssh key location so we prep that spot in case we
+        # flip to the SIMP SSH module.
+        on(sut, 'mkdir -p /etc/ssh/local_keys')
+        on(sut, 'chown -R root:root /etc/ssh/local_keys')
+        on(sut, 'chmod 755 /etc/ssh/local_keys')
+
+        user_info = on(sut, 'getent passwd').stdout.lines
+
+        # Hash of user => home_dir
+        # Exclude silly directories
+        #   * /
+        #   * /dev/*
+        #   * /s?bin
+        #   * /proc
+        user_info = Hash[
+          user_info.map do |u|
+            u.strip!
+            u = u.split(':')
+            u[5] =~ %r{^(/|/dev/.*|/s?bin/?.*|/proc/?.*)$} ? [nil] : [u[0], u[5]]
+          end
+        ]
+
+        user_info.keys.each do |user|
+          src_file = "#{user_info[user]}/.ssh/authorized_keys"
+          tgt_file = "/etc/ssh/local_keys/#{user}"
+
+          on(sut, %{if [ -f "#{src_file}" ]; then cp -a -f "#{src_file}" "#{tgt_file}" && chmod 644 "#{tgt_file}"; fi}, :silent => true)
+        end
+      end
+
+      # SIMP uses structured facts, therefore stringify_facts must be disabled
+      unless ENV['BEAKER_stringify_facts'] == 'yes'
+        on sut, 'puppet config set stringify_facts false'
+      end
+
+      # Occasionally we run across something similar to BKR-561, so to ensure we
+      # at least have the host defaults:
+      #
+      # :hieradatadir is used as a canary here; it isn't the only missing key
+      unless sut.host_hash.key? :hieradatadir
+        configure_type_defaults_on(sut)
+      end
+
+      if os_info['family'] == 'RedHat'
+        # OS-specific items
         if os_info['name'] == 'RedHat'
-          if os_maj_rel == '7'
-            on sut, %{subscription-manager repos --enable "rhel-*-optional-rpms"}
-            on sut, %{subscription-manager repos --enable "rhel-*-extras-rpms"}
-            on sut, %{subscription-manager repos --enable "rhel-ha-for-rhel-*-server-rpms"}
-          end
+          RSpec.configure do |c|
+            c.before(:all) do
+              rhel_rhsm_subscribe(sut)
+            end
 
-          if os_maj_rel == '8'
-            on sut, %{subscription-manager repos --enable "codeready-builder-for-rhel-8-#{os_info['architecture']}-rpms"}
-          end
-        end
-
-        if os_info['name'] == 'CentOS'
-          if os_maj_rel == '8'
-            # 8.0 fallback
-            on sut, %{dnf config-manager --set-enabled powertools || dnf config-manager --set-enabled PowerTools}
-          end
-        end
-      end
-    end
-  end
-
-  def update_package_from_centos_stream(sut, package_name)
-    sut.install_package('centos-release-stream') unless sut.check_for_package('centos-release-stream')
-    install_latest_package_on(sut, package_name)
-    sut.uninstall_package('centos-release-stream')
-  end
-
-  def linux_errata( sut )
-    # We need to be able to flip between server and client without issue
-    on sut, 'puppet resource group puppet gid=52'
-    on sut, 'puppet resource user puppet comment="Puppet" gid="52" uid="52" home="/var/lib/puppet" managehome=true'
-
-    os_info = fact_on(sut, 'os')
-
-    # Make sure we have a domain on our host
-    current_domain = fact_on(sut, 'domain').strip
-    hostname = fact_on(sut, 'hostname').strip
-
-    if current_domain.empty?
-      new_fqdn = hostname + '.beaker.test'
-
-      on(sut, "sed -i 's/#{hostname}.*/#{new_fqdn} #{hostname}/' /etc/hosts")
-      on(sut, "echo '#{new_fqdn}' > /etc/hostname", :accept_all_exit_codes => true)
-      on(sut, "hostname #{new_fqdn}", :accept_all_exit_codes => true)
-
-      if sut.file_exist?('/etc/sysconfig/network')
-        on(sut, "sed -s '/HOSTNAME=/d' /etc/sysconfig/network")
-        on(sut, "echo 'HOSTNAME=#{new_fqdn}' >> /etc/sysconfig/network")
-      end
-    end
-
-    if fact_on(sut, 'domain').strip.empty?
-      fail("Error: hosts must have an FQDN, got domain='#{current_domain}'")
-    end
-
-    # This may not exist in docker so just skip the whole thing
-    if sut.file_exist?('/etc/ssh')
-      # SIMP uses a central ssh key location so we prep that spot in case we
-      # flip to the SIMP SSH module.
-      on(sut, 'mkdir -p /etc/ssh/local_keys')
-      on(sut, 'chown -R root:root /etc/ssh/local_keys')
-      on(sut, 'chmod 755 /etc/ssh/local_keys')
-
-      user_info = on(sut, 'getent passwd').stdout.lines
-
-      # Hash of user => home_dir
-      # Exclude silly directories
-      #   * /
-      #   * /dev/*
-      #   * /s?bin
-      #   * /proc
-      user_info = Hash[
-        user_info.map do |u|
-          u.strip!
-          u = u.split(':')
-          u[5] =~ %r{^(/|/dev/.*|/s?bin/?.*|/proc/?.*)$} ? [nil] : [u[0], u[5]]
-        end
-      ]
-
-      user_info.keys.each do |user|
-        src_file = "#{user_info[user]}/.ssh/authorized_keys"
-        tgt_file = "/etc/ssh/local_keys/#{user}"
-
-        on(sut, %{if [ -f "#{src_file}" ]; then cp -a -f "#{src_file}" "#{tgt_file}" && chmod 644 "#{tgt_file}"; fi}, :silent => true)
-      end
-    end
-
-    # SIMP uses structured facts, therefore stringify_facts must be disabled
-    unless ENV['BEAKER_stringify_facts'] == 'yes'
-      on sut, 'puppet config set stringify_facts false'
-    end
-
-    # Occasionally we run across something similar to BKR-561, so to ensure we
-    # at least have the host defaults:
-    #
-    # :hieradatadir is used as a canary here; it isn't the only missing key
-    unless sut.host_hash.key? :hieradatadir
-      configure_type_defaults_on(sut)
-    end
-
-    if os_info['family'] == 'RedHat'
-      # OS-specific items
-      if os_info['name'] == 'RedHat'
-        RSpec.configure do |c|
-          c.before(:all) do
-            rhel_rhsm_subscribe(sut)
-          end
-
-          c.after(:all) do
-            rhel_rhsm_unsubscribe(sut)
-          end
-        end
-      end
-
-      if ['CentOS','RedHat','OracleLinux'].include?(os_info['name'])
-        enable_yum_repos_on(sut)
-        enable_epel_on(sut)
-
-        # net-tools required for netstat utility being used by be_listening
-        if os_info['release']['major'].to_i >= 7
-          pp = <<-EOS
-            package { 'net-tools': ensure => installed }
-          EOS
-          apply_manifest_on(sut, pp, :catch_failures => false)
-        end
-
-        if (os_info['name'] == 'CentOS') && (os_info['release']['major'].to_i >= 8)
-          if os_info['release']['minor'].to_i == 3
-            update_package_from_centos_stream(sut, 'kernel')
-            sut.reboot
+            c.after(:all) do
+              rhel_rhsm_unsubscribe(sut)
+            end
           end
         end
 
-        # Clean up YUM prior to starting our test runs.
-        on(sut, 'yum clean all')
+        if ['CentOS','RedHat','OracleLinux'].include?(os_info['name'])
+          enable_yum_repos_on(sut)
+          enable_epel_on(sut)
+
+          # net-tools required for netstat utility being used by be_listening
+          if os_info['release']['major'].to_i >= 7
+            pp = <<-EOS
+              package { 'net-tools': ensure => installed }
+            EOS
+            apply_manifest_on(sut, pp, :catch_failures => false)
+          end
+
+          unless sut[:hypervisor] == 'docker'
+            if (os_info['name'] == 'CentOS') && (os_info['release']['major'].to_i >= 8)
+              if os_info['release']['minor'].to_i == 3
+                update_package_from_centos_stream(sut, 'kernel')
+                sut.reboot
+              end
+            end
+          end
+
+          # Clean up YUM prior to starting our test runs.
+          on(sut, 'yum clean all')
+        end
       end
     end
   end
@@ -671,85 +718,100 @@ module Simp::BeakerHelpers
   #
   # Must set BEAKER_RHSM_USER and BEAKER_RHSM_PASS environment variables or pass them in as
   # parameters
-  def rhel_rhsm_subscribe(sut, *opts)
+  def rhel_rhsm_subscribe(suts, *opts)
     require 'securerandom'
 
-    rhsm_opts = {
-      :username => ENV['BEAKER_RHSM_USER'],
-      :password => ENV['BEAKER_RHSM_PASS'],
-      :system_name => "#{sut}_beaker_#{Time.now.to_i}_#{SecureRandom.uuid}",
-      :repo_list => {
-        '7' => [
-          'rhel-7-server-extras-rpms',
-          'rhel-7-server-optional-rpms',
-          'rhel-7-server-rh-common-rpms',
-          'rhel-7-server-rpms',
-          'rhel-7-server-supplementary-rpms'
-        ],
-        '8' => [
-          'rhel-8-for-x86_64-baseos-rpms',
-          'rhel-8-for-x86_64-supplementary-rpms'
-        ]
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(suts, :run_in_parallel => parallel) do |sut|
+      rhsm_opts = {
+        :username => ENV['BEAKER_RHSM_USER'],
+        :password => ENV['BEAKER_RHSM_PASS'],
+        :system_name => "#{sut}_beaker_#{Time.now.to_i}_#{SecureRandom.uuid}",
+        :repo_list => {
+          '7' => [
+            'rhel-7-server-extras-rpms',
+            'rhel-7-server-optional-rpms',
+            'rhel-7-server-rh-common-rpms',
+            'rhel-7-server-rpms',
+            'rhel-7-server-supplementary-rpms'
+          ],
+          '8' => [
+            'rhel-8-for-x86_64-baseos-rpms',
+            'rhel-8-for-x86_64-supplementary-rpms'
+          ]
+        }
       }
-    }
 
-    if opts && opts.is_a?(Hash)
-      rhsm_opts.merge!(opts)
-    end
-
-    os = fact_on(sut, 'operatingsystem').strip
-    os_release = fact_on(sut, 'operatingsystemmajrelease').strip
-
-    if os == 'RedHat'
-      unless rhsm_opts[:username] && rhsm_opts[:password]
-        fail("You must set BEAKER_RHSM_USER and BEAKER_RHSM_PASS environment variables to register RHEL systems")
+      if opts && opts.is_a?(Hash)
+        rhsm_opts.merge!(opts)
       end
 
-      sub_status = on(sut, 'subscription-manager status', :accept_all_exit_codes => true)
-      unless sub_status.exit_code == 0
-        logger.info("Registering #{sut} via subscription-manager")
-        on(sut, %{subscription-manager register --auto-attach --name='#{rhsm_opts[:system_name]}' --username='#{rhsm_opts[:username]}' --password='#{rhsm_opts[:password]}'}, :silent => true)
+      os = fact_on(sut, 'operatingsystem').strip
+      os_release = fact_on(sut, 'operatingsystemmajrelease').strip
+
+      if os == 'RedHat'
+        unless rhsm_opts[:username] && rhsm_opts[:password]
+          fail("You must set BEAKER_RHSM_USER and BEAKER_RHSM_PASS environment variables to register RHEL systems")
+        end
+
+        sub_status = on(sut, 'subscription-manager status', :accept_all_exit_codes => true)
+        unless sub_status.exit_code == 0
+          logger.info("Registering #{sut} via subscription-manager")
+          on(sut, %{subscription-manager register --auto-attach --name='#{rhsm_opts[:system_name]}' --username='#{rhsm_opts[:username]}' --password='#{rhsm_opts[:password]}'}, :silent => true)
+        end
+
+        if rhsm_opts[:repo_list][os_release]
+          rhel_repo_enable(sut, rhsm_opts[:repo_list][os_release])
+        else
+          logger.warn("simp-beaker-helpers:#{__method__} => Default repos for RHEL '#{os_release}' not found")
+        end
+
+        # Ensure that all users can access the entitlements since we don't know
+        # who we'll be running jobs as (often not root)
+        on(sut, 'chmod -R ugo+rX /etc/pki/entitlement', :accept_all_exit_codes => true)
       end
+    end
+  end
 
-      if rhsm_opts[:repo_list][os_release]
-        rhel_repo_enable(sut, rhsm_opts[:repo_list][os_release])
-      else
-        logger.warn("simp-beaker-helpers:#{__method__} => Default repos for RHEL '#{os_release}' not found")
+  def sosreport(suts, dest='sosreports')
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(suts, :run_in_parallel => parallel) do |sut|
+      install_latest_package_on(sut, 'sos')
+      on(sut, 'sosreport --batch')
+
+      files = on(sut, 'ls /var/tmp/sosreport* /tmp/sosreport* 2>/dev/null', :accept_all_exit_codes => true).output.lines.map(&:strip)
+
+      FileUtils.mkdir_p(dest)
+
+      files.each do |file|
+        scp_from(sut, file, File.absolute_path(dest))
       end
-
-      # Ensure that all users can access the entitlements since we don't know
-      # who we'll be running jobs as (often not root)
-      on(sut, 'chmod -R ugo+rX /etc/pki/entitlement', :accept_all_exit_codes => true)
     end
   end
 
-  def sosreport(sut, dest='sosreports')
-    install_latest_package_on(sut, 'sos')
-    on(sut, 'sosreport --batch')
-
-    files = on(sut, 'ls /var/tmp/sosreport* /tmp/sosreport* 2>/dev/null', :accept_all_exit_codes => true).output.lines.map(&:strip)
-
-    FileUtils.mkdir_p(dest)
-
-    files.each do |file|
-      scp_from(sut, file, File.absolute_path(dest))
+  def rhel_repo_enable(suts, repos)
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(suts, :run_in_parallel => parallel) do |sut|
+      Array(repos).each do |repo|
+        on(sut, %{subscription-manager repos --enable #{repo}})
+      end
     end
   end
 
-  def rhel_repo_enable(sut, repos)
-    Array(repos).each do |repo|
-      on(sut, %{subscription-manager repos --enable #{repo}})
+  def rhel_repo_disable(suts, repos)
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(suts, :run_in_parallel => parallel) do |sut|
+      Array(repos).each do |repo|
+        on(sut, %{subscription-manager repos --disable #{repo}}, :accept_all_exit_codes => true)
+      end
     end
   end
 
-  def rhel_repo_disable(sut, repos)
-    Array(repos).each do |repo|
-      on(sut, %{subscription-manager repos --disable #{repo}}, :accept_all_exit_codes => true)
+  def rhel_rhsm_unsubscribe(suts)
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(suts, :run_in_parallel => parallel) do |sut|
+      on(sut, %{subscription-manager unregister}, :accept_all_exit_codes => true)
     end
-  end
-
-  def rhel_rhsm_unsubscribe(sut)
-    on(sut, %{subscription-manager unregister}, :accept_all_exit_codes => true)
   end
 
   # Apply known OS fixes we need to run Beaker on each SUT
@@ -823,6 +885,9 @@ module Simp::BeakerHelpers
 
       host_entry = { fqdn => [] }
 
+      # Add the short name because containers can't change the hostname
+      host_entry[fqdn] << host.name if (host[:hypervisor] == 'docker')
+
       # Ensure that all interfaces are active prior to collecting data
       activate_interfaces(host) unless ENV['BEAKER_no_fix_interfaces']
 
@@ -836,7 +901,7 @@ module Simp::BeakerHelpers
         host_entry[fqdn] << ipaddress.strip
 
         unless host_entry[fqdn].empty?
-          suts_network_info[fqdn] = host_entry[fqdn]
+          suts_network_info[fqdn] = host_entry[fqdn].sort.uniq
         end
       end
     end
@@ -865,6 +930,7 @@ module Simp::BeakerHelpers
       end
 
       copy_to(ca_sut, pki_hosts_file, host_dir)
+
       # generate certs
       on(ca_sut, "cd #{host_dir}; cat #{host_dir}/pki.hosts | xargs bash make.sh")
     end
@@ -899,8 +965,8 @@ module Simp::BeakerHelpers
       sut.mkdir_p("#{sut_pki_dir}/public")
       sut.mkdir_p("#{sut_pki_dir}/private")
       sut.mkdir_p("#{sut_pki_dir}/cacerts")
-      copy_to(sut, "#{local_host_pki_tree}/#{fqdn}.pem",   "#{sut_pki_dir}/private/")
-      copy_to(sut, "#{local_host_pki_tree}/#{fqdn}.pub",   "#{sut_pki_dir}/public/")
+      copy_to(sut, "#{local_host_pki_tree}/#{fqdn}.pem", "#{sut_pki_dir}/private/")
+      copy_to(sut, "#{local_host_pki_tree}/#{fqdn}.pub", "#{sut_pki_dir}/public/")
 
       copy_to(sut, local_cacert, "#{sut_pki_dir}/cacerts/simp_auto_ca.pem")
 
@@ -911,6 +977,7 @@ module Simp::BeakerHelpers
       # properly! This must happen on the host itself since it needs to match
       # the native hashing algorithms.
       hash_cmd = <<~EOM.strip
+        PATH=/opt/puppetlabs/puppet/bin:$PATH; \
         cd #{sut_pki_dir}/cacerts; \
         for x in *; do \
           if [ ! -h "$x" ]; then \

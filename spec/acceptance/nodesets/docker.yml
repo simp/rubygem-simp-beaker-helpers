@@ -1,0 +1,36 @@
+HOSTS:
+  el7:
+    roles:
+      - el7
+      - master
+    platform: el-7-x86_64
+    hypervisor: docker
+    image: simpproject/simp_build_centos7
+    docker_cmd: '/usr/sbin/sshd -D -E /var/log/sshd.log'
+
+  el8:
+    roles:
+      - el8
+    platform: el-8-x86_64
+    hypervisor: docker
+    image: simpproject/simp_build_centos8
+    docker_cmd: '["/sbin/init"]'
+
+CONFIG:
+  docker_preserve_image: true
+  log_level: verbose
+  type: aio
+<% if ENV['BEAKER_PUPPET_COLLECTION'] -%>
+  puppet_collection: <%= ENV['BEAKER_PUPPET_COLLECTION'] %>
+<% end -%>
+  ssh:
+    keepalive: true
+    keepalive_interval: 10
+    host_key:
+      - <%= Net::SSH::Transport::Algorithms::ALGORITHMS[:host_key].join("\n#{' '*6}- ") %>
+    kex:
+      - <%= Net::SSH::Transport::Algorithms::ALGORITHMS[:kex].join("\n#{' '*6}- ") %>
+    encryption:
+      - <%= Net::SSH::Transport::Algorithms::ALGORITHMS[:encryption].join("\n#{' '*6}- ") %>
+    hmac:
+      - <%= Net::SSH::Transport::Algorithms::ALGORITHMS[:hmac].join("\n#{' '*6}- ") %>

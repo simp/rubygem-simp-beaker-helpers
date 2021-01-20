@@ -1,3 +1,11 @@
+### 1.21.3 / 2021-01-20
+* Fixed:
+  * Allow all methods that can safely take SUT arrays to do so
+  * Ensure thta pfact_on returns a Hash if appropriate
+  * Fix container support in copy_to
+* Added:
+  * Explicitly support podman local and remote in copy_to
+
 ### 1.21.2 / 2021-01-15
 * Fixed version mismatch.  1.21.1 was tagged with an incorrect version
   in version.rb.
