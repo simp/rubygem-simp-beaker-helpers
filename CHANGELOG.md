@@ -1,3 +1,9 @@
+### 1.21.4 / 2021-01-21
+* Fixed:
+  * Reverted the use of OpenStruct due to issues with seralization
+  * Hash objects have a 'dig' method as of Ruby 2.3 so pinned this gem to a
+    minimum version of Ruby 2.3
+
 ### 1.21.3 / 2021-01-20
 * Fixed:
   * Allow all methods that can safely take SUT arrays to do so
