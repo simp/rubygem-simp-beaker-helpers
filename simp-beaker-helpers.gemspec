@@ -18,6 +18,9 @@ Gem::Specification.new do |s|
   s.metadata = {
                  'issue_tracker' => 'https://simp-project.atlassian.net'
                }
+
+  s.required_ruby_version = '>= 2.3.0'
+
   s.add_runtime_dependency 'beaker'                      , ['>= 4.17.0', '< 5.0.0']
   s.add_runtime_dependency 'beaker-rspec'                , '~> 6.2'
   s.add_runtime_dependency 'beaker-puppet'               , ['>= 1.18.14', '< 2.0.0']
