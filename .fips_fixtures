@@ -1,6 +1,7 @@
 ---
 fixtures:
   repositories:
+    crypto_policy: https://github.com/simp/pupmod-simp-crypto_policy
     fips: https://github.com/simp/pupmod-simp-fips
     augeasproviders_core: https://github.com/simp/augeasproviders_core
     augeasproviders_grub: https://github.com/simp/augeasproviders_grub

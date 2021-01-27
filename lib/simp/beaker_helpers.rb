@@ -18,6 +18,73 @@ module Simp::BeakerHelpers
     "simp-beaker-helpers-#{t}-#{$$}-#{rand(0x100000000).to_s(36)}.tmp"
   end
 
+  # Sets a single YUM option in the form that yum-config-manager/dnf
+  # config-manager would expect.
+  #
+  # If not prefaced with a repository, the option will be applied globally.
+  #
+  # Has no effect if yum or dnf is not present.
+  def set_yum_opt_on(suts, key, value)
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(suts, :run_in_parallel => parallel) do |sut|
+      repo,target = key.split('.')
+
+      unless target
+        key = "\\*.#{repo}"
+      end
+
+      command = nil
+      if !sut.which('dnf').empty?
+        install_package_unless_present_on(sut, 'dnf-plugins-core', :accept_all_exit_codes => true)
+        command = 'dnf config-manager'
+      elsif !sut.which('yum').empty?
+        command = 'yum-config-manager'
+      end
+
+      on(sut, %{#{command} --save --setopt=#{key}=#{value}}, :silent => true) if command
+    end
+  end
+
+  # Takes a hash of YUM options to set in the form that yum-config-manager/dnf
+  # config-manager would expect.
+  #
+  # If not prefaced with a repository, the option will be applied globally.
+  #
+  # Example:
+  #   {
+  #     'skip_if_unavailable' => '1', # Applies globally
+  #     'foo.installonly_limit' => '5' # Applies only to the 'foo' repo
+  #   }
+  def set_yum_opts_on(suts, yum_opts={})
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(suts, :run_in_parallel => parallel) do |sut|
+      yum_opts.each_pair do |k,v|
+        set_yum_opt_on(sut, k, v)
+      end
+    end
+  end
+
+  def install_package_unless_present_on(suts, package_name, package_source=nil, opts={})
+    default_opts = {
+      max_retries: 3,
+      retry_interval: 10
+    }
+
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(suts, :run_in_parallel => parallel) do |sut|
+      package_source = package_name unless package_source
+
+      unless sut.check_for_package(package_name)
+        sut.install_package(
+          package_source,
+          '',
+          nil,
+          default_opts.merge(opts)
+        )
+      end
+    end
+  end
+
   def install_latest_package_on(suts, package_name, package_source=nil, opts={})
     default_opts = {
       max_retries: 3,
@@ -35,12 +102,7 @@ module Simp::BeakerHelpers
           default_opts.merge(opts)
         )
       else
-        sut.install_package(
-          package_source,
-          '',
-          nil,
-          default_opts.merge(opts)
-        )
+        install_package_unless_present_on(sut, package_name, package_source, opts)
       end
     end
   end
@@ -434,13 +496,16 @@ module Simp::BeakerHelpers
 
         fips_enable_modulepath = '--modulepath=/root/.beaker_fips/modules'
 
-        module_install_cmd = 'puppet module install simp-fips --target-dir=/root/.beaker_fips/modules'
+        modules_to_install = {
+          'simp-fips' => ENV['BEAKER_fips_module_version'],
+          'simp-crypto_policy' => nil
+        }
 
-        if ENV['BEAKER_fips_module_version']
-          module_install_cmd += " --version #{ENV['BEAKER_fips_module_version']}"
+        modules_to_install.each_pair do |to_install, version|
+          module_install_cmd = "puppet module install #{to_install} --target-dir=/root/.beaker_fips/modules"
+          module_install_cmd += " --version #{version}" if version
+          on(sut, module_install_cmd)
         end
-
-        on(sut, module_install_cmd)
       end
 
       # Work around Vagrant and cipher restrictions in EL8+
@@ -549,7 +614,7 @@ module Simp::BeakerHelpers
   def enable_epel_on(suts)
     parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
     block_on(suts, :run_in_parallel => parallel) do |sut|
-      if ONLINE && (ENV['BEAKER_stringify_facts'] != 'no')
+      if ONLINE
         os_info = fact_on(sut, 'os')
         os_maj_rel = os_info['release']['major']
 
@@ -1397,49 +1462,79 @@ module Simp::BeakerHelpers
   #    * 'simp-community-postgres'
   #    * 'simp-community-puppet'
   #
-  def install_simp_repos(sut, disable = [])
+  #
+  # Environment Variables:
+  #   * BEAKER_SIMP_install_repos
+  #     * 'no' => disable the capability
+  #   * BEAKER_SIMP_disable_repos
+  #     * Comma delimited list of active yum repo names to disable
+  def install_simp_repos(suts, disable = [])
     # NOTE: Do *NOT* use puppet in this method since it may not be available yet
 
-    install_latest_package_on(sut, 'yum-utils')
-    install_latest_package_on(
-      sut,
-      'simp-release-community',
-      "https://download.simp-project.com/simp-release-community.rpm",
-    )
+    return if (ENV.fetch('SIMP_install_repos', 'yes') == 'no')
 
-    to_disable = disable.dup
+    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+    block_on(suts, :run_in_parallel => parallel) do |sut|
+      install_package_unless_present_on(sut, 'yum-utils')
 
-    unless to_disable.empty?
-      if to_disable.include?('simp')
-        to_disable.delete('simp')
-        to_disable << 'simp-community-simp'
-      end
+      install_package_unless_present_on(
+        sut,
+        'simp-release-community',
+        "https://download.simp-project.com/simp-release-community.rpm",
+      )
 
-      if to_disable.include?('simp_deps')
-        to_disable.delete('simp_deps')
-        to_disable << 'simp-community-epel'
-        to_disable << 'simp-community-postgres'
-        to_disable << 'simp-community-puppet'
-      end
+      to_disable = disable.dup
+      to_disable += ENV.fetch('BEAKER_SIMP_disable_repos', '').split(',').map(&:strip)
 
-      # NOTE: This --enablerepo enables the repos for listing and is inherited
-      # from YUM. This does not actually "enable" the repos, that would require
-      # the "--enable" option (from yum-config-manager) :-D.
-      #
-      # Note: Certain versions of EL8 do not dump by default and EL7 does not
-      # have the '--dump' option.
-      available_repos = on(sut, %{yum-config-manager --enablerepo="*" || yum-config-manager --enablerepo="*" --dump}).stdout.lines.grep(/\A\[(.+)\]\Z/){|x| $1}
+      unless to_disable.empty?
+        if to_disable.include?('simp')
+          to_disable.delete('simp')
+          to_disable << 'simp-community-simp'
+        end
 
-      invalid_repos = (to_disable - available_repos)
+        if to_disable.include?('simp_deps')
+          to_disable.delete('simp_deps')
+          to_disable << 'simp-community-epel'
+          to_disable << 'simp-community-postgres'
+          to_disable << 'simp-community-puppet'
+        end
 
-      # Verify that the repos passed to disable are in the list of valid repos
-      unless invalid_repos.empty?
-        logger.warn(%{WARN: install_simp_repo - requested repos to disable do not exist on the target system '#{invalid_repos.join("', '")}'.})
-      end
+        # NOTE: This --enablerepo enables the repos for listing and is inherited
+        # from YUM. This does not actually "enable" the repos, that would require
+        # the "--enable" option (from yum-config-manager) :-D.
+        #
+        # Note: Certain versions of EL8 do not dump by default and EL7 does not
+        # have the '--dump' option.
+        available_repos = on(sut, %{yum-config-manager --enablerepo="*" || yum-config-manager --enablerepo="*" --dump}).stdout.lines.grep(/\A\[(.+)\]\Z/){|x| $1}
 
-      (to_disable - invalid_repos).each do |repo|
-        on(sut, %{yum-config-manager --disable "#{repo}"})
+        invalid_repos = (to_disable - available_repos)
+
+        # Verify that the repos passed to disable are in the list of valid repos
+        unless invalid_repos.empty?
+          logger.warn(%{WARN: install_simp_repo - requested repos to disable do not exist on the target system '#{invalid_repos.join("', '")}'.})
+        end
+
+        (to_disable - invalid_repos).each do |repo|
+          on(sut, %{yum-config-manager --disable "#{repo}"})
+        end
       end
     end
+
+    set_yum_opts_on(suts, {'simp*.skip_if_unavailable' => '1' })
+  end
+
+  # Set the release and release type of the SIMP yum repos
+  #
+  # Environment variables may be used to set either one
+  #   * BEAKER_SIMP_repo_release => The actual release (version number)
+  #   * BEAKER_SIMP_repo_release_type => The type of release (stable, unstable, rolling, etc...)
+  def set_simp_repo_release(sut, simp_release_type='stable', simp_release='6')
+    simp_release = ENV.fetch('BEAKER_SIMP_repo_release', simp_release)
+    simp_release_type = ENV.fetch('BEAKER_SIMP_repo_release_type', simp_release_type)
+
+    simp_release_type = 'releases' if (simp_release_type == 'stable')
+
+    create_remote_file(sut, '/etc/yum/vars/simprelease', simp_release)
+    create_remote_file(sut, '/etc/yum/vars/simpreleasetype', simp_release_type)
   end
 end
