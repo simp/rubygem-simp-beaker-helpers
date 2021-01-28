@@ -156,7 +156,7 @@ sensitive).
 * BEAKER_RHSM_PASS [String]
   * The password for using with RHSM
 
-* BEAEKR_fips [yes|no]
+* BEAKER_fips [yes|no]
   * `yes` => Enable FIPS on the SUT
   * `no` => Do not manage FIPS on the SUT (will not disable if enabled)
 
@@ -464,7 +464,7 @@ might try to install packages before subscription manager is configured.
 The version of InSpec to use when running inspec tests. Currently hard-coded to
 `4.16.14` due to a bug introduced in `4.16.15`.
 
-Let to 'latest' to use the latest available in the upstream repos.
+Set to 'latest' to use the latest available in the upstream repos.
 
 ## Examples
 
@@ -568,7 +568,7 @@ underlying OS configuration.
 
 `Simp::BeakerHelpers::Snapshot.save(sut, '<name of snapshot>')` will save a
 snapshot with the given name. If the snapshot already exists, it will be
-forceably overwritten.
+forcibly overwritten.
 
 
 ##### Base Snapshots
