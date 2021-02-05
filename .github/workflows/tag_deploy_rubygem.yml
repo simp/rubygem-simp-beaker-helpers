@@ -1,0 +1,152 @@
+# Build & Deploy RubyGem & GitHub release when a SemVer tag is pushed
+# ------------------------------------------------------------------------------
+#
+#             NOTICE: **This file is maintained with puppetsync**
+#
+# This file is updated automatically as part of a standardized asset baseline.
+#
+# The next baseline sync will overwrite any local changes to this file!
+#
+# ==============================================================================
+#
+# This pipeline uses the following GitHub Action Secrets:
+#
+#   GitHub Secret variable    Type      Notes
+#   ------------------------  --------  ----------------------------------------
+#   RUBYGEMS_API_KEY          Required
+#
+# ------------------------------------------------------------------------------
+#
+# NOTES:
+#
+# * The CHANGLOG text is altered to remove RPM-style date headers, which don't
+#   render well as markdown on the GitHub release pages
+---
+name: 'Tag: Release to GitHub & rubygems.org'
+
+on:
+  push:
+    tags:
+      - '[0-9]+\.[0-9]+\.[0-9]+'
+
+env:
+  PUPPET_VERSION: '~> 6'
+  LOCAL_WORKFLOW_CONFIG_FILE: .github/workflows.local.json
+
+jobs:
+  releng-checks:
+    name: "RELENG checks"
+    runs-on: ubuntu-18.04
+    outputs:
+      build_command: ${{ steps.commands.outputs.build_command }}
+      release_command: ${{ steps.commands.outputs.release_command }}
+    steps:
+      - name: "Assert '${{ github.ref }}' is a tag"
+        run: '[[ "$GITHUB_REF" =~ ^refs/tags/ ]] || { echo "::error ::GITHUB_REF is not a tag: ${GITHUB_REF}"; exit 1 ; }'
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+          clean: true
+      - name: Determing build and release commands
+        id: commands
+        run: |
+          # By default, these are the standard tasks from "bundler/gem_tasks"
+          # To override them in the LOCAL_WORKFLOW_CONFIG_FILE
+          GEM_BUILD_COMMAND='bundle exec rake build'
+          GEM_RELEASE_COMMAND='gem push pkg/*.gem'
+          if jq -r '. | keys' "$LOCAL_WORKFLOW_CONFIG_FILE" 2>/dev/null | \
+              grep -w '"gem_build_command"' &> /dev/null; then
+            GEM_BUILD_COMMAND="$(jq .gem_build_command "$LOCAL_WORKFLOW_CONFIG_FILE" )"
+          fi
+          if jq -r '. | keys' "$LOCAL_WORKFLOW_CONFIG_FILE" 2>/dev/null | \
+              grep -w '"gem_release_command"' &> /dev/null; then
+            GEM_RELEASE_COMMAND="$(jq .gem_release_command "$LOCAL_WORKFLOW_CONFIG_FILE" )"
+          fi
+          echo "::set-output name=build_command::${GEM_BUILD_COMMAND}"
+          echo "::set-output name=release_command::${GEM_RELEASE_COMMAND}"
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.5
+          bundler-cache: true
+      - name: Test build the package
+        run: "${{ steps.commands.outputs.build_command }}"
+
+  create-github-release:
+    name: Deploy GitHub Release
+    needs: [ releng-checks ]
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+          clean: true
+          fetch-depth: 0
+      - name: Get tag & annotation info (${{github.ref}})
+        id: tag-check
+        run: |
+          tag="${GITHUB_REF/refs\/tags\//}"
+          annotation="$(git for-each-ref "$GITHUB_REF" --format='%(contents)' --count=1)"
+          annotation_title="$(echo "$annotation" | head -1)"
+
+          echo "::set-output name=tag::${tag}"
+          echo "::set-output name=annotation_title::${annotation_title}"
+
+          # Prepare annotation body as a file for the next step
+          #
+          # * The GitHub Release render the text in this file as markdown
+          # * The file is needed because :set-output only supports single lines
+          # * The `perl -pe` removes RPM-style date headers from the CHANGELOG,
+          #   because they don't render well as markdown on the Release page
+          #
+          echo "$annotation" |  tail -n +2 | \
+            perl -pe 'BEGIN{undef $/;} s/\n\* (Mon|Tue|Wed|Thu|Fri|Sat|Sun) .*?\n//smg;' > /tmp/annotation.body
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ steps.tag-check.outputs.annotation_title }}
+          body_path: /tmp/annotation.body
+          draft: false
+          prerelease: false
+
+  deploy-rubygem:
+    name: Deploy RubyGem Release
+    needs: [ releng-checks ]
+    runs-on: ubuntu-18.04
+    env:
+      RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
+      BUILD_COMMAND: ${{ needs.releng-checks.outputs.build_command }}
+      RELEASE_COMMAND: ${{ needs.releng-checks.outputs.release_command }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+          clean: true
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: 2.5
+          bundler-cache: true
+      - name: Build RubyGem
+        run: '$BUILD_COMMAND'
+
+      - name: Release RubyGem
+        run: |
+          echo "Setting up gem credentials..."
+          mkdir -p ~/.gem
+
+          cat << EOF > ~/.gem/credentials
+          ---
+          :rubygems_api_key: ${RUBYGEMS_API_KEY}
+          EOF
+          chmod 0600 ~/.gem/credentials
+
+          chmod -R go=u-w .
+
+          echo "Running '$RELEASE_COMMAND'..."
+          $RELEASE_COMMAND
