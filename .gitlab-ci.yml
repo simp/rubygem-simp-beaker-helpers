@@ -284,8 +284,8 @@ pup5.x-unit:
   <<: *pup_5_x
   <<: *unit_tests
 
-pup6.pe-unit:
-  <<: *pup_6_pe
+pup6.x-unit:
+  <<: *pup_6_x
   <<: *unit_tests
 
 pup7.x-unit:
@@ -311,11 +311,11 @@ pup5.x-pkg:
   script:
     'bundle exec rake pkg:gem'
 
-pup6.pe-pkg:
-  <<: *pup_6_pe
+pup6.x-pkg:
+  <<: *pup_6_x
   <<: *unit_tests
   script:
-    'bundle epeec rake pkg:gem'
+    'bundle exec rake pkg:gem'
 
 pup7.x-pkg:
   <<: *pup_7_x
@@ -326,22 +326,22 @@ pup7.x-pkg:
 #=======================================================================
 # Acceptance tests
 default:
-  <<: *pup_6_pe
+  <<: *pup_6_x
   <<: *acceptance_base
   script:
-    - bundle epeec rake beaker:suites[default]
+    - bundle exec rake beaker:suites[default]
 
 default-fips:
-  <<: *pup_6_pe
+  <<: *pup_6_x
   <<: *acceptance_base
   script:
-    - BEAKER_fips=yes bundle epeec rake beaker:suites[default]
+    - BEAKER_fips=yes bundle exec rake beaker:suites[default]
 
-fips_from_fipetures:
-  <<: *pup_6_pe
+fips_from_fixtures:
+  <<: *pup_6_x
   <<: *acceptance_base
   script:
-    - bundle epeec rake beaker:suites[fips_from_fipetures]
+    - bundle exec rake beaker:suites[fips_from_fixtures]
 
 puppet5_collections:
   <<: *pup_5_x
@@ -350,10 +350,10 @@ puppet5_collections:
     - bundle exec rake beaker:suites[puppet_collections]
 
 puppet6_collections:
-  <<: *pup_6_pe
+  <<: *pup_6_x
   <<: *acceptance_base
   script:
-    - bundle epeec rake beaker:suites[puppet_collections]
+    - bundle exec rake beaker:suites[puppet_collections]
 
 puppet7_collections:
   <<: *pup_7_x
@@ -362,15 +362,15 @@ puppet7_collections:
     - bundle exec rake beaker:suites[puppet_collections]
 
 windows:
-  <<: *pup_6_pe
+  <<: *pup_6_x
   <<: *acceptance_base
   script:
-    - bundle epeec rake beaker:suites[windows]
+    - bundle exec rake beaker:suites[windows]
 
 snapshot:
-  <<: *pup_6_pe
+  <<: *pup_6_x
   <<: *acceptance_base
   # This is prone to breakage in the underlying system
   allow_failure: true
   script:
-    - BEAKER_simp_snapshot=yes bundle epeec rake beaker:suites[snapshot]
+    - BEAKER_simp_snapshot=yes bundle exec rake beaker:suites[snapshot]
