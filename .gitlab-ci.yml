@@ -1,11 +1,4 @@
 # ------------------------------------------------------------------------------
-#             NOTICE: **This file is maintained with puppetsync**
-#
-# This file is updated automatically as part of a puppet module baseline.
-#
-# The next baseline sync will overwrite any local changes to everything above
-# the line "# Repo-specific content"
-# ------------------------------------------------------------------------------
 # The testing matrix considers ruby/puppet versions supported by SIMP and PE:
 #
 # https://puppet.com/docs/pe/2019.8/component_versions_in_recent_pe_releases.html
@@ -216,28 +209,28 @@ variables:
 # Puppet Versions
 #-----------------------------------------------------------------------
 
-.pup_5: &pup_5
+.pup_5_x: &pup_5_x
   image: 'ruby:2.4'
   variables:
     PUPPET_VERSION: '~> 5.0'
     BEAKER_PUPPET_COLLECTION: 'puppet5'
     MATRIX_RUBY_VERSION: '2.4'
 
-.pup_6: &pup_6
+.pup_6_x: &pup_6_x
   image: 'ruby:2.5'
   variables:
     PUPPET_VERSION: '~> 6.0'
     BEAKER_PUPPET_COLLECTION: 'puppet6'
     MATRIX_RUBY_VERSION: '2.5'
 
-.pup_6_18_0: &pup_6_18_0
+.pup_6_pe: &pup_6_pe
   image: 'ruby:2.5'
   variables:
     PUPPET_VERSION: '6.18.0'
     BEAKER_PUPPET_COLLECTION: 'puppet6'
     MATRIX_RUBY_VERSION: '2.5'
 
-.pup_7: &pup_7
+.pup_7_x: &pup_7_x
   image: 'ruby:2.7'
   variables:
     PUPPET_VERSION: '~> 7.0'
@@ -280,24 +273,18 @@ variables:
 # Unit Tests
 #-----------------------------------------------------------------------
 
-pup5-unit:
-  <<: *pup_5
+pup5.x-unit:
+  <<: *pup_5_x
   <<: *unit_tests
 
-pup6-unit:
-  <<: *pup_6
+pup6.x-unit:
+  <<: *pup_6_x
   <<: *unit_tests
 
-pup7-unit:
-  <<: *pup_7
+pup7.x-unit:
+  <<: *pup_7_x
   <<: *unit_tests
 
-# ------------------------------------------------------------------------------
-#             NOTICE: **This file is maintained with puppetsync**
-#
-# Everything above the "Repo-specific content" comment will be overwritten by
-# the next puppetsync.
-# ------------------------------------------------------------------------------
 
 # Repo-specific content
 # ==============================================================================
@@ -305,20 +292,20 @@ pup7-unit:
 #=======================================================================
 # Packaging test
 
-pup5-pkg:
-  <<: *pup_5
+pup5.x-pkg:
+  <<: *pup_5_x
   <<: *unit_tests
   script:
     'bundle exec rake pkg:gem'
 
-pup6-pkg:
-  <<: *pup_6
+pup6.x-pkg:
+  <<: *pup_6_x
   <<: *unit_tests
   script:
     'bundle exec rake pkg:gem'
 
-pup7-pkg:
-  <<: *pup_7
+pup7.x-pkg:
+  <<: *pup_7_x
   <<: *unit_tests
   script:
     'bundle exec rake pkg:gem'
@@ -326,49 +313,49 @@ pup7-pkg:
 #=======================================================================
 # Acceptance tests
 default:
-  <<: *pup_6
+  <<: *pup_6_x
   <<: *acceptance_base
   script:
     - bundle exec rake beaker:suites[default]
 
 default-fips:
-  <<: *pup_6
+  <<: *pup_6_x
   <<: *acceptance_base
   script:
     - BEAKER_fips=yes bundle exec rake beaker:suites[default]
 
 fips_from_fixtures:
-  <<: *pup_6
+  <<: *pup_6_x
   <<: *acceptance_base
   script:
     - bundle exec rake beaker:suites[fips_from_fixtures]
 
 puppet5_collections:
-  <<: *pup_5
+  <<: *pup_5_x
   <<: *acceptance_base
   script:
     - bundle exec rake beaker:suites[puppet_collections]
 
 puppet6_collections:
-  <<: *pup_6
+  <<: *pup_6_x
   <<: *acceptance_base
   script:
     - bundle exec rake beaker:suites[puppet_collections]
 
 puppet7_collections:
-  <<: *pup_7
+  <<: *pup_7_x
   <<: *acceptance_base
   script:
     - bundle exec rake beaker:suites[puppet_collections]
 
 windows:
-  <<: *pup_6
+  <<: *pup_6_x
   <<: *acceptance_base
   script:
     - bundle exec rake beaker:suites[windows]
 
 snapshot:
-  <<: *pup_6
+  <<: *pup_6_x
   <<: *acceptance_base
   # This is prone to breakage in the underlying system
   allow_failure: true
