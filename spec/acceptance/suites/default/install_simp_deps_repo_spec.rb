@@ -1,12 +1,12 @@
 require 'spec_helper_acceptance'
 
 hosts.each do |host|
-  describe '#write_hieradata_to' do
-    expect_failures = false
-    if hosts_with_role(hosts, 'el8').include?(host)
-      expect_failures = true
-    end
+  expect_failures = false
+  if hosts_with_role(hosts, 'el8').include?(host)
+    expect_failures = true
+  end
 
+  describe '#install_simp_repos' do
     it 'should install yum utils' do
       host.install_package('yum-utils')
     end
@@ -18,6 +18,18 @@ hosts.each do |host|
         skip "#{host} is not supported yet" if expect_failures
         on(host, 'yum -y list simp')
         on(host, 'yum -y list postgresql96')
+      end
+    end
+
+    context 'when targeting a release type' do
+      it 'adjusts the SIMP release target' do
+        set_simp_repo_release(host, 'rolling')
+        expect(file_content_on(host, '/etc/yum/vars/simpreleasetype').strip).to eq('rolling')
+      end
+
+      it 'lists the simp rpm' do
+        skip "#{host} is not supported yet" if expect_failures
+        on(host, 'yum list simp')
       end
     end
 

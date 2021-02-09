@@ -13,6 +13,8 @@ Methods to assist beaker acceptance tests for SIMP.
   * [`rake beaker:suites`](#rake-beakersuites)
   * [Suite Execution](#suite-execution)
     * [Environment Variables](#environment-variables)
+      * [Beaker Management](#beaker-management)
+      * [Beaker Helpers Adjustments](#beaker-helpers-adjustments)
     * [Global Suite Configuration](#global-suite-configuration)
       * [Supported Config:](#supported-config)
     * [Individual Suite Configuration](#individual-suite-configuration)
@@ -112,12 +114,68 @@ sensitive).
 
 #### Environment Variables
 
-* BEAKER_suite_runall
+##### Beaker Management
+
+* BEAKER_suite_runall [yes|no]
   * Run all Suites
 
-* BEAKER_suite_basedir
+* BEAKER_suite_basedir [String]
   * The base directory where suites will be defined
-  * Default: spec/acceptance
+  * Default: `spec/acceptance`
+
+##### Beaker Helpers Adjustments
+
+* BEAKER_SIMP_parallel [yes|no]
+  * `yes` => Run simp-beaker-helpers methods on SUTs in parallel if possible
+  * `no` => Do not run methods in parallel
+
+* BEAKER_docker_cmd [String]
+  * The specific command to use for performing `docker` operations
+
+* BEAKER_helpers_verbose [yes|no]
+  * `yes` => Enable verbose output
+  * `no` => Do not enable verbose output
+
+* BEAKER_copy_fixtures [yes|no]
+  * `yes` => Enable copying fixtures to the SUT
+  * `no` => Disable copying fixtures to the SUT
+
+* BEAKER_use_fixtures_dir_for_modules [yes|no]
+  * `yes` => Pull fixtures directly from `spec/fixtures/modules`
+  * `no` => Ignore `spec/fixtures/modules` content
+
+* BEAKER_stringify_facts [yes|no]
+  * `yes` => Enable fact stringification
+
+* BEAKER_fips_module_version [String]
+  * The specific version of the FIPS module to install from the puppet forge
+
+* BEAKER_RHSM_USER [String]
+  * The username for using with RHSM
+
+* BEAKER_RHSM_PASS [String]
+  * The password for using with RHSM
+
+* BEAKER_fips [yes|no]
+  * `yes` => Enable FIPS on the SUT
+  * `no` => Do not manage FIPS on the SUT (will not disable if enabled)
+
+* BEAKER_no_fix_interfaces [Boolean]
+  * If present, will not try to fix the interfaces on the SUT
+
+* BEAKER_SIMP_install_repos [yes|no]
+  * `yes` => Install the SIMP YUM repositories
+  * `no` => No not install the SIMP YUM repositories
+
+* BEAKER_SIMP_disable_repos [String]
+  * Comma delimited list of YUM repositories to disable on the SUT
+
+* BEAKER_SIMP_repo_release [String]
+  * The release of SIMP to target in the YUM repos (usually a number)
+
+* BEAKER_SIMP_repo_release_type [String]
+  * The release type of SIMP to target in the YUM repos
+    * Something like `stable`, `rolling`, or `unstable`
 
 #### Global Suite Configuration
 
@@ -406,7 +464,7 @@ might try to install packages before subscription manager is configured.
 The version of InSpec to use when running inspec tests. Currently hard-coded to
 `4.16.14` due to a bug introduced in `4.16.15`.
 
-Let to 'latest' to use the latest available in the upstream repos.
+Set to 'latest' to use the latest available in the upstream repos.
 
 ## Examples
 
@@ -510,7 +568,7 @@ underlying OS configuration.
 
 `Simp::BeakerHelpers::Snapshot.save(sut, '<name of snapshot>')` will save a
 snapshot with the given name. If the snapshot already exists, it will be
-forceably overwritten.
+forcibly overwritten.
 
 
 ##### Base Snapshots

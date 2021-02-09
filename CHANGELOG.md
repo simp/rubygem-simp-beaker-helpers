@@ -1,3 +1,19 @@
+### 1.22.0 / 2021-01-27
+* Fixed:
+  * Ensure that the simp-crypto_policy module is installed when flipping to FIPS
+    mode
+  * Only attempt to install the simp repos once in case they are broken for some
+    reason
+* Added:
+  * Documentation for all of the beaker environment variables
+  * set_simp_repo_release() for setting the release and release_type of the
+    public SIMP yum repos
+  * set_yum_opts_on() method for setting bulk yum config options
+  * set_yum_opt_on() method for setting singular yum config options
+  * install_package_unless_present_on() method
+  * Allow users to set repos to disable using an environment variable
+  * A total run time summary for beaker suites
+
 ### 1.21.4 / 2021-01-21
 * Fixed:
   * Reverted the use of OpenStruct due to issues with seralization

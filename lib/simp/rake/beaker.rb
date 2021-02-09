@@ -196,6 +196,7 @@ module Simp::Rake
           default_suite = ordered_suites.delete('default')
           ordered_suites.unshift(default_suite) if default_suite
 
+          suite_start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
           ordered_suites.each do |ste|
 
             next unless (suites[ste]['default_run'] == true)
@@ -255,6 +256,11 @@ module Simp::Rake
               $stdout.puts("\n\n=== Suite '#{name}' Complete ===\n\n")
             end
           end
+          suite_end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
+          suite_run_time = ((suite_end_time - suite_start_time)/60).round(2)
+
+          $stdout.puts("== Total Runtime: #{suite_run_time} minutes ==\n\n")
 
           unless failures.keys.empty?
             $stdout.puts("The following tests had failures:")

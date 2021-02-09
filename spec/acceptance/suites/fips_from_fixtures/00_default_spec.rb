@@ -18,6 +18,7 @@ new_fixtures = {
   }
 }
 
+new_fixtures['fixtures']['repositories']['crypto_policy'] = 'https://github.com/simp/pupmod-simp-crypto_policy'
 new_fixtures['fixtures']['repositories']['fips'] = 'https://github.com/simp/pupmod-simp-fips'
 new_fixtures['fixtures']['repositories']['augeasproviders_core'] = 'https://github.com/simp/augeasproviders_core'
 new_fixtures['fixtures']['repositories']['augeasproviders_grub'] = 'https://github.com/simp/augeasproviders_grub'
