@@ -619,7 +619,8 @@ module Simp::BeakerHelpers
         os_maj_rel = os_info['release']['major']
 
         # This is based on the official EPEL docs https://fedoraproject.org/wiki/EPEL
-        if ['RedHat', 'CentOS'].include?(os_info['name'])
+        case os_info['name']
+        when 'RedHat','CentOS'
           install_latest_package_on(
             sut,
             'epel-release',
@@ -645,7 +646,11 @@ module Simp::BeakerHelpers
               on sut, %{dnf config-manager --set-enabled powertools || dnf config-manager --set-enabled PowerTools}
             end
           end
+        when 'OracleLinux'
+          package_name = "oracle-epel-release-el#{os_maj_rel}"
+          install_latest_package_on(sut,package_name)
         end
+
       end
     end
   end
