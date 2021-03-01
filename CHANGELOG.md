@@ -1,3 +1,7 @@
+### 1.22.1 / 2021-03-01
+* Fixed: enable_epel_on() now installs the correct EPEL repository
+  package on OracleLinux
+
 ### 1.22.0 / 2021-01-27
 * Fixed:
   * Ensure that the simp-crypto_policy module is installed when flipping to FIPS
