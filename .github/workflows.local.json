@@ -1,0 +1,6 @@
+{
+  "gem_build_command": "bundle exec rake pkg:gem",
+  "gem_release_command": "gem push dist/*.gem",
+  "gem_pkg_dir": "dist"
+}
+
