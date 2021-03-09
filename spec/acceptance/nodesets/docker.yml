@@ -1,29 +1,53 @@
 HOSTS:
-  el7:
+  el7.test.net:
     roles:
       - el7
       - master
-    platform: el-7-x86_64
+    platform:   el-7-x86_64
     hypervisor: docker
-    image: simpproject/simp_build_centos7
-    docker_cmd: '/usr/sbin/sshd -D -E /var/log/sshd.log'
+    image: simpproject/simp_beaker_el7
+    docker_cmd: '["/sbin/init"]'
 
-  el8:
+  el8.test.net:
     roles:
       - el8
-    platform: el-8-x86_64
+    platform:   el-8-x86_64
     hypervisor: docker
-    image: simpproject/simp_build_centos8
+    image: simpproject/simp_beaker_el8
     docker_cmd: '["/sbin/init"]'
 
 CONFIG:
-  docker_preserve_image: true
   log_level: verbose
   type: aio
-<% if ENV['BEAKER_PUPPET_COLLECTION'] -%>
-  puppet_collection: <%= ENV['BEAKER_PUPPET_COLLECTION'] %>
+<% if ENV['BEAKER_PUPPET_ENVIRONMENT'] -%>
+  puppet_environment: <%= ENV['BEAKER_PUPPET_ENVIRONMENT'] %>
+<% end -%>
+  # This is necessary for pretty much all containers
+  docker_cap_add:
+    - AUDIT_WRITE
+<%
+  require 'docker-api'
+  unless ::Docker.podman?
+-%>
+  # All items below this point are required for systemd
+  mount_folders:
+    cgroup:
+      host_path: /sys/fs/cgroup
+      container_path: /sys/fs/cgroup
+      opts: 'ro'
+  dockeropts:
+    HostConfig:
+      Tmpfs:
+        '/run': 'rw,noexec,nosuid,nodev,size=65536k'
+        '/run/lock': 'rw,noexec,nosuid,nodev,size=65536k'
+        '/tmp': 'rw,exec,nosuid,nodev,size=65536k'
+        '/sys/fs/cgroup/systemd': 'rw,size=65536k'
+        '/var/log/journal': 'rw,noexec,nodev,nosuid,size=65536k'
 <% end -%>
   ssh:
+    password: root
+    auth_methods:
+      - password
     keepalive: true
     keepalive_interval: 10
     host_key:

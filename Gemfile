@@ -38,7 +38,9 @@ group :system_tests do
       raise "Invalid BEAKER_GEM_OPTIONS: '#{beaker_gem_options}' => '#{e}'"
     end
   else
-    gem 'beaker', beaker_gem_options
+    #gem 'beaker', beaker_gem_options
+    # Needed to workaround issues with 'which'
+    gem 'beaker', :git => 'https://github.com/voxpupuli/beaker', :ref => 'e0685f9b2fb092e3a522e5a623cdc90774096bee'
   end
 
   gem 'beaker-rspec'
