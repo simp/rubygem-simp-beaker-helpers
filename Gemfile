@@ -13,7 +13,7 @@ gem 'bundler'
 gem 'rake'
 
 group :system_tests do
-  beaker_gem_options = ENV.fetch('BEAKER_GEM_OPTIONS', ['>= 4.17.0', '< 5.0.0'])
+  beaker_gem_options = ENV.fetch('BEAKER_GEM_OPTIONS', ['>= 4.28.1', '< 5.0.0'])
 
   if "#{beaker_gem_options}".include?(':')
     # Just pass in BEAKER_GEM_OPTIONS as a string that would represent the usual
@@ -38,9 +38,7 @@ group :system_tests do
       raise "Invalid BEAKER_GEM_OPTIONS: '#{beaker_gem_options}' => '#{e}'"
     end
   else
-    #gem 'beaker', beaker_gem_options
-    # Needed to workaround issues with 'which'
-    gem 'beaker', :git => 'https://github.com/voxpupuli/beaker', :ref => 'e0685f9b2fb092e3a522e5a623cdc90774096bee'
+    gem 'beaker', beaker_gem_options
   end
 
   gem 'beaker-rspec'
