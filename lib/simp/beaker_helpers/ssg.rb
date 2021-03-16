@@ -79,7 +79,7 @@ module Simp::BeakerHelpers
         '7' => {
           'required_packages' => EL_PACKAGES,
           'ssg' => {
-            'profile_target' => 'rhel7',
+            'profile_target' => 'centos7',
             'build_target'   => 'centos7',
             'datastream'     => 'ssg-centos7-ds.xml'
           }
@@ -87,7 +87,7 @@ module Simp::BeakerHelpers
         '8' => {
           'required_packages' => EL8_PACKAGES,
           'ssg' => {
-            'profile_target' => 'rhel8',
+            'profile_target' => 'centos8',
             'build_target'   => 'centos8',
             'datastream'     => 'ssg-centos8-ds.xml'
           }
@@ -299,8 +299,26 @@ module Simp::BeakerHelpers
         result_id = rule_result.attributes['idref'].value.to_s
         result_value = [
           'Title: ' + doc.xpath("//Rule[@id='#{result_id}']/title/text()").first.to_s,
-          '  ID: ' + result_id
-        ].join("\n")
+          '  ID: ' + result_id,
+        ]
+
+        if result.child.content == 'fail'
+          references = {}
+
+          doc.xpath("//Rule[@id='#{result_id}']/reference").each do |ref|
+            references[ref['href']] ||= []
+            references[ref['href']] << ref.text
+          end
+
+          result_value << '  References:'
+          references.each_pair do |src, items|
+            result_value << "    *  #{src}"
+            result_value << "      * #{items.join(', ')}"
+          end
+          result_value << '  Description: ' + doc.xpath("//Rule[@id='#{result_id}']/description").text.gsub("\n","\n    ")
+        end
+
+        result_value = result_value.join("\n")
 
         if result.child.content == 'fail'
           stats[:failed] << result_value.red
