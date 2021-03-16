@@ -186,13 +186,18 @@ module Simp::BeakerHelpers
         end
       end
 
-      unless directory_exists_on(sut, dest)
-        dest = File.dirname(dest)
-        sut.mkdir_p(dest)
+      sut.mkdir_p(File.dirname(dest)) unless directory_exists_on(sut, dest)
+
+      if File.file?(src)
+        cmd = %{#{docker_cmd} cp "#{src}" "#{container_id}:#{dest}"}
+      else
+        cmd = [
+          %{tar #{exclude_list.join(' ')} -hcf - -C "#{File.dirname(src)}" "#{File.basename(src)}"},
+          %{#{docker_cmd} exec -i "#{container_id}" tar -C "#{File.dirname(dest)}" -xf -)}
+        ].join(' | ')
       end
 
-      %x(tar #{exclude_list.join(' ')} -hcf - -C "#{File.dirname(src)}" "#{File.basename(src)}" | #{docker_cmd} exec -i "#{container_id}" tar -C "#{dest}" -xf -)
-
+      %x(#{cmd})
     elsif rsync_functional_on?(sut)
       # This makes rsync_to work like beaker and scp usually do
       exclude_hack = %(__-__' -L --exclude '__-__)

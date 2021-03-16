@@ -2,6 +2,8 @@
 * For `podman` support:
   * Bumped the required beaker-docker to between 0.8.3 and 2.0.0
   * Added a dependency on docker-api between 2.1.0 and 3.0.0
+* Fixed:
+  * Ensure that containers use the correct method for copying files
 
 ### 1.22.1 / 2021-03-01
 * Fixed: enable_epel_on() now installs the correct EPEL repository

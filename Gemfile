@@ -13,7 +13,7 @@ gem 'bundler'
 gem 'rake'
 
 group :system_tests do
-  beaker_gem_options = ENV.fetch('BEAKER_GEM_OPTIONS', ['>= 4.17.0', '< 5.0.0'])
+  beaker_gem_options = ENV.fetch('BEAKER_GEM_OPTIONS', ['>= 4.28.1', '< 5.0.0'])
 
   if "#{beaker_gem_options}".include?(':')
     # Just pass in BEAKER_GEM_OPTIONS as a string that would represent the usual
