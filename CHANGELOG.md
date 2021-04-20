@@ -1,7 +1,9 @@
-### 1.23.0 / 2021-03-04
-* For `podman` support:
-  * Bumped the required beaker-docker to between 0.8.3 and 2.0.0
-  * Added a dependency on docker-api between 2.1.0 and 3.0.0
+### 1.23.0 / 2021-03-16
+* Added:
+  * For `podman` support:
+    * Bumped the required beaker-docker to between 0.8.3 and 2.0.0
+    * Added a dependency on docker-api between 2.1.0 and 3.0.0
+  * Make SSG failures have verbose output to make remediation easier
 * Fixed:
   * Ensure that containers use the correct method for copying files
 
