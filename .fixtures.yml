@@ -4,4 +4,9 @@ fixtures:
     stdlib: https://github.com/simp/puppetlabs-stdlib
     simplib: https://github.com/simp/pupmod-simp-simplib
     compliance_markup: https://github.com/simp/pupmod-simp-compliance_markup
-
+    disa_stig-el7-baseline:
+      repo: https://github.com/mitre/redhat-enterprise-linux-7-stig-baseline
+      target: spec/fixtures/inspec_deps/inspec_profiles/profiles
+    disa_stig-el8-baseline:
+      repo: https://github.com/mitre/redhat-enterprise-linux-8-stig-baseline
+      target: spec/fixtures/inspec_deps/inspec_profiles/profiles

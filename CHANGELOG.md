@@ -1,3 +1,16 @@
+### 1.23.1 / 2021-05-19
+* Fixed:
+  * The SSG default branch is now the latest numeric tag instead of the one
+    closest to the head of the default branch. The tag closest to the default
+    branch has drifted over time.
+  * Removed direct call to `docker` when copying out inspec results
+  * Typos in `copy_in` when running against docker
+* Added:
+  * `Simp::BeakerHelpers::Inspec.enable_repo_on(suts)` to allow users to easily
+    enable the Chef repos for inspec
+  * Beaker tests for inspec and SSG basic functionality
+  * GitHub Actions for acceptance testing where possible
+
 ### 1.23.0 / 2021-03-16
 * Added:
   * For `podman` support:

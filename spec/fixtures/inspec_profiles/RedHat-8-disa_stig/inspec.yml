@@ -1,0 +1,14 @@
+name: EL8 STIG
+title: STIG for EL 8
+supports:
+  - os-family: redhat
+maintainer: SIMP Team
+copyright: Onyx Point, Inc.
+copyright_email: simp@onyxpoint.com
+license: Apache-2.0
+summary: |
+  A collection of InSpec tests
+version: 0.0.1
+depends:
+  - name: disa_stig-el8-baseline
+    path: ../../inspec_deps/inspec_profiles/profiles/disa_stig-el8-baseline
