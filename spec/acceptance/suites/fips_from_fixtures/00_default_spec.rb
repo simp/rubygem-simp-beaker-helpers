@@ -56,7 +56,7 @@ describe 'FIPS pre-installed' do
     context "on #{host}" do
       it 'does not create an alternate apply directory' do
         if host[:hypervisor] == 'docker'
-          skip('Not supported on docker'
+          skip('Not supported on docker')
         else
           on(host, 'test ! -d /root/.beaker_fips/modules')
         end
@@ -64,7 +64,7 @@ describe 'FIPS pre-installed' do
 
       it 'has fips enabled' do
         if host[:hypervisor] == 'docker'
-          skip('Not supported on docker'
+          skip('Not supported on docker')
         else
           stdout = on(host, 'cat /proc/sys/crypto/fips_enabled').stdout.strip
           expect(stdout).to eq('1')
