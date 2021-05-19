@@ -69,10 +69,3 @@ jobs:
         run: |
           sudo chmod -R ugo+rwX /var/run/podman
           bundle exec rake beaker:suites[inspec,docker]
-      - name: beaker offline
-        env:
-          DOCKER_HOST: unix:///var/run/podman/podman.sock
-          CONTAINER_HOST: unix:///var/run/podman/podman.sock
-        run: |
-          sudo chmod -R ugo+rwX /var/run/podman
-          bundle exec rake beaker:suites[offline,docker]
