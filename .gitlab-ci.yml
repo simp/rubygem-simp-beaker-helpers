@@ -351,6 +351,7 @@ puppet7_collections:
 windows:
   <<: *pup_6_x
   <<: *acceptance_base
+  allow_failure: true
   script:
     - bundle exec rake beaker:suites[windows]
 

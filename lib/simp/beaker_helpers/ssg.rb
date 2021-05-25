@@ -25,19 +25,20 @@ module Simp::BeakerHelpers
       'git',
       'openscap-python',
       'openscap-utils',
-      'python-lxml',
-      'python-jinja2'
+      'python-jinja2',
+      'python-lxml'
     ]
 
     EL8_PACKAGES = [
-      'python3',
-      'python3-pyyaml',
       'cmake',
       'git',
+      'make',
       'openscap-python3',
       'openscap-utils',
+      'python3',
+      'python3-jinja2',
       'python3-lxml',
-      'python3-jinja2'
+      'python3-pyyaml'
     ]
 
     OS_INFO = {
