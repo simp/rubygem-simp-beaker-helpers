@@ -22,28 +22,6 @@ CONFIG:
 <% if ENV['BEAKER_PUPPET_ENVIRONMENT'] -%>
   puppet_environment: <%= ENV['BEAKER_PUPPET_ENVIRONMENT'] %>
 <% end -%>
-  # This is necessary for pretty much all containers
-  docker_cap_add:
-    - AUDIT_WRITE
-<%
-  require 'docker-api'
-  unless ::Docker.podman?
--%>
-  # All items below this point are required for systemd
-  mount_folders:
-    cgroup:
-      host_path: /sys/fs/cgroup
-      container_path: /sys/fs/cgroup
-      opts: 'ro'
-  dockeropts:
-    HostConfig:
-      Tmpfs:
-        '/run': 'rw,noexec,nosuid,nodev,size=65536k'
-        '/run/lock': 'rw,noexec,nosuid,nodev,size=65536k'
-        '/tmp': 'rw,exec,nosuid,nodev,size=65536k'
-        '/sys/fs/cgroup/systemd': 'rw,size=65536k'
-        '/var/log/journal': 'rw,noexec,nodev,nosuid,size=65536k'
-<% end -%>
   ssh:
     password: root
     auth_methods:

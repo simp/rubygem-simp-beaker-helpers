@@ -1,0 +1,71 @@
+# Run all tests as GitHub Actions
+name: Unit Tests
+on:
+  push:
+    branches:
+      # A test branch for seeing if your tests will pass in your personal fork
+      - test_me_github
+  pull_request_target:
+    types: [opened, reopened, synchronize]
+
+jobs:
+  acceptance:
+    runs-on:
+      - ubuntu-latest
+    strategy:
+      matrix:
+        ruby:
+          - 2.6
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+      - name: ensure entropy
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y rng-tools
+          sudo systemctl start rng-tools
+      - name: install podman
+        run: |
+          set -x
+          sudo apt-get remove -y podman docker-ce docker docker-engine docker.io containerd runc ||:
+          curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_$( lsb_release -rs )/Release.key | sudo apt-key add -
+          echo  "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_$( lsb_release -rs )/ /" | sudo tee /etc/apt/sources.list.d/podman.list /dev/null
+          sudo apt-get update
+          sudo apt-get install -y podman
+          sudo apt autoremove -y
+          sudo systemctl start podman
+      - name: install bundler
+        run: |
+          gem install bundler
+          bundle update
+      - name: beaker default
+        env:
+          DOCKER_HOST: unix:///var/run/podman/podman.sock
+          CONTAINER_HOST: unix:///var/run/podman/podman.sock
+        run: |
+          sudo chmod -R ugo+rwX /var/run/podman
+          bundle exec rake beaker:suites[default,docker]
+      - name: beaker puppet_collections
+        env:
+          DOCKER_HOST: unix:///var/run/podman/podman.sock
+          CONTAINER_HOST: unix:///var/run/podman/podman.sock
+        run: |
+          sudo chmod -R ugo+rwX /var/run/podman
+          bundle exec rake beaker:suites[puppet_collections,docker]
+      - name: beaker ssg
+        env:
+          DOCKER_HOST: unix:///var/run/podman/podman.sock
+          CONTAINER_HOST: unix:///var/run/podman/podman.sock
+        run: |
+          sudo chmod -R ugo+rwX /var/run/podman
+          bundle exec rake beaker:suites[ssg,docker]
+      - name: beaker inspec
+        env:
+          DOCKER_HOST: unix:///var/run/podman/podman.sock
+          CONTAINER_HOST: unix:///var/run/podman/podman.sock
+        run: |
+          sudo chmod -R ugo+rwX /var/run/podman
+          bundle exec rake beaker:suites[inspec,docker]

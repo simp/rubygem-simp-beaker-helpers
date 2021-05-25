@@ -12,7 +12,7 @@ module Simp::BeakerHelpers
       GIT_REPO = 'https://github.com/ComplianceAsCode/content.git'
     end
 
-    # If this is not set, the closest tag to the default branch will be used
+    # If this is not set, the highest numeric tag will be used
     GIT_BRANCH = nil
 
     if ENV['BEAKER_ssg_branch']
@@ -25,19 +25,20 @@ module Simp::BeakerHelpers
       'git',
       'openscap-python',
       'openscap-utils',
-      'python-lxml',
-      'python-jinja2'
+      'python-jinja2',
+      'python-lxml'
     ]
 
     EL8_PACKAGES = [
-      'python3',
-      'python3-pyyaml',
       'cmake',
       'git',
+      'make',
       'openscap-python3',
       'openscap-utils',
+      'python3',
+      'python3-jinja2',
       'python3-lxml',
-      'python3-jinja2'
+      'python3-pyyaml'
     ]
 
     OS_INFO = {
@@ -265,7 +266,7 @@ module Simp::BeakerHelpers
             "contains(@idref,'#{exl}')"
           end.join(' or ')
 
-          xpath_query << ')' if exclusions.size > 1
+          xpath_query << ')' if exclusions.size > 0
         end
 
         xpath_query << ')]'
@@ -383,7 +384,12 @@ module Simp::BeakerHelpers
         if GIT_BRANCH
           on(@sut, %(cd scap-content; git checkout #{GIT_BRANCH}))
         else
-          on(@sut, %(cd scap-content; git checkout $(git describe --abbrev=0 --tags)))
+          tags = on(@sut, %(cd scap-content; git tag -l)).output
+          target_tag = tags.lines.map(&:strip)
+            .select{|x| x.start_with?(/v\d+\./)}
+            .sort.last
+
+          on(@sut, %(cd scap-content; git checkout #{target_tag}))
         end
 
         # Work around the issue where the profiles now strip out derivative

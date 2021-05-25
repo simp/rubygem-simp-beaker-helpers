@@ -10,6 +10,21 @@ module Simp::BeakerHelpers
     attr_reader :profile_dir
     attr_reader :deps_root
 
+    def self.enable_repo_on(suts)
+      parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+      block_on(suts, :run_in_parallel => parallel) do |sut|
+        repo_manifest = create_yum_resource(
+          'chef-current',
+          {
+            :baseurl => "https://packages.chef.io/repos/yum/current/el/#{fact_on(sut,'os.release.major')}/$basearch",
+            :gpgkeys => ['https://packages.chef.io/chef.asc']
+          }
+        )
+
+        apply_manifest_on(sut, repo_manifest, :catch_failures => true)
+      end
+    end
+
     # Create a new Inspec helper for the specified host against the specified profile
     #
     # @param sut
@@ -81,18 +96,7 @@ module Simp::BeakerHelpers
       tmpdir = Dir.mktmpdir
       begin
         Dir.chdir(tmpdir) do
-          if @sut[:hypervisor] == 'docker'
-            # Work around for breaking changes in beaker-docker
-            if @sut.host_hash[:docker_container]
-              container_id = @sut.host_hash[:docker_container].id
-            else
-              container_id = @sut.host_hash[:docker_container_id]
-            end
-
-            %x(docker cp "#{container_id}:#{sut_inspec_results}" .)
-          else
-            scp_from(@sut, sut_inspec_results, '.')
-          end
+          scp_from(@sut, sut_inspec_results, '.')
 
           local_inspec_results = File.basename(sut_inspec_results)
 

@@ -193,7 +193,7 @@ module Simp::BeakerHelpers
       else
         cmd = [
           %{tar #{exclude_list.join(' ')} -hcf - -C "#{File.dirname(src)}" "#{File.basename(src)}"},
-          %{#{docker_cmd} exec -i "#{container_id}" tar -C "#{File.dirname(dest)}" -xf -)}
+          %{#{docker_cmd} exec -i "#{container_id}" tar -C "#{dest}" -xf -}
         ].join(' | ')
       end
 
@@ -539,7 +539,7 @@ module Simp::BeakerHelpers
     block_on(suts, :run_in_parallel => parallel) do |sut|
       if sut['yum_repos']
         sut['yum_repos'].each_pair do |repo, metadata|
-          repo_manifest = create_yum_resource( repo, metadata)
+          repo_manifest = create_yum_resource(repo, metadata)
 
           apply_manifest_on(sut, repo_manifest, :catch_failures => true)
         end
