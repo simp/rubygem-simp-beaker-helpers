@@ -1,3 +1,9 @@
+### 1.23.2 / 2021-05-28
+* Fixed:
+  * Fail an acceptance test when an explicitly-specified nodeset for an
+    acceptance test suite does not exist and the suite is configured
+    to fail fast (default behavior).
+
 ### 1.23.1 / 2021-05-19
 * Fixed:
   * The SSG default branch is now the latest numeric tag instead of the one
