@@ -672,6 +672,9 @@ module Simp::BeakerHelpers
   def linux_errata( suts )
     parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
     block_on(suts, :run_in_parallel => parallel) do |sut|
+      # Set the locale if not set
+      sut.set_env_var('LANG', 'en_US.UTF-8') unless sut.get_env_var('LANG')
+
       # We need to be able to flip between server and client without issue
       on sut, 'puppet resource group puppet gid=52'
       on sut, 'puppet resource user puppet comment="Puppet" gid="52" uid="52" home="/var/lib/puppet" managehome=true'
@@ -747,11 +750,9 @@ module Simp::BeakerHelpers
       if os_info['family'] == 'RedHat'
         # OS-specific items
         if os_info['name'] == 'RedHat'
-          RSpec.configure do |c|
-            c.before(:all) do
-              rhel_rhsm_subscribe(sut)
-            end
+          rhel_rhsm_subscribe(sut)
 
+          RSpec.configure do |c|
             c.after(:all) do
               rhel_rhsm_unsubscribe(sut)
             end
