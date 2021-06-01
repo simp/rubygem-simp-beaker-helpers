@@ -1,3 +1,8 @@
+### 1.23.2 / 2021-05-29
+* Fixed:
+  * The usual way of registering RHEL systems had to be changed to activate
+    immediately when called to function properly.
+
 ### 1.23.1 / 2021-05-19
 * Fixed:
   * The SSG default branch is now the latest numeric tag instead of the one

@@ -66,8 +66,7 @@ describe 'FIPS pre-installed' do
         if host[:hypervisor] == 'docker'
           skip('Not supported on docker')
         else
-          stdout = on(host, 'cat /proc/sys/crypto/fips_enabled').stdout.strip
-          expect(stdout).to eq('1')
+          expect(fips_enabled(host)).to be true
         end
       end
     end
