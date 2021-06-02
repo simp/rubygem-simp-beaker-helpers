@@ -1,4 +1,4 @@
-### 1.23.2 / 2021-05-28
+### 1.23.2 / 2021-05-29
 * Fixed:
   * Fail an acceptance test when an explicitly-specified nodeset for an
     acceptance test suite does not exist and the suite is configured
