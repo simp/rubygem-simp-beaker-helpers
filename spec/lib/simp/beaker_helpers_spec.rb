@@ -113,10 +113,8 @@ describe 'Simp::BeakerHelpers' do
       end
       pipe_in.close
 
-      expected_version = pipe_out.gets
-      expected_major_version = expected_version.split('.').first
+      expected_major_version = pipe_out.gets.split('.').first
 
-      expect( @helper.get_puppet_install_info[:puppet_install_version] ).to match(expected_version)
       expect( @helper.get_puppet_install_info[:puppet_collection] ).to eq("puppet#{expected_major_version}")
       expect( @helper.get_puppet_install_info[:puppet_install_type] ).to eq('agent')
     end

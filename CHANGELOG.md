@@ -3,6 +3,8 @@
   * Fail an acceptance test when an explicitly-specified nodeset for an
     acceptance test suite does not exist and the suite is configured
     to fail fast (default behavior).
+  * The usual way of registering RHEL systems had to be changed to activate
+    immediately when called to function properly.
 
 ### 1.23.1 / 2021-05-19
 * Fixed:

@@ -9,13 +9,15 @@ hosts.each do |host|
         end
 
         it 'has fips enabled' do
-          stdout = on(host, 'cat /proc/sys/crypto/fips_enabled').stdout.strip
-          expect(stdout).to eq('1')
+          if host[:hypervisor] == 'docker'
+            skip('Not supported on docker')
+          else
+            expect(fips_enabled(host)).to be true
+          end
         end
       else
         it 'has fips disabled' do
-          stdout = on(host, 'cat /proc/sys/crypto/fips_enabled').stdout.strip
-          expect(stdout).to eq('0')
+          expect(fips_enabled(host)).to be false
         end
       end
     end
