@@ -312,6 +312,18 @@ pup7.x-pkg:
 
 #=======================================================================
 # Acceptance tests
+
+# Verify a suite fails when an explicitly-specified nodeset does not exist.
+# It is significantly quicker to test here (where rvm is already installed
+# and the bundle is configured with this version of simp-beaker-helpers)
+# than in an acceptance test with a build user.
+default-bad-nodeset:
+  <<: *pup_6_x
+  <<: *acceptance_base
+  script:
+    - 'RESULT=`bundle exec rake beaker:suites[default,oops] 1>/dev/null; echo $?`; (test $RESULT == "1")'
+    - echo 'beaker:suites correctly failed with unknown nodeset'
+
 default:
   <<: *pup_6_x
   <<: *acceptance_base

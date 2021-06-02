@@ -1,5 +1,8 @@
 ### 1.23.2 / 2021-05-29
 * Fixed:
+  * Fail an acceptance test when an explicitly-specified nodeset for an
+    acceptance test suite does not exist and the suite is configured
+    to fail fast (default behavior).
   * The usual way of registering RHEL systems had to be changed to activate
     immediately when called to function properly.
 

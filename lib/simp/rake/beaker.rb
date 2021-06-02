@@ -226,8 +226,14 @@ module Simp::Rake
 
             nodesets.each do |nodeset_yml|
               unless File.file?(nodeset_yml)
-                $stdout.puts("=== Suite #{name} Nodeset '#{File.basename(nodeset_yml, '.yml')}' Not Found, Skipping ===")
-                next
+                # Get here if user has specified a non-existent nodeset or the
+                # implied `default` nodeset does not exist.
+                if suite_config['fail_fast']
+                  fail("*** Suite #{name} Nodeset '#{File.basename(nodeset_yml, '.yml')}' Not Found ***")
+                else
+                  $stdout.puts("=== Suite #{name} Nodeset '#{File.basename(nodeset_yml, '.yml')}' Not Found, Skipping ===")
+                  next
+                end
               end
 
               ENV['BEAKER_setfile'] = nodeset_yml
