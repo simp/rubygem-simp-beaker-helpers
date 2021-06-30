@@ -38,7 +38,8 @@ module Simp::BeakerHelpers
       'python3',
       'python3-jinja2',
       'python3-lxml',
-      'python3-pyyaml'
+      'python3-pyyaml',
+      'libarchive'
     ]
 
     OS_INFO = {
@@ -94,6 +95,16 @@ module Simp::BeakerHelpers
           }
         }
       },
+      'Rocky' => {
+        '8' => {
+          'required_packages' => EL8_PACKAGES,
+          'ssg' => {
+            'profile_target' => 'centos8',
+            'build_target'   => 'centos8',
+            'datastream'     => 'ssg-centos8-ds.xml'
+          }
+        }
+      },
       'OracleLinux' => {
         '7' => {
           'required_packages' => EL_PACKAGES,
@@ -136,7 +147,7 @@ module Simp::BeakerHelpers
       end
 
       OS_INFO[@os][@os_rel]['required_packages'].each do |pkg|
-        @sut.install_package(pkg)
+        install_latest_package_on(@sut, pkg)
       end
 
       @output_dir = File.absolute_path('sec_results/ssg')

@@ -1,3 +1,8 @@
+### 1.23.3 / 2021-06-30
+* Fixed:
+  * Removed the Streams kernel update for EL 8.3 since it now causes issues
+  * Use `pfact_on` to select the interface facts to fix Puppet 7 issues
+
 ### 1.23.2 / 2021-05-29
 * Fixed:
   * Fail an acceptance test when an explicitly-specified nodeset for an
