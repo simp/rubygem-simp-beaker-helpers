@@ -240,7 +240,7 @@ module Simp::BeakerHelpers
     else
       facts_json = nil
       begin
-        cmd_output = retry_on(sut, 'facter -p --json', :silent => true)
+        cmd_output = on(sut, 'facter -p --json', :silent => true)
         # Facter 4+
         raise('skip facter -p') if (cmd_output.stderr =~ /no longer supported/)
 
@@ -248,7 +248,7 @@ module Simp::BeakerHelpers
       rescue StandardError
         # If *anything* fails, we need to fall back to `puppet facts`
 
-        facts_json = retry_on(sut, 'puppet facts find garbage_xxx', :silent => true).stdout
+        facts_json = retry_on(sut, 'puppet facts find garbage_xxx', :silent => true, :max_retries => 4).stdout
         facts = JSON.parse(facts_json)['values']
       end
 
