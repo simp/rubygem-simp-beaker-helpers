@@ -240,7 +240,7 @@ module Simp::BeakerHelpers
     else
       facts_json = nil
       begin
-        cmd_output = on(sut, 'facter -p --json', :silent => true)
+        cmd_output = retry_on(sut, 'facter -p --json', :silent => true)
         # Facter 4+
         raise('skip facter -p') if (cmd_output.stderr =~ /no longer supported/)
 
@@ -248,7 +248,7 @@ module Simp::BeakerHelpers
       rescue StandardError
         # If *anything* fails, we need to fall back to `puppet facts`
 
-        facts_json = on(sut, 'puppet facts find garbage_xxx', :silent => true).stdout
+        facts_json = retry_on(sut, 'puppet facts find garbage_xxx', :silent => true).stdout
         facts = JSON.parse(facts_json)['values']
       end
 
@@ -771,15 +771,6 @@ module Simp::BeakerHelpers
             apply_manifest_on(sut, pp, :catch_failures => false)
           end
 
-          unless sut[:hypervisor] == 'docker'
-            if (os_info['name'] == 'CentOS') && (os_info['release']['major'].to_i >= 8)
-              if os_info['release']['minor'].to_i == 3
-                update_package_from_centos_stream(sut, 'kernel')
-                sut.reboot
-              end
-            end
-          end
-
           # Clean up YUM prior to starting our test runs.
           on(sut, 'yum clean all')
         end
@@ -1096,13 +1087,13 @@ module Simp::BeakerHelpers
         next
       end
 
-      interfaces_fact = retry_on(host,'facter interfaces', verbose: true).stdout
+      interfaces_fact = pfact_on(host, 'interfaces')
 
       interfaces = interfaces_fact.strip.split(',')
       interfaces.delete_if { |x| x =~ /^lo/ }
 
       interfaces.each do |iface|
-        if fact_on(host, "ipaddress_#{iface}").strip.empty?
+        if pfact_on(host, "ipaddress_#{iface}")
           on(host, "ifup #{iface}", :accept_all_exit_codes => true)
         end
       end
