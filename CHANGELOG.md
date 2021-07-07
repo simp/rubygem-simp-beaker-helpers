@@ -1,3 +1,7 @@
+### 1.23.4 / 2021-07-07
+* Fixed:
+  * Ensure that the openscap-scanner package is installed during SSG runs
+
 ### 1.23.3 / 2021-06-30
 * Fixed:
   * Removed the Streams kernel update for EL 8.3 since it now causes issues

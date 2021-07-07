@@ -19,10 +19,11 @@ module Simp::BeakerHelpers
       GIT_BRANCH = ENV['BEAKER_ssg_branch']
     end
 
-    EL_PACKAGES = [
+    EL7_PACKAGES = [
       'PyYAML',
       'cmake',
       'git',
+      'openscap-scanner',
       'openscap-python',
       'openscap-utils',
       'python-jinja2',
@@ -35,6 +36,7 @@ module Simp::BeakerHelpers
       'make',
       'openscap-python3',
       'openscap-utils',
+      'openscap-scanner',
       'python3',
       'python3-jinja2',
       'python3-lxml',
@@ -45,7 +47,7 @@ module Simp::BeakerHelpers
     OS_INFO = {
       'RedHat' => {
         '6' => {
-          'required_packages' => EL_PACKAGES,
+          'required_packages' => EL7_PACKAGES,
           'ssg' => {
             'profile_target' => 'rhel6',
             'build_target'   => 'rhel6',
@@ -53,7 +55,7 @@ module Simp::BeakerHelpers
           }
         },
         '7' => {
-          'required_packages' => EL_PACKAGES,
+          'required_packages' => EL7_PACKAGES,
           'ssg' => {
             'profile_target' => 'rhel7',
             'build_target'   => 'rhel7',
@@ -71,7 +73,7 @@ module Simp::BeakerHelpers
       },
       'CentOS' => {
         '6' => {
-          'required_packages' => EL_PACKAGES,
+          'required_packages' => EL7_PACKAGES,
           'ssg' => {
             'profile_target' => 'rhel6',
             'build_target'   => 'centos6',
@@ -79,7 +81,7 @@ module Simp::BeakerHelpers
           }
         },
         '7' => {
-          'required_packages' => EL_PACKAGES,
+          'required_packages' => EL7_PACKAGES,
           'ssg' => {
             'profile_target' => 'centos7',
             'build_target'   => 'centos7',
@@ -107,12 +109,13 @@ module Simp::BeakerHelpers
       },
       'OracleLinux' => {
         '7' => {
-          'required_packages' => EL_PACKAGES,
+          'required_packages' => EL7_PACKAGES,
           'ssg' => {
             'profile_target' => 'ol7',
             'build_target'   => 'ol7',
             'datastream'     => 'ssg-ol7-ds.xml'
           },
+        },
         '8' => {
           'required_packages' => EL8_PACKAGES,
           'ssg' => {
@@ -120,7 +123,6 @@ module Simp::BeakerHelpers
             'build_target'   => 'ol8',
             'datastream'     => 'ssg-ol8-ds.xml'
           }
-        }
         }
       }
     }
@@ -135,8 +137,8 @@ module Simp::BeakerHelpers
     def initialize(sut)
       @sut = sut
 
-      @os = fact_on(@sut, 'operatingsystem')
-      @os_rel = fact_on(@sut, 'operatingsystemmajrelease')
+      @os = pfact_on(@sut, 'os.name')
+      @os_rel = pfact_on(@sut, 'os.release.major')
 
       sut.mkdir_p('scap_working_dir')
 
@@ -158,12 +160,20 @@ module Simp::BeakerHelpers
 
       @result_file = "#{@sut.hostname}-ssg-#{Time.now.to_i}"
 
-
       get_ssg_datastream
     end
 
     def profile_target
       OS_INFO[@os][@os_rel]['ssg']['profile_target']
+    end
+
+    def get_profiles
+      cmd = "cd #{@scap_working_dir}; oscap info --profiles"
+      on(@sut, "#{cmd} #{OS_INFO[@os][@os_rel]['ssg']['datastream']}")
+        .stdout
+        .strip
+        .lines
+        .map{|x| x.split(':').first}
     end
 
     def remediate(profile)
@@ -177,7 +187,7 @@ module Simp::BeakerHelpers
         cmd += ' --remediate'
       end
 
-      cmd += %( --fetch-remote-resources --profile #{profile} --results #{@result_file}.xml --report #{@result_file}.html #{OS_INFO[@os][@os_rel]['ssg']['datastream']})
+      cmd += %( --profile #{profile} --results #{@result_file}.xml --report #{@result_file}.html #{OS_INFO[@os][@os_rel]['ssg']['datastream']})
 
       # We accept all exit codes here because there have occasionally been
       # failures in the SSG content and we're not testing that.

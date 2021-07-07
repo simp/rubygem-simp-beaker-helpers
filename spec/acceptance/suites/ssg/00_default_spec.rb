@@ -1,8 +1,8 @@
 require 'spec_helper_acceptance'
 
-test_name 'SSG STIG Validation'
+test_name 'SSG Functionality Validation'
 
-describe 'run the SSG against the STIG profile' do
+describe 'run the SSG against an SCAP profile' do
 
   hosts.each do |host|
     context "on #{host}" do
@@ -14,8 +14,15 @@ describe 'run the SSG against the STIG profile' do
       end
 
       it 'should run the SSG' do
-        profile = 'xccdf_org.ssgproject.content_profile_stig'
+        profiles = @ssg.get_profiles
 
+        profile = profiles.find{|x| x =~ /_stig/} ||
+          profiles.find{|x| x =~ /_cui/} ||
+          profiles.find{|x| x =~ /_ospp/} ||
+          profiles.find{|x| x =~ /_standard/} ||
+          profiles.last
+
+        expect(profile).not_to be_nil
         @ssg.evaluate(profile)
       end
 
