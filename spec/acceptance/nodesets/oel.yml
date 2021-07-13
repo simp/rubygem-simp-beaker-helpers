@@ -6,33 +6,25 @@
   end
 -%>
 HOSTS:
-  el7:
+  oel7:
     roles:
       - el7
       - master
     platform: el-7-x86_64
-    box: centos/7
+    box: generic/oracle7
     hypervisor: <%= hypervisor %>
 
-  el8:
+  oel8:
     roles:
       - el8
     platform: el-8-x86_64
-    box: generic/centos8
-    hypervisor: <%= hypervisor %>
-
-  el8-0:
-    roles:
-      - el8
-    platform: el-8-x86_64
-    box: centos/8
-    box_version: "1905.1"
+    box: generic/oracle8
     hypervisor: <%= hypervisor %>
 
 CONFIG:
   log_level: verbose
   type: aio
-  vagrant_memsize: 256
+  vagrant_memsize: 512
   vagrant_cpus: 2
 <% if ENV['BEAKER_PUPPET_COLLECTION'] -%>
   puppet_collection: <%= ENV['BEAKER_PUPPET_COLLECTION'] %>
