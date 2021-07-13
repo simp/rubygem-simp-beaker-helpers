@@ -2,7 +2,7 @@
 * Fixed:
   * Ensure that the openscap-scanner package is installed during SSG runs
 * Added:
-  * Added a function to fetch the available SSG profiles on a target system
+  * A function to fetch the available SSG profiles on a target system
 * Changed:
   * Added OEL nodeset
 
