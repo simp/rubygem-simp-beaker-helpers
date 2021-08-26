@@ -1,3 +1,12 @@
+### 1.24.0 / 2021-08-26
+* Fixed:
+  * Pinned the version of inspec to 4.39.0 since 4.41 broke tag processing
+  * Only call `activate_interfaces` once per test run instead of at each context
+      which saves quite a bit of time during testing
+* Added:
+  * Modified the `activate_interfaces` method to use the `networking` fact if
+    available which shaves quite a bit of time off of each test run
+
 ### 1.23.4 / 2021-07-07
 * Fixed:
   * Ensure that the openscap-scanner package is installed during SSG runs
