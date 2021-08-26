@@ -407,7 +407,7 @@ module Simp::BeakerHelpers
         else
           tags = on(@sut, %(cd scap-content; git tag -l)).output
           target_tag = tags.lines.map(&:strip)
-            .select{|x| x.start_with?(/v\d+\./)}
+            .select{|x| x.start_with?(/v(\d+\.)+\d+$/)}
             .sort.last
 
           on(@sut, %(cd scap-content; git checkout #{target_tag}))
