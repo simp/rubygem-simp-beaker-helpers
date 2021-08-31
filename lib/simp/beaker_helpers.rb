@@ -953,20 +953,30 @@ module Simp::BeakerHelpers
       host_entry[fqdn] << host.name if (host[:hypervisor] == 'docker')
 
       # Ensure that all interfaces are active prior to collecting data
-      activate_interfaces(host) unless ENV['BEAKER_no_fix_interfaces']
+      activate_interfaces(host)
 
-      # Gather the IP Addresses for the host to embed in the cert
-      interfaces = fact_on(host, 'interfaces').strip.split(',')
-      interfaces.each do |interface|
-        ipaddress = fact_on(host, "ipaddress_#{interface}")
+      networking_fact = pfact_on(host, 'networking')
+      if networking_fact && networking_fact['interfaces']
+        networking_fact['interfaces'].each do |iface, data|
+          next unless data['ip']
+          next if data['ip'].start_with?('127.')
 
-        next if ipaddress.nil? || ipaddress.empty? || ipaddress.start_with?('127.')
-
-        host_entry[fqdn] << ipaddress.strip
-
-        unless host_entry[fqdn].empty?
-          suts_network_info[fqdn] = host_entry[fqdn].sort.uniq
+          host_entry[fqdn] << data['ip'].strip
         end
+      else
+        # Gather the IP Addresses for the host to embed in the cert
+        interfaces = fact_on(host, 'interfaces').strip.split(',')
+        interfaces.each do |interface|
+          ipaddress = fact_on(host, "ipaddress_#{interface}")
+
+          next if ipaddress.nil? || ipaddress.empty? || ipaddress.start_with?('127.')
+
+          host_entry[fqdn] << ipaddress.strip
+        end
+      end
+
+      unless host_entry[fqdn].empty?
+        suts_network_info[fqdn] = host_entry[fqdn].sort.uniq
       end
     end
 
@@ -1072,7 +1082,6 @@ module Simp::BeakerHelpers
     on ca_sut, "chgrp -R puppet #{host_keydist_dir}"
   end
 
-
   # Activate all network interfaces on the target system
   #
   # This is generally needed if the upstream vendor does not activate all
@@ -1080,6 +1089,8 @@ module Simp::BeakerHelpers
   #
   # Can be passed any number of hosts either singly or as an Array
   def activate_interfaces(hosts)
+    return if ENV['BEAKER_no_fix_interfaces']
+
     parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
     block_on(hosts, :run_in_parallel => parallel) do |host|
       if host[:platform] =~ /windows/
@@ -1087,14 +1098,22 @@ module Simp::BeakerHelpers
         next
       end
 
-      interfaces_fact = pfact_on(host, 'interfaces')
-
-      interfaces = interfaces_fact.strip.split(',')
-      interfaces.delete_if { |x| x =~ /^lo/ }
-
-      interfaces.each do |iface|
-        if pfact_on(host, "ipaddress_#{iface}")
+      networking_fact = pfact_on(host, 'networking')
+      if networking_fact && networking_fact['interfaces']
+        networking_fact['interfaces'].each do |iface, data|
+          next if ( ( data['ip'] && !data['ip'].empty? ) || ( data['ip6'] && !data['ip6'].empty? ) )
           on(host, "ifup #{iface}", :accept_all_exit_codes => true)
+        end
+      else
+        interfaces_fact = pfact_on(host, 'interfaces')
+
+        interfaces = interfaces_fact.strip.split(',')
+        interfaces.delete_if { |x| x =~ /^lo/ }
+
+        interfaces.each do |iface|
+          if pfact_on(host, "ipaddress_#{iface}")
+            on(host, "ifup #{iface}", :accept_all_exit_codes => true)
+          end
         end
       end
     end
@@ -1111,12 +1130,9 @@ module Simp::BeakerHelpers
   RSpec.configure do |c|
     c.before(:all) do
       @temp_hieradata_dirs = @temp_hieradata_dirs || []
-    end
 
-    # We can't guarantee that the upstream vendor isn't disabling interfaces so
-    # we need to turn them on at each context run
-    c.before(:context) do
-      activate_interfaces(hosts) unless ENV['BEAKER_no_fix_interfaces']
+      # We can't guarantee that the upstream vendor isn't disabling interfaces
+      activate_interfaces(hosts)
     end
 
     c.after(:all) do
