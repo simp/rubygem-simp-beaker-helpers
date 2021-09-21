@@ -1,4 +1,4 @@
-# Build & Deploy RubyGem & GitHub release when a SemVer tag is pushed
+# When SemVer tag is pushed: create GitHub release & publish gem to rubygems.org
 #
 # This workflow's jobs are only triggered in repos under the `simp` organization
 # ------------------------------------------------------------------------------

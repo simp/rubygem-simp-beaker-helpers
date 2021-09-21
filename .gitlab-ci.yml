@@ -273,10 +273,6 @@ variables:
 # Unit Tests
 #-----------------------------------------------------------------------
 
-pup5.x-unit:
-  <<: *pup_5_x
-  <<: *unit_tests
-
 pup6.x-unit:
   <<: *pup_6_x
   <<: *unit_tests
@@ -291,12 +287,6 @@ pup7.x-unit:
 
 #=======================================================================
 # Packaging test
-
-pup5.x-pkg:
-  <<: *pup_5_x
-  <<: *unit_tests
-  script:
-    'bundle exec rake pkg:gem'
 
 pup6.x-pkg:
   <<: *pup_6_x
