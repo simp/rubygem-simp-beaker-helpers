@@ -483,7 +483,7 @@ module Simp::BeakerHelpers
       #      that doesn't break vagrant access and is appropriate for
       #      typical module tests.)
       fips_ssh_ciphers = [ 'aes256-ctr','aes192-ctr','aes128-ctr']
-      on(sut, %(sed -i '/Ciphers /d' /etc/ssh/sshd_config))
+      on(sut, %(sed -ci '/Ciphers /d' /etc/ssh/sshd_config))
       on(sut, %(echo 'Ciphers #{fips_ssh_ciphers.join(',')}' >> /etc/ssh/sshd_config))
 
       fips_enable_modulepath = ''
@@ -688,7 +688,7 @@ module Simp::BeakerHelpers
       if current_domain.empty?
         new_fqdn = hostname + '.beaker.test'
 
-        on(sut, "sed -i 's/#{hostname}.*/#{new_fqdn} #{hostname}/' /etc/hosts")
+        on(sut, "sed -ci 's/#{hostname}.*/#{new_fqdn} #{hostname}/' /etc/hosts")
         on(sut, "echo '#{new_fqdn}' > /etc/hostname", :accept_all_exit_codes => true)
         on(sut, "hostname #{new_fqdn}", :accept_all_exit_codes => true)
 
