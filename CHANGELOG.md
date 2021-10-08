@@ -1,9 +1,10 @@
-### 1.24.0 / 2021-08-26
+### 1.24.0 / 2021-10-05
 * Fixed:
   * Pinned the version of inspec to 4.39.0 since 4.41 broke tag processing
   * Only call `activate_interfaces` once per test run instead of at each context
     which saves quite a bit of time during testing
   * SSG tag selection logic
+  * Use `sed -ci` which works with docker volume mounts
 * Added:
   * Modified the `activate_interfaces` method to use the `networking` fact if
     available which shaves quite a bit of time off of each test run

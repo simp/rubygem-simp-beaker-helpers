@@ -407,7 +407,7 @@ module Simp::BeakerHelpers
         else
           tags = on(@sut, %(cd scap-content; git tag -l)).output
           target_tag = tags.lines.map(&:strip)
-            .select{|x| x.start_with?(/v(\d+\.)+\d+$/)}
+            .select{|x| x.match?(/^v(\d+\.)+\d+$/)}
             .sort.last
 
           on(@sut, %(cd scap-content; git checkout #{target_tag}))
@@ -419,7 +419,7 @@ module Simp::BeakerHelpers
         #
         # This isn't 100% correct but it's "good enough" for an automated CI
         # environment to tell us if something is critically out of alignment.
-        on(@sut, %(cd scap-content/build-scripts; sed -i 's/ssg.build_derivatives.profile_handling/#ssg.build_derivatives.profile_handling/g' enable_derivatives.py))
+        on(@sut, %(cd scap-content/build-scripts; sed -ci 's/ssg.build_derivatives.profile_handling/#ssg.build_derivatives.profile_handling/g' enable_derivatives.py))
 
         on(@sut, %(cd scap-content/build; cmake ../; make -j4 #{OS_INFO[@os][@os_rel]['ssg']['build_target']}-content && cp *ds.xml #{@scap_working_dir}))
       end
