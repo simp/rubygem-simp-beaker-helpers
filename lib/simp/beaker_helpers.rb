@@ -810,8 +810,8 @@ module Simp::BeakerHelpers
         rhsm_opts.merge!(opts)
       end
 
-      os = fact_on(sut, 'operatingsystem').strip
-      os_release = fact_on(sut, 'operatingsystemmajrelease').strip
+      os = fact_on(sut, 'os.name').strip
+      os_release = fact_on(sut, 'os.release.major').strip
 
       if os == 'RedHat'
         unless rhsm_opts[:username] && rhsm_opts[:password]

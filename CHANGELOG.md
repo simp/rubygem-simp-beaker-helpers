@@ -1,3 +1,7 @@
+### 1.24.1 / 2021-10-27
+* Fixed:
+  * Updated calls to the operating system fact when connecting to RHSM
+
 ### 1.24.0 / 2021-10-05
 * Fixed:
   * Pinned the version of inspec to 4.39.0 since 4.41 broke tag processing
