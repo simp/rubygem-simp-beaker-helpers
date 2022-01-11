@@ -1,5 +1,6 @@
 ### 1.24.1 / 2021-10-27
 * Fixed:
+  * Worked around a bug in 'puppet lookup' - PUP-11402
   * Updated calls to the operating system fact when connecting to RHSM
 
 ### 1.24.0 / 2021-10-05

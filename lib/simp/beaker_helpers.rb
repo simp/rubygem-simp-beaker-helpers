@@ -1244,8 +1244,11 @@ module Simp::BeakerHelpers
   #
   # @returns [String] Path to the Hieradata directory on the target system
   def hiera_datadir(sut)
+    # A workaround for PUP-11042
+    sut_environment = sut.puppet_configprint['environment']
+
     # This output lets us know where Hiera is configured to look on the system
-    puppet_lookup_info = on(sut, 'puppet lookup --explain test__simp__test', :silent => true).output.strip.lines
+    puppet_lookup_info = on(sut, "puppet lookup --explain --environment #{sut_environment} test__simp__test", :silent => true).output.strip.lines
 
     if sut.puppet_configprint['manifest'].nil? || sut.puppet_configprint['manifest'].empty?
       fail("No output returned from `puppet config print manifest` on #{sut}")
