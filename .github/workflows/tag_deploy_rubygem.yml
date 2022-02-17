@@ -21,7 +21,7 @@
 #
 # NOTES:
 #
-# * The CHANGLOG text is altered to remove RPM-style date headers, which don't
+# * The CHANGELOG text is altered to remove RPM-style date headers, which don't
 #   render well as markdown on the GitHub release pages
 #
 # * By default, the gem is built and released using the standard rake tasks
@@ -37,12 +37,15 @@
 #   All keys are optional.
 #
 ---
-name: 'Tag: Release to GitHub & rubygems.org'
+name: 'Tag: Release to GitHub + rubygems.org (no RPMS)'
 
 on:
   push:
     tags:
+      # NOTE: These filter patterns aren't actually regexes:
+      #   https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#filter-pattern-cheat-sheet
       - '[0-9]+\.[0-9]+\.[0-9]+'
+      - '[0-9]+\.[0-9]+\.[0-9]+\-[a-z]+[0-9]+'
 
 env:
   PUPPET_VERSION: '~> 6'
@@ -52,11 +55,7 @@ jobs:
   releng-checks:
     name: "RELENG checks"
     if: github.repository_owner == 'simp'
-    runs-on: ubuntu-18.04
-    outputs:
-      build_command: ${{ steps.commands.outputs.build_command }}
-      release_command: ${{ steps.commands.outputs.release_command }}
-      pkg_dir: ${{ steps.commands.outputs.pkg_dir }}
+    runs-on: ubuntu-latest
     steps:
       - name: "Assert '${{ github.ref }}' is a tag"
         run: '[[ "$GITHUB_REF" =~ ^refs/tags/ ]] || { echo "::error ::GITHUB_REF is not a tag: ${GITHUB_REF}"; exit 1 ; }'
@@ -64,7 +63,7 @@ jobs:
         with:
           ref: ${{ github.ref }}
           clean: true
-      - name: Determing build and release commands
+      - name: Determine build and release commands
         id: commands
         run: |
           # By default, these are the standard tasks from "bundler/gem_tasks"
@@ -92,9 +91,7 @@ jobs:
           ruby-version: 2.5
           bundler-cache: true
       - name: Test build the package
-        env:
-          GEM_BUILD_COMMAND: ${{ steps.commands.outputs.build_command }}
-        run: "$GEM_BUILD_COMMAND"
+        run: "${{ steps.commands.outputs.build_command }}"
       - name: "Assert '${{ github.ref }}' matches the package version"
         run: |
           tag="${GITHUB_REF/refs\/tags\//}"
@@ -109,7 +106,9 @@ jobs:
     name: Deploy GitHub Release
     needs: [ releng-checks ]
     if: github.repository_owner == 'simp'
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
+    outputs:
+      prerelease: ${{ steps.tag-check.outputs.prerelease }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -117,6 +116,7 @@ jobs:
           ref: ${{ github.ref }}
           clean: true
           fetch-depth: 0
+
       - name: Get tag & annotation info (${{github.ref}})
         id: tag-check
         run: |
@@ -124,7 +124,19 @@ jobs:
           annotation="$(git for-each-ref "$GITHUB_REF" --format='%(contents)' --count=1)"
           annotation_title="$(echo "$annotation" | head -1)"
 
+
+          if [[ "$tag" =~ ^(simp-|v)?[0-9]+\.[0-9]+\.[0-9]+(-(rc|alpha|beta|pre|post)?([0-9]+)?)?$ ]]; then
+            if [ -n "${BASH_REMATCH[2]}" ]; then
+              prerelease=yes
+              annotation_title="Pre-release of ${tag}"
+            fi
+          else
+            printf '::error ::Release Tag format is not SemVer, X.Y.Z-R, X.Y.Z-<prerelease>: "%s"\n' "$RELEASE_TAG"
+            exit 88
+          fi
+
           echo "::set-output name=tag::${tag}"
+          echo "::set-output name=prerelease::${prerelease}"
           echo "::set-output name=annotation_title::${annotation_title}"
 
           # Prepare annotation body as a file for the next step
@@ -146,14 +158,14 @@ jobs:
           tag_name: ${{ github.ref }}
           release_name: ${{ steps.tag-check.outputs.annotation_title }}
           body_path: /tmp/annotation.body
+          prerelease: ${{ steps.tag-check.outputs.prerelease  == 'yes'}}
           draft: false
-          prerelease: false
 
   deploy-rubygem:
     name: Deploy RubyGem Release
-    needs: [ releng-checks ]
-    if: github.repository_owner == 'simp'
-    runs-on: ubuntu-18.04
+    needs: [ releng-checks, create-github-release ]
+    if: (github.repository_owner == 'simp') && (needs.create-github-release.outputs.prerelease != 'yes')
+    runs-on: ubuntu-latest
     env:
       RUBYGEMS_API_KEY: ${{ secrets.RUBYGEMS_API_KEY }}
       BUILD_COMMAND: ${{ needs.releng-checks.outputs.build_command }}
