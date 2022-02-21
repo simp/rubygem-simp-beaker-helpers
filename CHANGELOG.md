@@ -1,3 +1,8 @@
+### 1.24.2 / 2022-02-20
+* Fixed:
+  * Update the derivatives workaround to insert an inert line instead of
+    commenting out the previous line to allow for logic updates
+
 ### 1.24.1 / 2021-10-27
 * Fixed:
   * Worked around a bug in 'puppet lookup' - PUP-11402
