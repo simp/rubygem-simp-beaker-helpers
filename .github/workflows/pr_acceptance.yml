@@ -1,5 +1,5 @@
 # Run all tests as GitHub Actions
-name: Unit Tests
+name: Acceptance Tests
 on:
   push:
     branches:
