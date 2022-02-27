@@ -2,6 +2,9 @@
 * Fixed:
   * Update the derivatives workaround to insert an inert line instead of
     commenting out the previous line to allow for logic updates
+  * Addressed a bug where passing an empty exceptions array would produce an
+    invalid xpath query
+  * Ensure that the new SIMP community RPMs are used
 
 ### 1.24.1 / 2021-10-27
 * Fixed:

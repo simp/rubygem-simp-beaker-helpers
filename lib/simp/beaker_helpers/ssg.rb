@@ -278,9 +278,8 @@ module Simp::BeakerHelpers
 
         xpath_query << ')' if filter.size > 1
 
-        if exclusions
-          exclusions = Array(exclusions)
-
+        exclusions = Array(exclusions)
+        unless exclusions.empty?
           xpath_query << 'and not('
 
           xpath_query << exclusions.map do |exl|
