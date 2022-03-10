@@ -1,5 +1,6 @@
-### 1.24.2 / 2022-02-20
+### 1.24.2 / 2022-03-09
 * Fixed:
+  * Prevent `spec/` directory symlink recursion in `copy_fixture_modules_to`
   * Update the derivatives workaround to insert an inert line instead of
     commenting out the previous line to allow for logic updates
   * Addressed a bug where passing an empty exceptions array would produce an
