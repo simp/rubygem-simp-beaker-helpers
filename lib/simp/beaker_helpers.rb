@@ -1498,10 +1498,12 @@ module Simp::BeakerHelpers
     block_on(suts, :run_in_parallel => parallel) do |sut|
       install_package_unless_present_on(sut, 'yum-utils')
 
+      release = fact_on(sut, 'os.release.major')
+
       install_package_unless_present_on(
         sut,
         'simp-release-community',
-        "https://download.simp-project.com/simp-release-community.rpm",
+        "https://download.simp-project.com/simp-release-community.el#{release}.rpm"
       )
 
       to_disable = disable.dup

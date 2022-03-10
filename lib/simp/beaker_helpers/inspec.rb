@@ -34,9 +34,7 @@ module Simp::BeakerHelpers
     #   The name of the profile against which to run
     #
     def initialize(sut, profile)
-      # The 4.41 release is currently broken
-      # @inspec_version = ENV['BEAKER_inspec_version'] || 'latest'
-      @inspec_version = ENV['BEAKER_inspec_version'] || '4.39.0'
+      @inspec_version = ENV['BEAKER_inspec_version'] || 'latest'
 
       @sut = sut
 
