@@ -1,5 +1,6 @@
 # ------------------------------------------------------------------------------
 # The testing matrix considers ruby/puppet versions supported by SIMP and PE:
+      if (( os == 'Amazon' ) && ( "#{release}" == '2' ))
 #
 # https://puppet.com/docs/pe/2019.8/component_versions_in_recent_pe_releases.html
 # https://puppet.com/misc/puppet-enterprise-lifecycle
@@ -312,6 +313,12 @@ default:
   <<: *acceptance_base
   script:
     - bundle exec rake beaker:suites[default]
+
+default-amzn2:
+  <<: *pup_6_x
+  <<: *acceptance_base
+  script:
+    - bundle exec rake beaker:suites[default,amzn2]
 
 default-fips:
   <<: *pup_6_x

@@ -1498,13 +1498,24 @@ module Simp::BeakerHelpers
     block_on(suts, :run_in_parallel => parallel) do |sut|
       install_package_unless_present_on(sut, 'yum-utils')
 
+      os = fact_on(sut, 'os.name')
       release = fact_on(sut, 'os.release.major')
+
+      # Work around Amazon 2 compatibility
+      if (( os == 'Amazon' ) && ( "#{release}" == '2' ))
+        release = '7'
+      end
 
       install_package_unless_present_on(
         sut,
         'simp-release-community',
         "https://download.simp-project.com/simp-release-community.el#{release}.rpm"
       )
+
+      # TODO: Remove this hack-around when there's a version for AL2
+      if (( os == 'Amazon' ) && ( "#{release}" == '2' ))
+        on(sut, %(sed -i 's/$releasever/7/g' /etc/yum.repos.d/simp*))
+      end
 
       to_disable = disable.dup
       to_disable += ENV.fetch('BEAKER_SIMP_disable_repos', '').split(',').map(&:strip)
