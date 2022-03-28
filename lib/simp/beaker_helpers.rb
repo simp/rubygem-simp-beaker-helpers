@@ -1513,8 +1513,8 @@ module Simp::BeakerHelpers
       )
 
       # TODO: Remove this hack-around when there's a version for AL2
-      if (( os == 'Amazon' ) && ( "#{release}" == '2' ))
-        on(sut, %(sed -i 's/$releasever/7/g' /etc/yum.repos.d/simp*))
+      if ( os == 'Amazon' )
+        on(sut, %(sed -i 's/$releasever/#{release}/g' /etc/yum.repos.d/simp*))
       end
 
       to_disable = disable.dup
