@@ -23,11 +23,12 @@ module Simp::BeakerHelpers
       'PyYAML',
       'cmake',
       'git',
-      'openscap-scanner',
       'openscap-python',
+      'openscap-scanner',
       'openscap-utils',
       'python-jinja2',
-      'python-lxml'
+      'python-lxml',
+      'python-setuptools'
     ]
 
     EL8_PACKAGES = [
@@ -41,6 +42,7 @@ module Simp::BeakerHelpers
       'python3-jinja2',
       'python3-lxml',
       'python3-pyyaml',
+      'python3-setuptools',
       'libarchive'
     ]
 

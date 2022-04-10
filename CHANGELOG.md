@@ -1,3 +1,7 @@
+### 1.24.3 / 2022-04-10
+* Fixed:
+  * Added python-setuptools to the list of required packages
+
 ### 1.24.2 / 2022-03-09
 * Fixed:
   * Prevent `spec/` directory symlink recursion in `copy_fixture_modules_to`
