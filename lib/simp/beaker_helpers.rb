@@ -650,16 +650,38 @@ module Simp::BeakerHelpers
               on sut, %{subscription-manager repos --enable "rhel-ha-for-rhel-*-server-rpms"}
             end
 
-            if os_maj_rel == '8'
-              on sut, %{subscription-manager repos --enable "codeready-builder-for-rhel-8-#{os_info['architecture']}-rpms"}
+            if os_maj_rel > '7'
+              on sut, %{subscription-manager repos --enable "codeready-builder-for-rhel-#{os_maj_rel}-#{os_info['architecture']}-rpms"}
             end
           end
 
           if ['CentOS','AlmaLinux','Rocky'].include?(os_info['name'])
-            if os_maj_rel == '8'
+            if os_maj_rel > '7'
               # 8.0 fallback
               install_latest_package_on(sut, 'dnf-plugins-core')
+            end
+            if os_maj_rel == '8'
               on sut, %{dnf config-manager --set-enabled powertools || dnf config-manager --set-enabled PowerTools}
+            end
+            if os_maj_rel == '9'
+              on sut, %{dnf config-manager --set-enabled crb}
+            end
+          end
+
+          if os_maj_rel < '8'
+            install_latest_package_on(
+              sut,
+              'epel-release',
+              "https://dl.fedoraproject.org/pub/epel/epel-release-latest-#{os_maj_rel}.noarch.rpm",
+            )
+          else
+            # Workaround because of :shrug:
+            on(sut, "cd /etc/pki/rpm-gpg; curl -L -O https://www.centos.org/keys/RPM-GPG-KEY-CentOS-SIG-Extras")
+
+            install_latest_package_on(sut, 'epel-release')
+
+            if os_info['id'] == 'CentOSStream'
+              install_latest_package_on(sut, 'epel-next-release')
             end
           end
         when 'OracleLinux'
@@ -823,6 +845,10 @@ module Simp::BeakerHelpers
           '8' => [
             'rhel-8-for-x86_64-baseos-rpms',
             'rhel-8-for-x86_64-supplementary-rpms'
+          ],
+          '9' => [
+            'rhel-9-for-x86_64-baseos-rpms',
+            'rhel-9-for-x86_64-supplementary-rpms'
           ]
         }
       }
@@ -1556,7 +1582,7 @@ module Simp::BeakerHelpers
         # from YUM. This does not actually "enable" the repos, that would require
         # the "--enable" option (from yum-config-manager) :-D.
         #
-        # Note: Certain versions of EL8 do not dump by default and EL7 does not
+        # Note: Certain versions of EL8+ do not dump by default and EL7 does not
         # have the '--dump' option.
         available_repos = on(sut, %{yum-config-manager --enablerepo="*" || yum-config-manager --enablerepo="*" --dump}).stdout.lines.grep(/\A\[(.+)\]\Z/){|x| $1}
 

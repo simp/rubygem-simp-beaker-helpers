@@ -92,7 +92,7 @@ jobs:
           echo "::set-output name=release_command::${GEM_RELEASE_COMMAND}"
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.5
+          ruby-version: 2.6
           bundler-cache: true
       - name: Test build the package
         run: "${{ steps.commands.outputs.build_command }}"
@@ -183,7 +183,7 @@ jobs:
           clean: true
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.5
+          ruby-version: 2.6
           bundler-cache: true
       - name: Build RubyGem
         run: |
