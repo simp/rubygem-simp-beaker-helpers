@@ -209,13 +209,6 @@ variables:
 # Puppet Versions
 #-----------------------------------------------------------------------
 
-.pup_5_x: &pup_5_x
-  image: 'ruby:2.4'
-  variables:
-    PUPPET_VERSION: '~> 5.0'
-    BEAKER_PUPPET_COLLECTION: 'puppet5'
-    MATRIX_RUBY_VERSION: '2.4'
-
 .pup_6_x: &pup_6_x
   image: 'ruby:2.5'
   variables:
@@ -331,12 +324,6 @@ fips_from_fixtures:
   <<: *acceptance_base
   script:
     - bundle exec rake beaker:suites[fips_from_fixtures]
-
-puppet5_collections:
-  <<: *pup_5_x
-  <<: *acceptance_base
-  script:
-    - bundle exec rake beaker:suites[puppet_collections]
 
 puppet6_collections:
   <<: *pup_6_x
