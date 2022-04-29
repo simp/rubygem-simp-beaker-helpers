@@ -1,3 +1,11 @@
+### 1.24.4 / 2022-04-28
+* Fixed:
+  * Workaround for [MODULES-11315] in `puppet-agent-versions.yaml`
+* Removed:
+  * Dropped acceptance tests for Puppet 5.5
+
+[MODULES-11315]: https://tickets.puppetlabs.com/browse/MODULES-11315
+
 ### 1.24.3 / 2022-04-10
 * Fixed:
   * Added python-setuptools to the list of required packages
