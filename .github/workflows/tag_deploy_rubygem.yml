@@ -1,4 +1,4 @@
-# When SemVer tag is pushed: create GitHub release & publish gem to rubygems.org
+# Create GitHub release, build & publish .gem to rubygems.org on SemVer tag push
 #
 # This workflow's jobs are only triggered in repos under the `simp` organization
 # ------------------------------------------------------------------------------
@@ -56,6 +56,10 @@ jobs:
     name: "RELENG checks"
     if: github.repository_owner == 'simp'
     runs-on: ubuntu-latest
+    outputs:
+      build_command: ${{ steps.commands.outputs.build_command }}
+      release_command: ${{ steps.commands.outputs.release_command }}
+      pkg_dir: ${{ steps.commands.outputs.pkg_dir }}
     steps:
       - name: "Assert '${{ github.ref }}' is a tag"
         run: '[[ "$GITHUB_REF" =~ ^refs/tags/ ]] || { echo "::error ::GITHUB_REF is not a tag: ${GITHUB_REF}"; exit 1 ; }'
@@ -66,8 +70,8 @@ jobs:
       - name: Determine build and release commands
         id: commands
         run: |
-          # By default, these are the standard tasks from "bundler/gem_tasks"
-          # To override them in the LOCAL_WORKFLOW_CONFIG_FILE
+          # By default, this is the standard task from "bundler/gem_tasks"
+          # To override it, add the new command to LOCAL_WORKFLOW_CONFIG_FILE
           GEM_BUILD_COMMAND='bundle exec rake build'
           GEM_RELEASE_COMMAND='bundle exec rake build release:rubygem_push'
           GEM_PKG_DIR='pkg'
