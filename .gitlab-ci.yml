@@ -313,6 +313,12 @@ default:
   script:
     - bundle exec rake beaker:suites[default]
 
+default-amzn2:
+  <<: *pup_6_x
+  <<: *acceptance_base
+  script:
+    - bundle exec rake beaker:suites[default,amzn2]
+
 default-fips:
   <<: *pup_6_x
   <<: *acceptance_base

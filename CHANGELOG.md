@@ -1,3 +1,7 @@
+### 1.24.5 / 2022-05-06
+* Fixed:
+  * Added a workaround for Amazon Linux 2 testing
+
 ### 1.24.4 / 2022-04-28
 * Fixed:
   * Workaround for [MODULES-11315] in `puppet-agent-versions.yaml`

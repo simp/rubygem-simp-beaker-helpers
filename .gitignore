@@ -1,9 +1,24 @@
+.*.sw?
+.yardoc
+.idea/
 .fips_fixtures.yml
 *.gem
-*.swp
-Gemfile.lock
-.bundle/
 *.old
 .vagrant
+dist
+/pkg
+# Read everything in fixtures
+/spec/fixtures/*
+# Un-ignore hieradata
+!/spec/fixtures/hieradata/*
+# Except this one, which is auto-generated
+/spec/fixtures/hieradata/hiera.yaml
+/spec/rp_env
+/.rspec_system
+/.vagrant
+/.bundle
+/.vendor
+/vendor
+/junit
 /log
-/spec/fixtures
+/doc
