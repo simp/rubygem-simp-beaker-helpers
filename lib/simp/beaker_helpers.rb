@@ -483,7 +483,7 @@ module Simp::BeakerHelpers
       #      that doesn't break vagrant access and is appropriate for
       #      typical module tests.)
       fips_ssh_ciphers = [ 'aes256-ctr','aes192-ctr','aes128-ctr']
-      on(sut, %(sed -ci '/Ciphers /d' /etc/ssh/sshd_config))
+      on(sut, %(sed -e '/Ciphers /d' /etc/ssh/sshd_config 1<> /etc/ssh/sshd_config))
       on(sut, %(echo 'Ciphers #{fips_ssh_ciphers.join(',')}' >> /etc/ssh/sshd_config))
 
       fips_enable_modulepath = ''
@@ -688,9 +688,14 @@ module Simp::BeakerHelpers
       if current_domain.empty?
         new_fqdn = hostname + '.beaker.test'
 
-        on(sut, "sed -ci 's/#{hostname}.*/#{new_fqdn} #{hostname}/' /etc/hosts")
-        on(sut, "echo '#{new_fqdn}' > /etc/hostname", :accept_all_exit_codes => true)
-        on(sut, "hostname #{new_fqdn}", :accept_all_exit_codes => true)
+        on(sut, "sed -e 's/#{hostname}.*/#{new_fqdn} #{hostname}/' /etc/hosts 1<> /etc/hosts")
+
+        if !sut.which('hostnamectl').empty?
+          on(sut, "hostnamectl set-hostname #{new_fqdn}")
+        else
+          on(sut, "echo '#{new_fqdn}' > /etc/hostname", :accept_all_exit_codes => true)
+          on(sut, "hostname #{new_fqdn}", :accept_all_exit_codes => true)
+        end
 
         if sut.file_exist?('/etc/sysconfig/network')
           on(sut, "sed -s '/HOSTNAME=/d' /etc/sysconfig/network")
@@ -1455,9 +1460,8 @@ module Simp::BeakerHelpers
       ENV['BEAKER_PUPPET_COLLECTION'] = install_info[:puppet_collection]
     end
 
-    require 'beaker/puppet_install_helper'
-
-    run_puppet_install_helper(install_info[:puppet_install_type], install_info[:puppet_install_version])
+    require 'beaker-puppet'
+    install_puppet_on(hosts, version: install_info[:puppet_install_version])
   end
 
   # Configure all SIMP repos on a host and disable all repos in the disable Array
