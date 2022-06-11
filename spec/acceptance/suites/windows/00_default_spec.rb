@@ -5,8 +5,6 @@ require 'beaker-rspec'
 require 'simp/beaker_helpers'
 include Simp::BeakerHelpers
 
-require 'beaker/puppet_install_helper'
-
 unless ENV['BEAKER_provision'] == 'no'
   hosts.each do |host|
     unless Simp::BeakerHelpers::Snapshot.exist?(host, 'puppet_installed')
