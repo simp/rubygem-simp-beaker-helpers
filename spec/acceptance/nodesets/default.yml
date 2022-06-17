@@ -22,6 +22,7 @@ HOSTS:
     hypervisor: <%= hypervisor %>
 
 CONFIG:
+  sequential: true
   log_level: verbose
   type: aio
   vagrant_cpus: 2
