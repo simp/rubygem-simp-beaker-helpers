@@ -22,18 +22,13 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 2.3.0'
 
   s.add_runtime_dependency 'beaker'                      , ['>= 4.17.0', '< 5.0.0']
-  s.add_runtime_dependency 'beaker-rspec'                , '~> 6.2'
+  s.add_runtime_dependency 'beaker-rspec'                , '~> 7.1'
   s.add_runtime_dependency 'beaker-puppet'               , ['>= 1.18.14', '< 2.0.0']
   s.add_runtime_dependency 'beaker-docker'               , ['>= 0.8.3', '< 2.0.0']
   s.add_runtime_dependency 'docker-api'                  , ['>= 2.1.0', '< 3.0.0']
   s.add_runtime_dependency 'beaker-vagrant'              , ['>= 0.6.4', '< 2.0.0']
-  s.add_runtime_dependency 'beaker-puppet_install_helper', '~> 0.9'
   s.add_runtime_dependency 'highline'                    , '~> 2.0'
   s.add_runtime_dependency 'nokogiri'                    , '~> 1.8'
-
-  # Because net-telnet dropped support for Ruby < 2.3.0
-  # TODO: Update this when we no longer support Ruby 2.1.9 (should be October 2018)
-  s.add_runtime_dependency 'net-telnet', '~> 0.1.1'
 
   ### s.files = Dir['Rakefile', '{bin,lib,spec}/**/*', 'README*', 'LICENSE*'] & `git ls-files -z .`.split("\0")
   s.files       = `git ls-files`.split("\n")

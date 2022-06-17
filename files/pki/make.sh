@@ -73,7 +73,8 @@ for hosts in $*; do
       done
     done
 
-    sed -ci "s/# subjectAltName = #ALTNAMES#/subjectAltName = ${altnames}/" "working/${hname}.cnf"
+    tgt_file="working/${hname}.cnf"
+    sed -e "s/# subjectAltName = #ALTNAMES#/subjectAltName = ${altnames}/" "$tgt_file" 1<> "$tgt_file"
   fi
 
   echo "-- running openssl req"

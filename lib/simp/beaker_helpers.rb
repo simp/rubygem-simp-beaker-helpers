@@ -12,6 +12,8 @@ module Simp::BeakerHelpers
   require 'simp/beaker_helpers/ssg'
   require 'simp/beaker_helpers/version'
 
+  @run_in_parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
+
   # Stealing this from the Ruby 2.5 Dir::Tmpname workaround from Rails
   def self.tmpname
     t = Time.new.strftime("%Y%m%d")
@@ -25,8 +27,7 @@ module Simp::BeakerHelpers
   #
   # Has no effect if yum or dnf is not present.
   def set_yum_opt_on(suts, key, value)
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(suts, :run_in_parallel => parallel) do |sut|
+    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
       repo,target = key.split('.')
 
       unless target
@@ -56,8 +57,7 @@ module Simp::BeakerHelpers
   #     'foo.installonly_limit' => '5' # Applies only to the 'foo' repo
   #   }
   def set_yum_opts_on(suts, yum_opts={})
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(suts, :run_in_parallel => parallel) do |sut|
+    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
       yum_opts.each_pair do |k,v|
         set_yum_opt_on(sut, k, v)
       end
@@ -70,8 +70,7 @@ module Simp::BeakerHelpers
       retry_interval: 10
     }
 
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(suts, :run_in_parallel => parallel) do |sut|
+    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
       package_source = package_name unless package_source
 
       unless sut.check_for_package(package_name)
@@ -91,8 +90,7 @@ module Simp::BeakerHelpers
       retry_interval: 10
     }
 
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(suts, :run_in_parallel => parallel) do |sut|
+    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
       package_source = package_name unless package_source
 
       if sut.check_for_package(package_name)
@@ -380,8 +378,7 @@ module Simp::BeakerHelpers
     opts[:pluginsync] = opts.fetch(:pluginsync, true)
 
     unless ENV['BEAKER_copy_fixtures'] == 'no'
-      parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-      block_on(suts, :run_in_parallel => parallel) do |sut|
+      block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
         STDERR.puts "  ** copy_fixture_modules_to: '#{sut}'" if ENV['BEAKER_helpers_verbose']
 
         # Use spec_prep to provide modules (this supports isolated networks)
@@ -443,8 +440,7 @@ module Simp::BeakerHelpers
   end
 
   def munge_ssh_crypto_policies(suts, key_types=['ssh-rsa'])
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(suts, :run_in_parallel => parallel) do |sut|
+    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
       if has_crypto_policies(sut)
         install_latest_package_on(sut, 'crypto-policies', nil, :accept_all_exit_codes => true)
 
@@ -455,14 +451,31 @@ module Simp::BeakerHelpers
     end
   end
 
+  # Perform the equivalend of an in-place sed without changing the target inode
+  #
+  # Required for many container targets
+  def safe_sed(suts = hosts, pattern, target_file)
+    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
+      tmpfile = sut.tmpfile('safe_sed')
+
+      command = [
+        "cp #{target_file} #{tmpfile}",
+        "sed -i '#{pattern}' #{tmpfile}",
+        "cat #{tmpfile} > #{target_file}"
+      ].join(' && ')
+
+      on(sut, command)
+
+      sut.rm_rf(tmpfile)
+    end
+  end
+
   # Configure and reboot SUTs into FIPS mode
   def enable_fips_mode_on( suts = hosts )
     puts '== configuring FIPS mode on SUTs'
     puts '  -- (use BEAKER_fips=no to disable)'
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
 
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(suts, :run_in_parallel => parallel) do |sut|
+    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
       next if sut[:hypervisor] == 'docker'
 
       if is_windows?(sut)
@@ -483,7 +496,7 @@ module Simp::BeakerHelpers
       #      that doesn't break vagrant access and is appropriate for
       #      typical module tests.)
       fips_ssh_ciphers = [ 'aes256-ctr','aes192-ctr','aes128-ctr']
-      on(sut, %(sed -ci '/Ciphers /d' /etc/ssh/sshd_config))
+      safe_sed(sut, '/Ciphers /d', '/etc/ssh/sshd_config')
       on(sut, %(echo 'Ciphers #{fips_ssh_ciphers.join(',')}' >> /etc/ssh/sshd_config))
 
       fips_enable_modulepath = ''
@@ -535,8 +548,7 @@ module Simp::BeakerHelpers
   #       - <URL to GPGKEY1>
   #       - <URL to GPGKEY2>
   def enable_yum_repos_on( suts = hosts )
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(suts, :run_in_parallel => parallel) do |sut|
+    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
       if sut['yum_repos']
         sut['yum_repos'].each_pair do |repo, metadata|
           repo_manifest = create_yum_resource(repo, metadata)
@@ -617,8 +629,7 @@ module Simp::BeakerHelpers
   #
   # Can be disabled by setting BEAKER_enable_epel=no
   def enable_epel_on(suts)
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(suts, :run_in_parallel => parallel) do |sut|
+    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
       if ONLINE
         os_info = fact_on(sut, 'os')
         os_maj_rel = os_info['release']['major']
@@ -661,8 +672,7 @@ module Simp::BeakerHelpers
   end
 
   def update_package_from_centos_stream(suts, package_name)
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(suts, :run_in_parallel => parallel) do |sut|
+    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
       sut.install_package('centos-release-stream') unless sut.check_for_package('centos-release-stream')
       install_latest_package_on(sut, package_name)
       sut.uninstall_package('centos-release-stream')
@@ -670,8 +680,7 @@ module Simp::BeakerHelpers
   end
 
   def linux_errata( suts )
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(suts, :run_in_parallel => parallel) do |sut|
+    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
       # Set the locale if not set
       sut.set_env_var('LANG', 'en_US.UTF-8') unless sut.get_env_var('LANG')
 
@@ -688,9 +697,14 @@ module Simp::BeakerHelpers
       if current_domain.empty?
         new_fqdn = hostname + '.beaker.test'
 
-        on(sut, "sed -ci 's/#{hostname}.*/#{new_fqdn} #{hostname}/' /etc/hosts")
-        on(sut, "echo '#{new_fqdn}' > /etc/hostname", :accept_all_exit_codes => true)
-        on(sut, "hostname #{new_fqdn}", :accept_all_exit_codes => true)
+        safe_sed(sut, 's/#{hostname}.*/#{new_fqdn} #{hostname}/', '/etc/hosts')
+
+        if !sut.which('hostnamectl').empty?
+          on(sut, "hostnamectl set-hostname #{new_fqdn}")
+        else
+          on(sut, "echo '#{new_fqdn}' > /etc/hostname", :accept_all_exit_codes => true)
+          on(sut, "hostname #{new_fqdn}", :accept_all_exit_codes => true)
+        end
 
         if sut.file_exist?('/etc/sysconfig/network')
           on(sut, "sed -s '/HOSTNAME=/d' /etc/sysconfig/network")
@@ -785,8 +799,7 @@ module Simp::BeakerHelpers
   def rhel_rhsm_subscribe(suts, *opts)
     require 'securerandom'
 
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(suts, :run_in_parallel => parallel) do |sut|
+    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
       rhsm_opts = {
         :username => ENV['BEAKER_RHSM_USER'],
         :password => ENV['BEAKER_RHSM_PASS'],
@@ -838,8 +851,7 @@ module Simp::BeakerHelpers
   end
 
   def sosreport(suts, dest='sosreports')
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(suts, :run_in_parallel => parallel) do |sut|
+    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
       install_latest_package_on(sut, 'sos')
       on(sut, 'sosreport --batch')
 
@@ -854,8 +866,7 @@ module Simp::BeakerHelpers
   end
 
   def rhel_repo_enable(suts, repos)
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(suts, :run_in_parallel => parallel) do |sut|
+    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
       Array(repos).each do |repo|
         on(sut, %{subscription-manager repos --enable #{repo}})
       end
@@ -863,8 +874,7 @@ module Simp::BeakerHelpers
   end
 
   def rhel_repo_disable(suts, repos)
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(suts, :run_in_parallel => parallel) do |sut|
+    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
       Array(repos).each do |repo|
         on(sut, %{subscription-manager repos --disable #{repo}}, :accept_all_exit_codes => true)
       end
@@ -872,16 +882,14 @@ module Simp::BeakerHelpers
   end
 
   def rhel_rhsm_unsubscribe(suts)
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(suts, :run_in_parallel => parallel) do |sut|
+    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
       on(sut, %{subscription-manager unregister}, :accept_all_exit_codes => true)
     end
   end
 
   # Apply known OS fixes we need to run Beaker on each SUT
   def fix_errata_on( suts = hosts )
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(suts, :run_in_parallel => parallel) do |sut|
+    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
       if is_windows?(sut)
         # Load the Windows requirements
         require 'simp/beaker_helpers/windows'
@@ -1091,8 +1099,7 @@ module Simp::BeakerHelpers
   def activate_interfaces(hosts)
     return if ENV['BEAKER_no_fix_interfaces']
 
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(hosts, :run_in_parallel => parallel) do |host|
+    block_on(hosts, :run_in_parallel => @run_in_parallel) do |host|
       if host[:platform] =~ /windows/
         puts "  -- SKIPPING #{host} because it is windows"
         next
@@ -1335,8 +1342,7 @@ module Simp::BeakerHelpers
           noop    => false
         }
     PLUGINSYNC_MANIFEST
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    apply_manifest_on(hosts, pluginsync_manifest, :run_in_parallel => parallel)
+    apply_manifest_on(hosts, pluginsync_manifest, :run_in_parallel => @run_in_parallel)
   end
 
 
@@ -1455,9 +1461,8 @@ module Simp::BeakerHelpers
       ENV['BEAKER_PUPPET_COLLECTION'] = install_info[:puppet_collection]
     end
 
-    require 'beaker/puppet_install_helper'
-
-    run_puppet_install_helper(install_info[:puppet_install_type], install_info[:puppet_install_version])
+    require 'beaker-puppet'
+    install_puppet_on(hosts, version: install_info[:puppet_install_version])
   end
 
   # Configure all SIMP repos on a host and disable all repos in the disable Array
@@ -1494,8 +1499,7 @@ module Simp::BeakerHelpers
 
     return if (ENV.fetch('SIMP_install_repos', 'yes') == 'no')
 
-    parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-    block_on(suts, :run_in_parallel => parallel) do |sut|
+    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
       install_package_unless_present_on(sut, 'yum-utils')
 
       os = fact_on(sut, 'os.name')

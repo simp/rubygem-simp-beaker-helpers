@@ -44,8 +44,8 @@ group :system_tests do
   gem 'beaker-rspec'
   gem 'beaker-windows'
   gem 'net-ssh'
-  gem 'puppet', ENV.fetch('PUPPET_VERSION', '~> 6.0')
-  gem 'puppetlabs_spec_helper', '~> 3.0'
+  gem 'puppet', ENV.fetch('PUPPET_VERSION', '~> 7.0')
   gem 'rubocop'
   gem 'rubocop-rspec'
+  gem 'puppetlabs_spec_helper', '~> 4.0'
 end

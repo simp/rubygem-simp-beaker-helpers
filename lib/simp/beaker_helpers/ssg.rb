@@ -420,7 +420,11 @@ module Simp::BeakerHelpers
         #
         # This isn't 100% correct but it's "good enough" for an automated CI
         # environment to tell us if something is critically out of alignment.
-        on(@sut, %(cd scap-content/build-scripts; sed -ci 's/ssg.build_derivatives.profile_handling/__simp_dontcare__ = None #ssg.build_derivatives.profile_handling/g' enable_derivatives.py))
+        safe_sed(
+          @sut,
+          's/ssg.build_derivatives.profile_handling/__simp_dontcare__ = None #ssg.build_derivatives.profile_handling/g',
+          'scap-content/build-scripts/enable_derivatives.py'
+        )
 
         on(@sut, %(cd scap-content/build; cmake ../; make -j4 #{OS_INFO[@os][@os_rel]['ssg']['build_target']}-content && cp *ds.xml #{@scap_working_dir}))
       end
