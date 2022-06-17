@@ -47,7 +47,7 @@ group :system_tests do
   gem 'net-ssh', :git => "https://github.com/net-ssh/net-ssh", :ref => 'v7.0.0.beta1'
   gem 'bcrypt_pbkdf' unless RUBY_PLATFORM == 'java'
   gem 'puppet', ENV.fetch('PUPPET_VERSION', '~> 7.0')
-  gem 'puppetlabs_spec_helper', '~> 3.0'
+  gem 'puppetlabs_spec_helper', '~> 4.0'
   gem 'rubocop'
   gem 'rubocop-rspec'
 end
