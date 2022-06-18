@@ -230,7 +230,9 @@ module Simp::Rake
             nodesets.each do |nodeset_yml|
               parsed_nodeset = ::Beaker::Options::HostsFileParser.parse_hosts_file(nodeset_yml)
 
-              if parsed_nodeset[:sequential]
+              if parsed_nodeset[:multi_node]
+                refined_nodesets.push(nodeset_yml)
+              else
                 parsed_nodeset_hosts = parsed_nodeset.delete(:HOSTS)
 
                 parsed_nodeset_hosts.each do |k,v|
@@ -256,8 +258,6 @@ module Simp::Rake
                     end
                   end
                 end
-              else
-                refined_nodesets.push(nodeset_yml)
               end
             end
 

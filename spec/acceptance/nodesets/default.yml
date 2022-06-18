@@ -22,7 +22,7 @@ HOSTS:
     hypervisor: <%= hypervisor %>
 
 CONFIG:
-  sequential: true
+  multi_node: <%= ['yes','true'].include?(ENV['BEAKER_multi_node']) ? true : false %>
   log_level: verbose
   type: aio
   vagrant_cpus: 2
