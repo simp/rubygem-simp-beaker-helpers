@@ -1,10 +1,12 @@
+### 1.26.0 / 2022-06-24
+* Added:
+  * Updated all dependencies to their latest versions where possible and removed
+    depdendencies on deprecated libraries.
+
 ### 1.25.0 / 2022-06-11
 * Fixed:
   * Replaced calls to `sed -c` with something POSIX compliant that should work
     on non-RHEL systems
-* Added:
-  * Updated all dependencies to their latest versions where possible and removed
-    depdendencies on deprecated libraries.
 
 ### 1.24.5 / 2022-05-06
 * Fixed:
