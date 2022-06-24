@@ -9,7 +9,6 @@ HOSTS:
   oel7:
     roles:
       - el7
-      - master
     platform: el-7-x86_64
     box: generic/oracle7
     hypervisor: <%= hypervisor %>
