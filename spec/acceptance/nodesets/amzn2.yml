@@ -8,7 +8,6 @@
 HOSTS:
   amzn2:
     roles:
-      - master
       - default
     platform: el-7-x86_64
     box: gbailey/amzn2

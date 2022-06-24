@@ -7,6 +7,8 @@
 -%>
 HOSTS:
   focal:
+    roles:
+      - default
     platform: ubuntu-20.04-x86_64
     box: ubuntu/focal64
     hypervisor: <%= hypervisor %>

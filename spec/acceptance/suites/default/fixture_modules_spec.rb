@@ -6,41 +6,41 @@ context 'after copy_fixture_modules_to( hosts )' do
     copy_fixture_modules_to( hosts )
   end
 
-  describe "fact_on(master,'root_home')" do
+  describe "fact_on(default,'root_home')" do
     it 'should not return value of `root_home`' do
-      expect(fact_on(master, 'root_home')).to eq ''
+      expect(fact_on(default, 'root_home')).to eq ''
     end
   end
 
-  describe "pfact_on(master,'root_home')" do
+  describe "pfact_on(default,'root_home')" do
     it 'should return value of `root_home`' do
-      expect(pfact_on(master, 'root_home')).to eq '/root'
+      expect(pfact_on(default, 'root_home')).to eq '/root'
     end
   end
 
-  describe "pfact_on(master,'os.release.major')" do
+  describe "pfact_on(default,'os.release.major')" do
     it 'should return the value of `os.release.major`' do
-      expect(pfact_on(master, 'os.release.major')).to match(/.+/)
+      expect(pfact_on(default, 'os.release.major')).to match(/.+/)
     end
   end
 
-  describe "pfact_on(master,'os.release.foo')" do
+  describe "pfact_on(default,'os.release.foo')" do
     it 'should not return the value of `os.release.foo`' do
-      expect(pfact_on(master, 'os.release.foo')).to eq ''
+      expect(pfact_on(default, 'os.release.foo')).to eq ''
     end
   end
 
-  describe "pfact_on(master,'fips_enabled')" do
+  describe "pfact_on(default,'fips_enabled')" do
     expected = (ENV['BEAKER_fips'] == 'yes')
 
     it 'should return false' do
-      expect(pfact_on(master, 'fips_enabled')).to eq expected
+      expect(pfact_on(default, 'fips_enabled')).to eq expected
     end
   end
 
   describe "pfact_on returns a hash" do
     it 'should return a Hash' do
-      expect(pfact_on(master, 'os')).to be_a(Hash)
+      expect(pfact_on(default, 'os')).to be_a(Hash)
     end
   end
 end

@@ -230,7 +230,10 @@ module Simp::Rake
             nodesets.each do |nodeset_yml|
               parsed_nodeset = ::Beaker::Options::HostsFileParser.parse_hosts_file(nodeset_yml)
 
-              if parsed_nodeset[:multi_node]
+              # Default to multi-node testing for backwards compatibility
+              multi_node = (parsed_nodeset[:multi_node] == false ? false: true)
+
+              if multi_node
                 refined_nodesets.push(nodeset_yml)
               else
                 parsed_nodeset_hosts = parsed_nodeset.delete(:HOSTS)
@@ -238,14 +241,14 @@ module Simp::Rake
                 parsed_nodeset_hosts.each do |k,v|
 
                   v[:roles] ||= []
-                  v[:roles] |= ['default', 'master']
+                  v[:roles] |= ['default']
 
                   tmp_nodeset = {
                     :HOSTS  => { k => v },
                     :CONFIG => parsed_nodeset
                   }
 
-                  tmp_nodeset_file = Tempfile.new("beaker_nodeset_#{k}")
+                  tmp_nodeset_file = Tempfile.new("nodeset_#{k}-")
                   tmp_nodeset_file.write(tmp_nodeset.to_yaml)
                   tmp_nodeset_file.close
 
@@ -261,7 +264,7 @@ module Simp::Rake
               end
             end
 
-            refined_nodesets.each do |nodeset_yml|
+            refined_nodesets.sort.each do |nodeset_yml|
               unless File.file?(nodeset_yml)
                 # Get here if user has specified a non-existent nodeset or the
                 # implied `default` nodeset does not exist.

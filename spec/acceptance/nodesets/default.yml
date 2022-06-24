@@ -8,8 +8,8 @@
 HOSTS:
   el7:
     roles:
+      - default
       - el7
-      - master
     platform: el-7-x86_64
     box: centos/7
     hypervisor: <%= hypervisor %>
