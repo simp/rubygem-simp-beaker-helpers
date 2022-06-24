@@ -1,3 +1,8 @@
+### 1.26.1 / 2022-06-24
+* Fixed:
+  * Ensure that `multi_node` is enabled by default for backwards compatibility
+  * Sort the discovered nodesets by default when running with `ALL` nodesets
+
 ### 1.26.0 / 2022-06-24
 * Added:
   * Allow for sequential nodesets by setting `multi_node: false` in the
