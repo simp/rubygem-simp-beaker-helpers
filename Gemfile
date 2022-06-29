@@ -43,8 +43,7 @@ group :system_tests do
 
   gem 'beaker-rspec'
   gem 'beaker-windows'
-  # Need at least 85ebe31 for EL9 support
-  gem 'net-ssh', :git => "https://github.com/net-ssh/net-ssh", :ref => 'v7.0.0.beta1'
+  gem 'net-ssh', '> 7.0' # Need 7.0+ for EL9 support
   gem 'bcrypt_pbkdf' unless RUBY_PLATFORM == 'java'
   gem 'puppet', ENV.fetch('PUPPET_VERSION', '~> 7.0')
   gem 'puppetlabs_spec_helper', '~> 4.0'
