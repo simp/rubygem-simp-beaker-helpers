@@ -43,7 +43,7 @@ group :system_tests do
 
   gem 'beaker-rspec'
   gem 'beaker-windows'
-  gem 'net-ssh', '> 7.0' # Need 7.0+ for EL9 support
+  gem 'net-ssh', '< 7.0' if Gem::Requirement.create('< 2.6').satisfied_by?(Gem::Version.new(RUBY_VERSION.dup))
   gem 'bcrypt_pbkdf' unless RUBY_PLATFORM == 'java'
   gem 'puppet', ENV.fetch('PUPPET_VERSION', '~> 7.0')
   gem 'puppetlabs_spec_helper', '~> 4.0'
