@@ -46,7 +46,7 @@ for hosts in $*; do
   echo "-- $hname"
   mkdir -p "${keydist}/${hname}/cacerts"
 
-  sed -e "s/#HOSTNAME#/${hname}/" template_host.cnf > "working/${hname}.cnf"
+  sed -e "s/#HOSTNAME#/${hname:0:63}/" template_host.cnf > "working/${hname}.cnf"
 
   if [ "$hname" != "$hosts" ];
   then
