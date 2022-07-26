@@ -1,3 +1,7 @@
+### 1.26.2 / 2022-07-26
+* Fixed:
+  * Limit the length of the CN field of the certificates to 64 bytes
+
 ### 1.26.1 / 2022-06-24
 * Fixed:
   * Ensure that `multi_node` is enabled by default for backwards compatibility
