@@ -643,7 +643,7 @@ module Simp::BeakerHelpers
             "https://dl.fedoraproject.org/pub/epel/epel-release-latest-#{os_maj_rel}.noarch.rpm",
           )
 
-          if os_info['name'] == 'RedHat' && env.fetch('BEAKER_RHSM_USER') && env.fetch('BEAKER_RHSM_PASS')
+          if os_info['name'] == 'RedHat' && ENV.fetch('BEAKER_RHSM_USER', false) && ENV.fetch('BEAKER_RHSM_PASS', false)
             if os_maj_rel == '7'
               on sut, %{subscription-manager repos --enable "rhel-*-optional-rpms"}
               on sut, %{subscription-manager repos --enable "rhel-*-extras-rpms"}
@@ -875,7 +875,7 @@ module Simp::BeakerHelpers
   end
 
   def rhel_repo_enable(suts, repos)
-    if env.fetch('BEAKER_RHSM_USER') && env.fetch('BEAKER_RHSM_PASS')
+    if ENV.fetch('BEAKER_RHSM_USER', false) && ENV.fetch('BEAKER_RHSM_PASS', false)
       block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
         Array(repos).each do |repo|
           on(sut, %{subscription-manager repos --enable #{repo}})
@@ -885,7 +885,7 @@ module Simp::BeakerHelpers
   end
 
   def rhel_repo_disable(suts, repos)
-    if env.fetch('BEAKER_RHSM_USER') && env.fetch('BEAKER_RHSM_PASS')
+    if ENV.fetch('BEAKER_RHSM_USER', false) && ENV.fetch('BEAKER_RHSM_PASS', false)
       block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
         Array(repos).each do |repo|
           on(sut, %{subscription-manager repos --disable #{repo}}, :accept_all_exit_codes => true)
@@ -895,7 +895,7 @@ module Simp::BeakerHelpers
   end
 
   def rhel_rhsm_unsubscribe(suts)
-    if env.fetch('BEAKER_RHSM_USER') && env.fetch('BEAKER_RHSM_PASS')
+    if ENV.fetch('BEAKER_RHSM_USER', false) && ENV.fetch('BEAKER_RHSM_PASS', false)
       block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
         on(sut, %{subscription-manager unregister}, :accept_all_exit_codes => true)
       end
