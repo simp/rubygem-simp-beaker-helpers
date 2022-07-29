@@ -636,7 +636,7 @@ module Simp::BeakerHelpers
 
         # This is based on the official EPEL docs https://fedoraproject.org/wiki/EPEL
         case os_info['name']
-        when 'RedHat','CentOS'
+        when 'RedHat','CentOS','AlmaLinux','Rocky'
           install_latest_package_on(
             sut,
             'epel-release',
@@ -655,7 +655,7 @@ module Simp::BeakerHelpers
             end
           end
 
-          if os_info['name'] == 'CentOS'
+          if ['CentOS','AlmaLinux','Rocky'].include?(os_info['name'])
             if os_maj_rel == '8'
               # 8.0 fallback
               install_latest_package_on(sut, 'dnf-plugins-core')
@@ -665,8 +665,9 @@ module Simp::BeakerHelpers
         when 'OracleLinux'
           package_name = "oracle-epel-release-el#{os_maj_rel}"
           install_latest_package_on(sut,package_name)
+        when 'Amazon'
+          on sut, %{amazon-linux-extras install epel -y}
         end
-
       end
     end
   end
@@ -773,12 +774,19 @@ module Simp::BeakerHelpers
           end
         end
 
-        if ['CentOS','RedHat','OracleLinux'].include?(os_info['name'])
+        if [
+            'AlmaLinux',
+            'Amazon',
+            'CentOS',
+            'OracleLinux',
+            'RedHat',
+            'Rocky'
+        ].include?(os_info['name'])
           enable_yum_repos_on(sut)
           enable_epel_on(sut)
 
           # net-tools required for netstat utility being used by be_listening
-          if os_info['release']['major'].to_i >= 7
+          if (os_info['release']['major'].to_i >= 7) ||((os_info['name'] == 'Amazon') && (os_info['release']['major'].to_i >= 2))
             pp = <<-EOS
               package { 'net-tools': ensure => installed }
             EOS
