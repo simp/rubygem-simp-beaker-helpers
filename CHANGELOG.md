@@ -1,3 +1,7 @@
+### 1.27.0 / 2022-07-30
+* Added:
+  * Add EPEL support for Amazon, Rocky, and Alma distributions
+
 ### 1.26.2 / 2022-07-26
 * Fixed:
   * Limit the length of the CN field of the certificates to 64 bytes
