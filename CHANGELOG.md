@@ -1,3 +1,8 @@
+### 1.28.0 / 2022-08-05
+* Added:
+  * Support RHEL versions without RHN credentials
+    * Supports pay-as-you-go cloud services
+
 ### 1.27.0 / 2022-07-30
 * Added:
   * Add EPEL support for Amazon, Rocky, and Alma distributions
