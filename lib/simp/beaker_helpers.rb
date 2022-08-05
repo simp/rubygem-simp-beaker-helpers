@@ -643,7 +643,7 @@ module Simp::BeakerHelpers
             "https://dl.fedoraproject.org/pub/epel/epel-release-latest-#{os_maj_rel}.noarch.rpm",
           )
 
-          if os_info['name'] == 'RedHat'
+          if os_info['name'] == 'RedHat' && ENV['BEAKER_RHSM_USER'] && ENV['BEAKER_RHSM_PASS']
             if os_maj_rel == '7'
               on sut, %{subscription-manager repos --enable "rhel-*-optional-rpms"}
               on sut, %{subscription-manager repos --enable "rhel-*-extras-rpms"}
@@ -836,7 +836,8 @@ module Simp::BeakerHelpers
 
       if os == 'RedHat'
         unless rhsm_opts[:username] && rhsm_opts[:password]
-          fail("You must set BEAKER_RHSM_USER and BEAKER_RHSM_PASS environment variables to register RHEL systems")
+          warn("BEAKER_RHSM_USER and/or BEAKER_RHSM_PASS not set on RHEL system.", "Assuming that subscription-manager is not needed. This may prevent packages from installing")
+          return
         end
 
         sub_status = on(sut, 'subscription-manager status', :accept_all_exit_codes => true)
@@ -874,24 +875,30 @@ module Simp::BeakerHelpers
   end
 
   def rhel_repo_enable(suts, repos)
-    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
-      Array(repos).each do |repo|
-        on(sut, %{subscription-manager repos --enable #{repo}})
+    if ENV['BEAKER_RHSM_USER'] && ENV['BEAKER_RHSM_PASS']
+      block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
+        Array(repos).each do |repo|
+          on(sut, %{subscription-manager repos --enable #{repo}})
+        end
       end
     end
   end
 
   def rhel_repo_disable(suts, repos)
-    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
-      Array(repos).each do |repo|
-        on(sut, %{subscription-manager repos --disable #{repo}}, :accept_all_exit_codes => true)
+    if ENV['BEAKER_RHSM_USER'] && ENV['BEAKER_RHSM_PASS']
+      block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
+        Array(repos).each do |repo|
+          on(sut, %{subscription-manager repos --disable #{repo}}, :accept_all_exit_codes => true)
+        end
       end
     end
   end
 
   def rhel_rhsm_unsubscribe(suts)
-    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
-      on(sut, %{subscription-manager unregister}, :accept_all_exit_codes => true)
+    if ENV['BEAKER_RHSM_USER'] && ENV['BEAKER_RHSM_PASS']
+      block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
+        on(sut, %{subscription-manager unregister}, :accept_all_exit_codes => true)
+      end
     end
   end
 
