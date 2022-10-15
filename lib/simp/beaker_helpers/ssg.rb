@@ -46,6 +46,8 @@ module Simp::BeakerHelpers
       'libarchive'
     ]
 
+    EL9_PACKAGES = EL8_PACKAGES
+
     OS_INFO = {
       'RedHat' => {
         '6' => {
@@ -70,6 +72,14 @@ module Simp::BeakerHelpers
             'profile_target' => 'rhel8',
             'build_target'   => 'rhel8',
             'datastream'     => 'ssg-rhel8-ds.xml'
+          }
+        },
+        '9' => {
+          'required_packages' => EL9_PACKAGES,
+          'ssg' => {
+            'profile_target' => 'rhel9',
+            'build_target'   => 'rhel9',
+            'datastream'     => 'ssg-rhel9-ds.xml'
           }
         }
       },
@@ -96,6 +106,14 @@ module Simp::BeakerHelpers
             'profile_target' => 'centos8',
             'build_target'   => 'centos8',
             'datastream'     => 'ssg-centos8-ds.xml'
+          }
+        },
+        '9' => {
+          'required_packages' => EL9_PACKAGES,
+          'ssg' => {
+            'profile_target' => 'centos9',
+            'build_target'   => 'centos9',
+            'datastream'     => 'ssg-centos9-ds.xml'
           }
         }
       },
