@@ -11,11 +11,11 @@ HOSTS:
       - windows
     platform: windows-server-amd64
     box: gusztavvargadr/windows-server
+    box_version: '~> 1809'
     hypervisor: <%= hypervisor %>
     vagrant_memsize: 2048
     vagrant_cpus: 2
     user: vagrant
-    communicator: winrm
     is_cygwin: false
 
   el7:

@@ -1,3 +1,7 @@
+### 1.29.0 / 2022-10-25
+* Fixed:
+  * Compress fixtures before copy to Windows nodes
+ 
 ### 1.28.0 / 2022-08-05
 * Added:
   * Support RHEL versions without RHN credentials

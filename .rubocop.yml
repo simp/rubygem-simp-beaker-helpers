@@ -13,7 +13,7 @@ AllCops:
     - Rakefile
     - Guardfile
     - Vagrantfile
-Lint/ConditionPosition:
+Layout/ConditionPosition:
   Enabled: True
 
 Lint/ElseLayout:
@@ -22,13 +22,13 @@ Lint/ElseLayout:
 Lint/UnreachableCode:
   Enabled: True
 
-Lint/UselessComparison:
+Lint/BinaryOperatorWithIdenticalOperands:
   Enabled: True
 
 Lint/EnsureReturn:
   Enabled: True
 
-Lint/HandleExceptions:
+Lint/SuppressedException:
   Enabled: True
 
 Lint/LiteralAsCondition:
@@ -84,13 +84,13 @@ Lint/AmbiguousRegexpLiteral:
 Security/Eval:
   Enabled: True
 
-Lint/BlockAlignment:
+Layout/BlockAlignment:
   Enabled: True
 
-Lint/DefEndAlignment:
+Layout/DefEndAlignment:
   Enabled: True
 
-Lint/EndAlignment:
+Layout/EndAlignment:
   Enabled: True
 
 Lint/DeprecatedClassMethods:
@@ -105,7 +105,7 @@ Lint/ParenthesesAsGroupedExpression:
 Lint/RescueException:
   Enabled: True
 
-Lint/StringConversionInInterpolation:
+Lint/RedundantStringCoercion:
   Enabled: True
 
 Lint/UnusedBlockArgument:
@@ -132,13 +132,13 @@ Naming/AccessorMethodName:
 Style/Alias:
   Enabled: True
 
-Layout/AlignArray:
+Layout/ArrayAlignment:
   Enabled: True
 
-Layout/AlignHash:
+Layout/HashAlignment:
   Enabled: True
 
-Layout/AlignParameters:
+Layout/ParameterAlignment:
   Enabled: True
 
 Metrics/BlockNesting:
@@ -148,9 +148,6 @@ Style/AsciiComments:
   Enabled: True
 
 Style/Attr:
-  Enabled: True
-
-Style/BracesAroundHashParameters:
   Enabled: True
 
 Style/CaseEquality:
@@ -187,16 +184,16 @@ Style/WhenThen:
 Style/WordArray:
   Enabled: True
 
-Style/UnneededPercentQ:
+Style/RedundantPercentQ:
   Enabled: True
 
-Layout/Tab:
+Layout/IndentationStyle:
   Enabled: True
 
 Layout/SpaceBeforeSemicolon:
   Enabled: True
 
-Layout/TrailingBlankLines:
+Layout/TrailingEmptyLines:
   Enabled: True
 
 Layout/SpaceInsideBlockBraces:
@@ -281,10 +278,10 @@ Style/EachWithObject:
 Layout/EmptyLineBetweenDefs:
   Enabled: True
 
-Layout/IndentArray:
+Layout/FirstArrayElementIndentation:
   Enabled: True
 
-Layout/IndentHash:
+Layout/FirstHashElementIndentation:
   Enabled: True
 
 Layout/IndentationConsistency:
@@ -306,7 +303,7 @@ Style/EmptyLiteral:
 Layout/TrailingWhitespace:
   Enabled: True
 
-Metrics/LineLength:
+Layout/LineLength:
   Enabled: False
 
 Naming/BinaryOperatorParameterName:
@@ -331,7 +328,10 @@ Style/StringLiterals:
 Style/TrailingCommaInArguments:
   Enabled: True
 
-Style/TrailingCommaInLiteral:
+Style/TrailingCommaInArrayLiteral:
+  Enabled: True
+
+Style/TrailingCommaInHashLiteral:
   Enabled: True
 
 Style/GlobalVars:
@@ -497,9 +497,6 @@ Metrics/AbcSize:
 Metrics/PerceivedComplexity:
   Enabled: False
 
-Lint/UselessAssignment:
-  Enabled: True
-
 Layout/ClosingParenthesisIndentation:
   Enabled: True
 
@@ -529,7 +526,7 @@ RSpec/NestedGroups:
   Enabled: False
 
 # this is broken on ruby1.9
-Layout/IndentHeredoc:
+Layout/HeredocIndentation:
   Enabled: False
 
 # disable Yaml safe_load. This is needed to support ruby2.0.0 development envs

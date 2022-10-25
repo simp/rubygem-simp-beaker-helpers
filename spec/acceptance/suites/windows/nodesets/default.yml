@@ -10,14 +10,12 @@ HOSTS:
     roles:
       - windows
     platform: windows-server-amd64
-    box: devopsgroup-io/windows_server-2012r2-standard-amd64-nocm
+    box: gusztavvargadr/windows-server
     hypervisor: <%= hypervisor %>
     vagrant_memsize: 2048
     vagrant_cpus: 2
     user: vagrant
     is_cygwin: false
-    ssh:
-      host_key: ssh-dss
 
   el7:
     roles:

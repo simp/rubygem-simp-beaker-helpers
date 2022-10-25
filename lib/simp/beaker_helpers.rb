@@ -11,6 +11,7 @@ module Simp::BeakerHelpers
   require 'simp/beaker_helpers/snapshot'
   require 'simp/beaker_helpers/ssg'
   require 'simp/beaker_helpers/version'
+  require 'find'
 
   @run_in_parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
 
@@ -395,14 +396,44 @@ module Simp::BeakerHelpers
           Dir.chdir(mod_root) do
             # Have to do things the slow way on Windows
             if is_windows?(sut)
-              Dir.glob('*') do |module_dir|
-                if File.directory?(module_dir)
-                  copy_module_to( sut, {
-                    :source             => module_dir,
-                    :module_name        => module_dir,
-                    :target_module_path => target_module_path
-                  })
+              begin
+                zipfile = "#{Simp::BeakerHelpers.tmpname}.zip"
+                files = []
+                
+                # 'zip -x' does not reliably exclude paths, so we need to remove them from
+                #   the list of files to zip
+                Dir.glob('*') do |module_root|
+                  next unless Dir.exist?(module_root)
+                  Find.find("#{module_root}/") do |path|
+                    if PUPPET_MODULE_INSTALL_IGNORE.any? { |ignore| path.include?(ignore) }
+                      Find.prune
+                      next
+                    end
+
+                    files << path
+                  end
                 end
+
+                command = ['zip', zipfile] + files
+                Kernel.system(*command)
+
+                raise("Error: module zip file '#{zipfile}' could not be created at #{mod_root}") unless File.exist?(zipfile)
+                copy_to(sut, zipfile, target_module_path, opts)
+
+                # Windows 2012 and R2 does not natively include PowerShell 5, in which
+                #  the Expand-Archive cmdlet was introduced 
+                if fact_on(sut, 'os.release.major').include?('2012')
+                  unzip_cmd = [
+                    "\"[System.Reflection.Assembly]::LoadWithPartialName(\'System.IO.Compression.FileSystem\')",
+                    "[System.IO.Compression.ZipFile]::OpenRead(\'#{target_module_path}\\#{File.basename(zipfile)}\').Entries.FullName \| %{Remove-Item -Path (\"\"\"#{target_module_path}\\$_\"\"\") -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue}", # rubocop:disable Layout/LineLength
+                    "[System.IO.Compression.ZipFile]::ExtractToDirectory(\'#{target_module_path}\\#{File.basename(zipfile)}\', \'#{target_module_path}\')\"",
+                  ].join(';')
+                else
+                  unzip_cmd = "$ProgressPreference='SilentlyContinue';Expand-Archive -Path #{target_module_path}\\#{File.basename(zipfile)} -DestinationPath #{target_module_path} -Force"
+                end
+                on(sut, powershell(unzip_cmd))
+              ensure
+                FileUtils.remove_entry(zipfile, true)
               end
             else
               begin

@@ -6,15 +6,15 @@ HOSTS:
     platform:   el-7-x86_64
     hypervisor: docker
     image: simpproject/simp_beaker_el7
-    docker_cmd: '["/sbin/init"]'
-
+    docker_cmd: '/usr/sbin/sshd -D -E /var/log/sshd.log'
+    
   el8.test.net:
     roles:
       - el8
     platform:   el-8-x86_64
     hypervisor: docker
     image: simpproject/simp_beaker_el8
-    docker_cmd: '["/sbin/init"]'
+    docker_cmd: '/usr/sbin/sshd -D -E /var/log/sshd.log'
 
 CONFIG:
   log_level: verbose
