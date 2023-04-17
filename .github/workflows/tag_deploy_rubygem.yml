@@ -87,12 +87,12 @@ jobs:
               grep -w '"gem_release_command"' &> /dev/null; then
             GEM_RELEASE_COMMAND="$(jq -r .gem_release_command "$LOCAL_WORKFLOW_CONFIG_FILE" )"
           fi
-          echo "::set-output name=build_command::${GEM_BUILD_COMMAND}"
-          echo "::set-output name=pkg_dir::${GEM_PKG_DIR}"
-          echo "::set-output name=release_command::${GEM_RELEASE_COMMAND}"
+          echo "build_command=$GEM_BUILD_COMMAND" | tee -a "$GITHUB_OUTPUT"
+          echo "pkg_dir=$GEM_PKG_DIR" | tee -a "$GITHUB_OUTPUT"
+          echo "release_command=$GEM_RELEASE_COMMAND" | tee -a "$GITHUB_OUTPUT"
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.5
+          ruby-version: 2.7
           bundler-cache: true
       - name: Test build the package
         run: "${{ steps.commands.outputs.build_command }}"
@@ -139,9 +139,10 @@ jobs:
             exit 88
           fi
 
-          echo "::set-output name=tag::${tag}"
-          echo "::set-output name=prerelease::${prerelease}"
-          echo "::set-output name=annotation_title::${annotation_title}"
+          echo "tag=$tag" | tee -a "$GITHUB_OUTPUT"
+          echo "prerelease=$prerelease" | tee -a "$GITHUB_OUTPUT"
+          echo "annotation_title=$annotation_title" | tee -a "$GITHUB_OUTPUT"
+
 
           # Prepare annotation body as a file for the next step
           #
@@ -183,7 +184,7 @@ jobs:
           clean: true
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.5
+          ruby-version: 2.7
           bundler-cache: true
       - name: Build RubyGem
         run: |
