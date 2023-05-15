@@ -21,8 +21,8 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 2.3.0'
 
-  s.add_runtime_dependency 'beaker'                      , ['>= 4.17.0', '< 5.0.0']
-  s.add_runtime_dependency 'beaker-rspec'                , '~> 7.1'
+  s.add_runtime_dependency 'beaker'                      , ['>= 4.17.0', '< 6.0.0']
+  s.add_runtime_dependency 'beaker-rspec'                , '~> 8.0'
   s.add_runtime_dependency 'beaker-puppet'               , ['>= 1.18.14', '< 2.0.0']
   s.add_runtime_dependency 'beaker-docker'               , ['>= 0.8.3', '< 2.0.0']
   s.add_runtime_dependency 'docker-api'                  , ['>= 2.1.0', '< 3.0.0']
