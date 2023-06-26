@@ -1423,7 +1423,7 @@ module Simp::BeakerHelpers
     unless result
       puppet_gems = nil
 
-      Bundler.with_clean_env do
+      Bundler.with_unbundled_env do
         puppet_gems = %x(gem search -ra -e puppet).match(/\((.+)\)/)
       end
 
