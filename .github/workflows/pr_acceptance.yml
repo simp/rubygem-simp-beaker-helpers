@@ -14,16 +14,27 @@ jobs:
       - ubuntu-latest
     strategy:
       matrix:
-        ruby:
-          - 2.6
+        puppet:
+          - label: 'Puppet 7.x [SIMP 6.6/PE 2021.7'
+            puppet_version: '~> 7.0'
+            ruby_version: '2.7'
+            experimental: false
+          - label: 'Puppet 8.x'
+            puppet_version: '~> 8.0'
+            ruby_version: 3.1
+            experimental: true
+          - beaker_suite:
       fail-fast: false
+    continue-on-error: ${{matrix.puppet.experimental}}
+    env:
+      PUPPET_VERSION: ${{matrix.puppet.puppet_version}}
     steps:
       - name: checkout repo
         uses: actions/checkout@v2
       - name: setup ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: ${{ matrix.ruby }}
+          ruby-version: ${{ matrix.puppet.ruby_version }}
       - name: ensure entropy
         run: |
           sudo apt-get update -y
