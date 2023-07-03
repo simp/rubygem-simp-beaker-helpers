@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         puppet:
-          - label: 'Puppet 7.x [SIMP 6.6/PE 2021.7'
+          - label: 'Puppet 7.x [SIMP 6.6/PE 2021.7]'
             puppet_version: '~> 7.0'
             ruby_version: '2.7'
             experimental: false
@@ -24,7 +24,6 @@ jobs:
             ruby_version: 3.1
             experimental: true
       fail-fast: false
-    continue-on-error: ${{matrix.puppet.experimental}}
     env:
       PUPPET_VERSION: ${{matrix.puppet.puppet_version}}
     steps:
@@ -54,12 +53,16 @@ jobs:
       - name: beaker
         run: |
           bundle exec rake beaker:suites[default,docker]
+          continue-on-error: ${{matrix.puppet.experimental}}
       - name: beaker puppet_collections
         run: |
           bundle exec rake beaker:suites[puppet_collections,docker]
+          continue-on-error: ${{matrix.puppet.experimental}}
       - name: beaker ssg
         run: |
           bundle exec rake beaker:suites[ssg,docker]
+          continue-on-error: ${{matrix.puppet.experimental}}
       - name: beaker inspec
         run: |
           bundle exec rake beaker:suites[inspec,docker]
+          continue-on-error: ${{matrix.puppet.experimental}}
