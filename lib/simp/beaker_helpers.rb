@@ -1604,9 +1604,14 @@ module Simp::BeakerHelpers
         #
         # Note: Certain versions of EL8 do not dump by default and EL7 does not
         # have the '--dump' option.
-        available_repos = on(sut, %{yum repolist all || dnf repolist --all}).stdout.lines.map{|x| x.gsub(%r{/.*\Z},'')}.grep(/\A([a-zA-Z][a-zA-Z0-9:_-]+)\Z/){|x| $1}
+        x = on(sut, %{yum repolist all || dnf repolist --all}).stdout.lines
+        logger.info(%{XXX INFO: x lines: '#{x.join("', '")}'.})
 
-        logger.info(%{XXX WARN: available repos: '#{available_repos.join("', '")}'.})
+        y = x.map{|z| z.gsub(%r{/.*\Z},'')}
+        logger.info(%{XXX INFO: y lines: '#{y.join("', '")}'.})
+
+        available_repos = y.grep(/\A([a-zA-Z][a-zA-Z0-9:_-]+)\Z/){|x| $1}
+        logger.info(%{XXX INFO: available repos: '#{available_repos.join("', '")}'.})
 
         invalid_repos = (to_disable - available_repos)
 
