@@ -1602,7 +1602,7 @@ module Simp::BeakerHelpers
         #
         # Note: Certain versions of EL8 do not dump by default and EL7 does not
         # have the '--dump' option.
-        available_repos = on(sut, %{yum-config-manager --enablerepo="*" || yum-config-manager --enablerepo="*" --dump}).stdout.lines.grep(/\A\[(.+)\]\Z/){|x| $1}
+        available_repos = on(sut, %{yum-config-manager --enablerepo="*" || yum-config-manager --enablerepo="*" --dump | grep '^\\['}).stdout.lines.grep(/\A\[(.+)\]\Z/){|x| $1}
 
         invalid_repos = (to_disable - available_repos)
 
@@ -1611,7 +1611,8 @@ module Simp::BeakerHelpers
           logger.warn(%{WARN: install_simp_repo - requested repos to disable do not exist on the target system '#{invalid_repos.join("', '")}'.})
         end
 
-        logger.info(%{INFO: repos to disable: '#{to_disable.join("', '")}'.})
+        logger.info(%{XXX WARN: available repos: '#{available_repos.join("', '")}'.})
+        logger.info(%{XXX INFO: repos to disable: '#{to_disable.join("', '")}'.})
 
         (to_disable - invalid_repos).each do |repo|
           on(sut, %{yum-config-manager --disable "#{repo}"})
