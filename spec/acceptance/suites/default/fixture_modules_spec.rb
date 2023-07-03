@@ -26,7 +26,7 @@ context 'after copy_fixture_modules_to( hosts )' do
 
   describe "pfact_on(default,'os.release.foo')" do
     it 'should not return the value of `os.release.foo`' do
-      expect(pfact_on(default, 'os.release.foo')).to eq ''
+      expect(pfact_on(default, 'os.release.foo').to_s).to eq ''
     end
   end
 
