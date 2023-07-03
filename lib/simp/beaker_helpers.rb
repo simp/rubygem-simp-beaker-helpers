@@ -399,7 +399,7 @@ module Simp::BeakerHelpers
               begin
                 zipfile = "#{Simp::BeakerHelpers.tmpname}.zip"
                 files = []
-                
+
                 # 'zip -x' does not reliably exclude paths, so we need to remove them from
                 #   the list of files to zip
                 Dir.glob('*') do |module_root|
@@ -421,7 +421,7 @@ module Simp::BeakerHelpers
                 copy_to(sut, zipfile, target_module_path, opts)
 
                 # Windows 2012 and R2 does not natively include PowerShell 5, in which
-                #  the Expand-Archive cmdlet was introduced 
+                #  the Expand-Archive cmdlet was introduced
                 if fact_on(sut, 'os.release.major').include?('2012')
                   unzip_cmd = [
                     "\"[System.Reflection.Assembly]::LoadWithPartialName(\'System.IO.Compression.FileSystem\')",
@@ -1573,14 +1573,27 @@ module Simp::BeakerHelpers
       unless to_disable.empty?
         if to_disable.include?('simp')
           to_disable.delete('simp')
+
+          # legacy community RPM
           to_disable << 'simp-community-simp'
+
+          # SIMP 6.6+ community RPM
+          to_disable << 'SIMP--simp'
         end
 
         if to_disable.include?('simp_deps')
           to_disable.delete('simp_deps')
+          # legacy community RPM
           to_disable << 'simp-community-epel'
           to_disable << 'simp-community-postgres'
           to_disable << 'simp-community-puppet'
+
+          # SIMP 6.6+ community RPM
+          to_disable << 'epel--simp'
+          to_disable << 'postgresql--simp'
+          to_disable << 'puppet--simp'
+          to_disable << 'puppet7--simp'
+          to_disable << 'puppet6--simp'
         end
 
         # NOTE: This --enablerepo enables the repos for listing and is inherited
