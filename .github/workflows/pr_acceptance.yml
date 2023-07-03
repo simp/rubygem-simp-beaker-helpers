@@ -23,16 +23,6 @@ jobs:
             puppet_version: '~> 8.0'
             ruby_version: 3.1
             experimental: true
-        beaker:
-          - label: beaker
-            suite: default
-          - label: beaker puppet_collections
-            suite: puppet_collections
-          - label: beaker ssg
-            suite: ssg
-          - label: beaker inspec
-            suite: inspec
-
       fail-fast: false
     env:
       PUPPET_VERSION: ${{matrix.puppet.puppet_version}}
@@ -60,9 +50,19 @@ jobs:
         run: |
           gem install bundler
           bundle update
-      - name: ${{matrix.beaker.label}}
-        env:
-          BEAKER_SUITE: ${{matrix.beaker.suite}}
+      - name: beaker
+        continue-on-error: ${{matrix.puppet.experimental}}
         run: |
-          bundle exec rake beaker:suites[$BEAKER_SUITE,docker]
-          continue-on-error: ${{matrix.puppet.experimental}}
+          bundle exec rake beaker:suites[default,docker]
+      - name: beaker puppet_collections
+        continue-on-error: ${{matrix.puppet.experimental}}
+        run: |
+          bundle exec rake beaker:suites[puppet_collections,docker]
+      - name: beaker ssg
+        continue-on-error: ${{matrix.puppet.experimental}}
+        run: |
+          bundle exec rake beaker:suites[ssg,docker]
+      - name: beaker inspec
+        continue-on-error: ${{matrix.puppet.experimental}}
+        run: |
+          bundle exec rake beaker:suites[inspec,docker]
