@@ -1571,7 +1571,7 @@ module Simp::BeakerHelpers
       to_disable += ENV.fetch('BEAKER_SIMP_disable_repos', '').split(',').map(&:strip)
 
       unless to_disable.empty?
-        if to_disable.include?('simp')
+        if to_disable.include?('simp') || to_disable.include?('simp-community-simp')
           to_disable.delete('simp')
 
           # legacy community RPM
