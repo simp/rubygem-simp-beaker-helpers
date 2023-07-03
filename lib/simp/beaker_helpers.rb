@@ -1610,7 +1610,7 @@ module Simp::BeakerHelpers
         y = x.map{|z| z.gsub(%r{/.*\Z},'')}
         logger.info(%{XXX INFO: y lines: '#{y.join("', '")}'.})
 
-        available_repos = y.grep(/\A([a-zA-Z][a-zA-Z0-9:_-]+)\Z/){|x| $1}
+        available_repos = y.grep(/\A([a-zA-Z][a-zA-Z0-9:_-]+)\s*/){|x| $1}
         logger.info(%{XXX INFO: available repos: '#{available_repos.join("', '")}'.})
 
         invalid_repos = (to_disable - available_repos)
