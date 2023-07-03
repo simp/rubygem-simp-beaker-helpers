@@ -1611,6 +1611,8 @@ module Simp::BeakerHelpers
           logger.warn(%{WARN: install_simp_repo - requested repos to disable do not exist on the target system '#{invalid_repos.join("', '")}'.})
         end
 
+        logger.info(%{INFO: repos to disable: '#{to_disable.join("', '")}'.})
+
         (to_disable - invalid_repos).each do |repo|
           on(sut, %{yum-config-manager --disable "#{repo}"})
         end
