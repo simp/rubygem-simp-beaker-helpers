@@ -42,6 +42,7 @@ hosts.each do |host|
       end
 
       it 'disables the correct repos' do
+        on(host, 'yum repolist || : ' ) # FIXME: REMOVE AFTER DEBUG
         on(host, 'yum -y list simp', :acceptable_exit_codes => [1])
       end
     end
