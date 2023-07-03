@@ -7,7 +7,7 @@ HOSTS:
     hypervisor: docker
     image: simpproject/simp_beaker_el7
     docker_cmd: '/usr/sbin/sshd -D -E /var/log/sshd.log'
-    
+
   el8.test.net:
     roles:
       - el8
