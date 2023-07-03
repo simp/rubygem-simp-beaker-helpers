@@ -1,4 +1,4 @@
 --format documentation
---fail-fast
+--no-fail-fast
 --color
 --order default
