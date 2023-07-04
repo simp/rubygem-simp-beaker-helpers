@@ -1,10 +1,16 @@
 ### 1.30.0 / 2023-05-15
 * Added:
   * Default `puppet_collection` to `puppet7`
+  * Support for new pulp-slimmed repo names in `install_simp_repos` logic
+  * Acceptance test support for Puppet 8
+  * Modernize GHA PR test matrix
+    * Support for experimental (Puppet 8.x/ruby 3.1)
 * Fixed:
-  * Update `beaker-rspec` 8.x to fix depsolving issues
-    in the updated `simp-rake-helpers`
+  * Update to `beaker-rspec` 8.x depsolve with `simp-rake-helpers` 5.20.0+
   * Update `beaker` to permit 5.x
+  * Update default `puppet-agent` to 7.x
+  * Use less fragile yum/dnf `repolist` in `install_simp_repos` logic
+
 
 ### 1.29.0 / 2022-10-25
 * Fixed:
