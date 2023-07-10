@@ -1,7 +1,24 @@
+### 1.30.0 / 2023-05-15
+* Added:
+  * Default `puppet_collection` to `puppet7`
+  * Support for new pulp-slimmed repo names in `install_simp_repos` logic
+  * Modernize GHA PR test matrix
+    * Support for experimental (Puppet 8.x/ruby 3.1)
+  * Add GHA acceptance test matrix (puppet version x suite)
+    * Support for experimental (Puppet 8.x/ruby 3.1)
+    * Allow problematic inspec suite to fail
+* Fixed:
+  * Update to `beaker-rspec` 8.x depsolve with `simp-rake-helpers` 5.20.0+
+  * Update `beaker` to permit 5.x
+  * Update default `puppet-agent` to 7.x
+  * Use less fragile yum/dnf `repolist` in `install_simp_repos` logic
+* Removed
+  * inspec acceptance suite no longer required in GHA matrix
+
 ### 1.29.0 / 2022-10-25
 * Fixed:
   * Compress fixtures before copy to Windows nodes
- 
+
 ### 1.28.0 / 2022-08-05
 * Added:
   * Support RHEL versions without RHN credentials
@@ -31,7 +48,7 @@
     on non-RHEL systems
 * Added:
   * Updated all dependencies to their latest versions where possible and removed
-    depdendencies on deprecated libraries.
+    dependencies on deprecated libraries.
 
 ### 1.24.5 / 2022-05-06
 * Fixed:

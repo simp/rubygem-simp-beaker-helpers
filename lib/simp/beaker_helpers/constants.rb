@@ -5,7 +5,7 @@ module Simp::BeakerHelpers
   #
   # This is done so that we know if some new thing that we're using breaks the
   # oldest system that we support
-  DEFAULT_PUPPET_AGENT_VERSION = '~> 6.0'
+  DEFAULT_PUPPET_AGENT_VERSION = '~> 7.0'
 
   SSG_REPO_URL = ENV['BEAKER_ssg_repo'] || 'https://github.com/ComplianceAsCode/content.git'
 

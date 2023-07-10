@@ -399,7 +399,7 @@ module Simp::BeakerHelpers
               begin
                 zipfile = "#{Simp::BeakerHelpers.tmpname}.zip"
                 files = []
-                
+
                 # 'zip -x' does not reliably exclude paths, so we need to remove them from
                 #   the list of files to zip
                 Dir.glob('*') do |module_root|
@@ -421,7 +421,7 @@ module Simp::BeakerHelpers
                 copy_to(sut, zipfile, target_module_path, opts)
 
                 # Windows 2012 and R2 does not natively include PowerShell 5, in which
-                #  the Expand-Archive cmdlet was introduced 
+                #  the Expand-Archive cmdlet was introduced
                 if fact_on(sut, 'os.release.major').include?('2012')
                   unzip_cmd = [
                     "\"[System.Reflection.Assembly]::LoadWithPartialName(\'System.IO.Compression.FileSystem\')",
@@ -1423,7 +1423,7 @@ module Simp::BeakerHelpers
     unless result
       puppet_gems = nil
 
-      Bundler.with_clean_env do
+      Bundler.with_unbundled_env do
         puppet_gems = %x(gem search -ra -e puppet).match(/\((.+)\)/)
       end
 
@@ -1571,17 +1571,32 @@ module Simp::BeakerHelpers
       to_disable += ENV.fetch('BEAKER_SIMP_disable_repos', '').split(',').map(&:strip)
 
       unless to_disable.empty?
-        if to_disable.include?('simp')
+        if to_disable.include?('simp') || to_disable.include?('simp-community-simp')
           to_disable.delete('simp')
+
+          # legacy community RPM
           to_disable << 'simp-community-simp'
+
+          # SIMP 6.6+ community RPM
+          to_disable << 'SIMP--simp'
         end
 
         if to_disable.include?('simp_deps')
           to_disable.delete('simp_deps')
+          # legacy community RPM
           to_disable << 'simp-community-epel'
           to_disable << 'simp-community-postgres'
           to_disable << 'simp-community-puppet'
+
+          # SIMP 6.6+ community RPM
+          to_disable << 'epel--simp'
+          to_disable << 'postgresql--simp'
+          to_disable << 'puppet--simp'
+          to_disable << 'puppet7--simp'
+          to_disable << 'puppet6--simp'
         end
+
+        logger.info(%{INFO: repos to disable: '#{to_disable.join("', '")}'.})
 
         # NOTE: This --enablerepo enables the repos for listing and is inherited
         # from YUM. This does not actually "enable" the repos, that would require
@@ -1589,7 +1604,10 @@ module Simp::BeakerHelpers
         #
         # Note: Certain versions of EL8 do not dump by default and EL7 does not
         # have the '--dump' option.
-        available_repos = on(sut, %{yum-config-manager --enablerepo="*" || yum-config-manager --enablerepo="*" --dump}).stdout.lines.grep(/\A\[(.+)\]\Z/){|x| $1}
+        x = on(sut, %{yum repolist all || dnf repolist --all}).stdout.lines
+        y = x.map{|z| z.gsub(%r{/.*\Z},'')}
+        available_repos = y.grep(/\A([a-zA-Z][a-zA-Z0-9:_-]+)\s*/){|x| $1}
+        logger.info(%{INFO: available repos: '#{available_repos.join("', '")}'.})
 
         invalid_repos = (to_disable - available_repos)
 
@@ -1597,6 +1615,7 @@ module Simp::BeakerHelpers
         unless invalid_repos.empty?
           logger.warn(%{WARN: install_simp_repo - requested repos to disable do not exist on the target system '#{invalid_repos.join("', '")}'.})
         end
+
 
         (to_disable - invalid_repos).each do |repo|
           on(sut, %{yum-config-manager --disable "#{repo}"})
