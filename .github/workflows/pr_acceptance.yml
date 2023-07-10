@@ -23,6 +23,22 @@ jobs:
             puppet_version: '~> 8.0'
             ruby_version: 3.1
             experimental: true
+        beaker:
+          - label: beaker
+            suite: default
+            allowed_to_fail: false
+          - label: beaker puppet_collections
+            suite: puppet_collections
+            allowed_to_fail: false
+          - label: beaker ssg
+            suite: ssg
+            allowed_to_fail: false
+          # The inspec suite fails for unclear reasons during an scp.
+          # Sicura tests compliance at the framework level, so troubleshooting
+          # inspec acceptance tests is not a priority at present.
+          - label: beaker inspec
+            suite: inspec
+            allowed_to_fail: true
       fail-fast: false
     env:
       PUPPET_VERSION: ${{matrix.puppet.puppet_version}}
@@ -50,15 +66,7 @@ jobs:
         run: |
           gem install bundler
           bundle update
-      - name: beaker
-        continue-on-error: ${{matrix.puppet.experimental}}
-        run: |
-          bundle exec rake beaker:suites[default,docker]
-      - name: beaker puppet_collections
-        continue-on-error: ${{matrix.puppet.experimental}}
-        run: |
-          bundle exec rake beaker:suites[puppet_collections,docker]
-      - name: beaker ssg
-        continue-on-error: ${{matrix.puppet.experimental}}
-        run: |
-          bundle exec rake beaker:suites[ssg,docker]
+      - name: ${{matrix.beaker.label}}
+        continue-on-error: ${{matrix.puppet.experimental || matrix.beaker.allowed_to_fail}}
+        env:
+          BEAKER_SUITE: ${{matrix.beaker.suite}}

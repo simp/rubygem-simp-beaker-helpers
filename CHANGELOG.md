@@ -2,16 +2,18 @@
 * Added:
   * Default `puppet_collection` to `puppet7`
   * Support for new pulp-slimmed repo names in `install_simp_repos` logic
-  * Acceptance test support for Puppet 8
   * Modernize GHA PR test matrix
     * Support for experimental (Puppet 8.x/ruby 3.1)
+  * Add GHA acceptance test matrix (puppet version x suite)
+    * Support for experimental (Puppet 8.x/ruby 3.1)
+    * Allow problematic inspec suite to fail
 * Fixed:
   * Update to `beaker-rspec` 8.x depsolve with `simp-rake-helpers` 5.20.0+
   * Update `beaker` to permit 5.x
   * Update default `puppet-agent` to 7.x
   * Use less fragile yum/dnf `repolist` in `install_simp_repos` logic
 * Removed
-  * inspec acceptance test removed from GHA matrix
+  * inspec acceptance suite no longer required in GHA matrix
 
 ### 1.29.0 / 2022-10-25
 * Fixed:
