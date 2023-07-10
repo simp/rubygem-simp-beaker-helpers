@@ -70,3 +70,4 @@ jobs:
         continue-on-error: ${{matrix.puppet.experimental || matrix.beaker.allowed_to_fail}}
         env:
           BEAKER_SUITE: ${{matrix.beaker.suite}}
+        run: bundle exec rake beaker:suites[$BEAKER_SUITE,docker]
