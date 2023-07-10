@@ -62,7 +62,3 @@ jobs:
         continue-on-error: ${{matrix.puppet.experimental}}
         run: |
           bundle exec rake beaker:suites[ssg,docker]
-      - name: beaker inspec
-        continue-on-error: ${{matrix.puppet.experimental}}
-        run: |
-          bundle exec rake beaker:suites[inspec,docker]

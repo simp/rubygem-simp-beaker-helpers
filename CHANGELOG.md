@@ -10,7 +10,8 @@
   * Update `beaker` to permit 5.x
   * Update default `puppet-agent` to 7.x
   * Use less fragile yum/dnf `repolist` in `install_simp_repos` logic
-
+* Removed
+  * inspec acceptance test removed from GHA matrix
 
 ### 1.29.0 / 2022-10-25
 * Fixed:
