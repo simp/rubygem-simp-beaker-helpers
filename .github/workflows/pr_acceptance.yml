@@ -10,7 +10,7 @@ on:
 
 jobs:
   acceptance:
-    name: 'Suite: ${{matrix.beaker.suite}}, Puppet ${{matrix.puppet.puppet_version}}'
+    name: '${{matrix.beaker.suite}}, Puppet ${{matrix.puppet.puppet_version}}'
     runs-on:
       - ubuntu-latest
     strategy:
