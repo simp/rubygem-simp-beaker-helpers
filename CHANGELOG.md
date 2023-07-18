@@ -1,3 +1,7 @@
+### 1.31.0 / 2023-07-18
+* Fixed:
+  * Compatibility with Ruby 3.2
+
 ### 1.30.0 / 2023-05-15
 * Added:
   * Default `puppet_collection` to `puppet7`

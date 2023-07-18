@@ -310,7 +310,7 @@ module Simp::BeakerHelpers
       while( fixtures_yml.empty? && File.expand_path(dir) != '/' ) do
         file = File.expand_path( '.fixtures.yml', dir )
         STDERR.puts "  ** fixtures_yml_path: #{file}" if ENV['BEAKER_helpers_verbose']
-        if File.exists? file
+        if File.exist? file
           fixtures_yml = file
           break
         end
@@ -1367,7 +1367,7 @@ module Simp::BeakerHelpers
   def clear_temp_hieradata
     if @temp_hieradata_dirs && !@temp_hieradata_dirs.empty?
       @temp_hieradata_dirs.each do |data_dir|
-        if File.exists?(data_dir)
+        if File.exist?(data_dir)
           FileUtils.rm_r(data_dir)
         end
       end
