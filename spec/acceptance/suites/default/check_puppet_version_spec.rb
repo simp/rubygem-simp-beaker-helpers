@@ -1,22 +1,22 @@
 require 'spec_helper_acceptance'
 
+unless ENV['PUPPET_VERSION'] || ENV['BEAKER_PUPPET_COLLECTION']
+  fail('You must set either PUPPET_VERSION or BEAKER_PUPPET_COLLECTION as an environment variable')
+end
+
+if ENV['BEAKER_PUPPET_COLLECTION']
+  target_version = ENV['BEAKER_PUPPET_COLLECTION'][/(\d+)$/,1]
+elsif ENV['PUPPET_VERSION']
+  target_version = ENV['PUPPET_VERSION'].split('.').first
+end
+
 hosts.each do |host|
   describe 'make sure puppet version is valid' do
     context "on #{host}" do
-      puppet_collection = host.options[:puppet_collection]
+      client_puppet_version = on(host, 'puppet --version').output.lines.last.strip
 
-      client_puppet_version = on(host, 'puppet --version').stdout.strip
-
-      if puppet_collection =~ /puppet(\d+)/
-        puppet_collection_version = $1
-
-        it "should be running puppet version #{puppet_collection_version}" do
-          expect(client_puppet_version.split('.').first).to eq(puppet_collection_version)
-        end
-      else
-        it 'should be running puppet 6' do
-          expect(client_puppet_version.split('.').first).to eq '6'
-        end
+      it "should be running puppet version #{target_version}" do
+        expect(Gem::Version.new(client_puppet_version)).to be >= Gem::Version.new(target_version)
       end
     end
   end

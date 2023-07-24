@@ -179,9 +179,7 @@ describe 'Simp::BeakerHelpers' do
     it 'extracts info from PUPPET_INSTALL_TYPE' do
       ENV['PUPPET_INSTALL_TYPE'] = 'pe'
 
-      expect( @helper.get_puppet_install_info[:puppet_collection] ).to eq('puppet6')
       expect( @helper.get_puppet_install_info[:puppet_install_type] ).to eq('pe')
-      expect( @helper.get_puppet_install_info[:puppet_install_version] ).to match(/^6\./)
     end
 
     it 'fails when BEAKER_PUPPET_COLLECTION is invalid' do

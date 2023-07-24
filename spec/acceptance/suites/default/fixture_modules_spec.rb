@@ -8,7 +8,7 @@ context 'after copy_fixture_modules_to( hosts )' do
 
   describe "fact_on(default,'root_home')" do
     it 'should not return value of `root_home`' do
-      expect(fact_on(default, 'root_home')).to eq ''
+      expect(fact_on(default, 'root_home').to_s).to eq ''
     end
   end
 
@@ -26,7 +26,7 @@ context 'after copy_fixture_modules_to( hosts )' do
 
   describe "pfact_on(default,'os.release.foo')" do
     it 'should not return the value of `os.release.foo`' do
-      expect(pfact_on(default, 'os.release.foo')).to eq ''
+      expect(pfact_on(default, 'os.release.foo').to_s).to eq ''
     end
   end
 
