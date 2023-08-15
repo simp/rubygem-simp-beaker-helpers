@@ -854,6 +854,10 @@ module Simp::BeakerHelpers
           '8' => [
             'rhel-8-for-x86_64-baseos-rpms',
             'rhel-8-for-x86_64-supplementary-rpms'
+          ],
+          '9' => [
+            'rhel-9-for-x86_64-appstream-rpms',
+            'rhel-9-for-x86_64-baseos-rpms'
           ]
         }
       }
