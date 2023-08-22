@@ -800,7 +800,9 @@ module Simp::BeakerHelpers
 
           RSpec.configure do |c|
             c.after(:all) do
-              rhel_rhsm_unsubscribe(sut)
+              unless ENV['BEAKER_RHSM_UNSUBSCRIBE'] == 'false'
+                rhel_rhsm_unsubscribe(sut)
+              end
             end
           end
         end
