@@ -2,8 +2,8 @@
 HOSTS:
   el7:
     roles:
-    - default
-    - el7
+      - default
+      - el7
     platform: el-7-x86_64
     box: centos/7
     hypervisor: "<%= ENV.fetch('BEAKER_HYPERVISOR', 'vagrant') %>"
@@ -11,9 +11,9 @@ HOSTS:
     gce_machine_type: n1-standard-2
   el8:
     roles:
-    - el8
+      - el8
     platform: el-8-x86_64
-    box: centos/stream8
+    box: generic/centos8s
     hypervisor: "<%= ENV.fetch('BEAKER_HYPERVISOR', 'vagrant') %>"
     family: centos-cloud/centos-stream-8
     gce_machine_type: n1-standard-2
@@ -33,4 +33,4 @@ CONFIG:
       - <%= Net::SSH::Transport::Algorithms::ALGORITHMS[:encryption].join("\n#{' '*6}- ") %>
     hmac:
       - <%= Net::SSH::Transport::Algorithms::ALGORITHMS[:hmac].join("\n#{' '*6}- ") %>
-  puppet_collection: "<%= ENV.fetch('BEAKER_PUPPET_COLLECTION', 'puppet7') %>"
+  puppet_collection: "<%= ENV.fetch('BEAKER_PUPPET_COLLECTION', 'puppet8') %>"

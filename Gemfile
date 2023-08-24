@@ -13,7 +13,7 @@ gem 'bundler'
 gem 'rake'
 
 group :system_tests do
-  beaker_gem_options = ENV.fetch('BEAKER_GEM_OPTIONS', ['>= 4.28.1', '< 5.0.0'])
+  beaker_gem_options = ENV.fetch('BEAKER_GEM_OPTIONS', ['>= 4.28.1', '< 6.0.0'])
 
   if "#{beaker_gem_options}".include?(':')
     # Just pass in BEAKER_GEM_OPTIONS as a string that would represent the usual
@@ -44,8 +44,8 @@ group :system_tests do
   gem 'beaker-rspec'
   gem 'beaker-windows'
   gem 'net-ssh'
-  gem 'puppet', ENV.fetch('PUPPET_VERSION', '~> 7.0')
+  gem 'puppet', ENV.fetch('PUPPET_VERSION', ['>= 7.0.0', '< 9.0.0'])
   gem 'rubocop'
   gem 'rubocop-rspec'
-  gem 'puppetlabs_spec_helper', '~> 4.0'
+  gem 'puppetlabs_spec_helper', '>= 4.0.0', '< 7.0.0'
 end

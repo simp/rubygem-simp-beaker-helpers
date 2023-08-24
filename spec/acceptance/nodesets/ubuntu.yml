@@ -2,7 +2,7 @@
 HOSTS:
   focal:
     roles:
-    - default
+      - default
     platform: ubuntu-20.04-x86_64
     box: ubuntu/focal64
     hypervisor: "<%= ENV.fetch('BEAKER_HYPERVISOR', 'vagrant') %>"
@@ -11,4 +11,4 @@ HOSTS:
 CONFIG:
   log_level: verbose
   type: aio
-  puppet_collection: "<%= ENV.fetch('BEAKER_PUPPET_COLLECTION', 'puppet7') %>"
+  puppet_collection: "<%= ENV.fetch('BEAKER_PUPPET_COLLECTION', 'puppet8') %>"
