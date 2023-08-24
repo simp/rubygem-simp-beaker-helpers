@@ -1,3 +1,9 @@
+### 1.32.0 / 2023-08-24
+* Added:
+  * Switch to Puppet 8 by default
+* Fixed:
+  * Update gem dependencies
+
 ### 1.31.0 / 2023-07-18
 * Fixed:
   * Compatibility with Ruby 3.2

@@ -1,10 +1,4 @@
-<%
-  if ENV['BEAKER_HYPERVISOR']
-    hypervisor = ENV['BEAKER_HYPERVISOR']
-  else
-    hypervisor = 'vagrant'
-  end
--%>
+---
 HOSTS:
   oel7:
     roles:
@@ -12,22 +6,20 @@ HOSTS:
       - el7
     platform: el-7-x86_64
     box: generic/oracle7
-    hypervisor: <%= hypervisor %>
+    hypervisor: "<%= ENV.fetch('BEAKER_HYPERVISOR', 'vagrant') %>"
 
   oel8:
     roles:
       - el8
     platform: el-8-x86_64
     box: generic/oracle8
-    hypervisor: <%= hypervisor %>
+    hypervisor: "<%= ENV.fetch('BEAKER_HYPERVISOR', 'vagrant') %>"
 
 CONFIG:
   log_level: verbose
   type: aio
   vagrant_cpus: 2
-<% if ENV['BEAKER_PUPPET_COLLECTION'] -%>
-  puppet_collection: <%= ENV['BEAKER_PUPPET_COLLECTION'] %>
-<% end -%>
+  puppet_collection: "<%= ENV.fetch('BEAKER_PUPPET_COLLECTION', 'puppet8') %>"
   ssh:
     keepalive: true
     keepalive_interval: 10
