@@ -1,3 +1,7 @@
+### 1.33.0 / 2023-08-28
+* Fixed:
+  * Version bump to resolve mis-tagging
+
 ### 1.32.0 / 2023-08-24
 * Added:
   * Switch to Puppet 8 by default
