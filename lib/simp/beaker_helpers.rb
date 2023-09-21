@@ -676,7 +676,6 @@ module Simp::BeakerHelpers
 
           if os_info['name'] == 'RedHat' && ENV['BEAKER_RHSM_USER'] && ENV['BEAKER_RHSM_PASS']
             if os_maj_rel == '7'
-              on sut, %{subscription-manager repos --enable "rhel-*-optional-rpms"}
               on sut, %{subscription-manager repos --enable "rhel-*-extras-rpms"}
               on sut, %{subscription-manager repos --enable "rhel-ha-for-rhel-*-server-rpms"}
             end
