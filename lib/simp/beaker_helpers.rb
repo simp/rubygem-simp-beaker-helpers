@@ -848,7 +848,6 @@ module Simp::BeakerHelpers
         :repo_list => {
           '7' => [
             'rhel-7-server-extras-rpms',
-            'rhel-7-server-optional-rpms',
             'rhel-7-server-rh-common-rpms',
             'rhel-7-server-rpms',
             'rhel-7-server-supplementary-rpms'
