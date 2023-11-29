@@ -47,6 +47,7 @@ Methods to assist beaker acceptance tests for SIMP.
     * [BEAKER_RHSM_USER](#beaker_rhsm_user)
     * [BEAKER_RHSM_PASS](#beaker_rhsm_pass)
     * [BEAKER_inspec_version](#beaker_inspec_version)
+    * [BEAKER_RHSM_UNSUBSCRIBE](#beaker_rhsm_unsubscribe)
 * [Examples](#examples)
   * [Prep OS, Generate and copy PKI certs to each SUT](#prep-os-generate-and-copy-pki-certs-to-each-sut)
   * [Specify the version of Puppet to run in the SUTs](#specify-the-version-of-puppet-to-run-in-the-suts)
@@ -465,6 +466,12 @@ The version of InSpec to use when running inspec tests. Currently hard-coded to
 `4.16.14` due to a bug introduced in `4.16.15`.
 
 Set to 'latest' to use the latest available in the upstream repos.
+
+#### BEAKER_RHSM_UNSUBSCRIBE
+
+By default the system is unsubscribed from RHSM.
+
+Set to 'False' to disable this behavior.
 
 ## Examples
 

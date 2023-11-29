@@ -676,7 +676,6 @@ module Simp::BeakerHelpers
 
           if os_info['name'] == 'RedHat' && ENV['BEAKER_RHSM_USER'] && ENV['BEAKER_RHSM_PASS']
             if os_maj_rel == '7'
-              on sut, %{subscription-manager repos --enable "rhel-*-optional-rpms"}
               on sut, %{subscription-manager repos --enable "rhel-*-extras-rpms"}
               on sut, %{subscription-manager repos --enable "rhel-ha-for-rhel-*-server-rpms"}
             end
@@ -800,7 +799,9 @@ module Simp::BeakerHelpers
 
           RSpec.configure do |c|
             c.after(:all) do
-              rhel_rhsm_unsubscribe(sut)
+              unless ENV['BEAKER_RHSM_UNSUBSCRIBE'] == 'false'
+                rhel_rhsm_unsubscribe(sut)
+              end
             end
           end
         end
@@ -846,7 +847,6 @@ module Simp::BeakerHelpers
         :repo_list => {
           '7' => [
             'rhel-7-server-extras-rpms',
-            'rhel-7-server-optional-rpms',
             'rhel-7-server-rh-common-rpms',
             'rhel-7-server-rpms',
             'rhel-7-server-supplementary-rpms'
@@ -854,6 +854,10 @@ module Simp::BeakerHelpers
           '8' => [
             'rhel-8-for-x86_64-baseos-rpms',
             'rhel-8-for-x86_64-supplementary-rpms'
+          ],
+          '9' => [
+            'rhel-9-for-x86_64-appstream-rpms',
+            'rhel-9-for-x86_64-baseos-rpms'
           ]
         }
       }
