@@ -161,10 +161,10 @@ jobs:
           IS_PRERELEASE: ${{ steps.tag-check.outputs.prerelease }}
         run: |
           echo "${RELEASE_MESSAGE}" > /tmp/.commit-msg.txt
-          args=(--file /tmp/.commit-msg.txt)
+          args=(-F /tmp/.commit-msg.txt)
           [[ $IS_PRERELEASE == yes ]] && args+=(--prerelease)
 
-          hub release create ${args[@]} "$TARGET_TAG"
+          gh release create ${args[@]} "$TARGET_TAG"
 
   deploy-rubygem:
     name: Deploy RubyGem Release
