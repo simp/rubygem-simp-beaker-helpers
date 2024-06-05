@@ -1,3 +1,7 @@
+### 1.33.0 / 2024-06-05
+* Fixed:
+  * Update gem dependencies
+
 ### 1.32.1 / 2023-08-28
 * Fixed:
   * Version bump to resolve mis-tagging
