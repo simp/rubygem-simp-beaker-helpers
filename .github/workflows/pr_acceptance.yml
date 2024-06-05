@@ -63,10 +63,6 @@ jobs:
           sudo apt-get update
           sudo apt autoremove -y
           sudo systemctl start docker
-      - name: install bundler
-        run: |
-          gem install bundler
-          bundle update
       - name: 'run beaker:suite "${{matrix.beaker.label}}"'
         continue-on-error: ${{matrix.puppet.experimental || matrix.beaker.allowed_to_fail}}
         env:
