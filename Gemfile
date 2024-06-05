@@ -8,7 +8,6 @@ gem_sources.each { |gem_source| source gem_source }
 gemspec
 
 # mandatory gems
-gem 'bundler'
 gem 'rake'
 
 group :system_tests do
