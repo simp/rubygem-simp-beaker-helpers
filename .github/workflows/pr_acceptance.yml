@@ -22,7 +22,7 @@ jobs:
             experimental: false
           - label: 'Puppet 8.x'
             puppet_version: '~> 8.0'
-            ruby_version: 3.1
+            ruby_version: '3.2'
             experimental: true
         beaker:
           - label: beaker
@@ -63,10 +63,10 @@ jobs:
           sudo apt-get update
           sudo apt autoremove -y
           sudo systemctl start docker
-      - name: install bundler
+      - name: install bundle
         run: |
-          gem install bundler
-          bundle update
+          bundle config path vendor
+          bundle install -j $(nproc)
       - name: 'run beaker:suite "${{matrix.beaker.label}}"'
         continue-on-error: ${{matrix.puppet.experimental || matrix.beaker.allowed_to_fail}}
         env:

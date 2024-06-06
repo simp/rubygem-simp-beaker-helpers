@@ -259,7 +259,8 @@ module Simp::BeakerHelpers
     end
 
     # Ensure that Hashes return as Hash objects
-    found_fact.is_a?(OpenStruct) ? found_fact.marshal_dump : found_fact
+    # OpenStruct objects have a marshal_dump method
+    found_fact.respond_to?(:marshal_dump) ? found_fact.marshal_dump : found_fact
   end
 
   # Returns the modulepath on the SUT, as an Array
