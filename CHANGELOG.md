@@ -1,3 +1,7 @@
+### 1.34.0 / 2024-09-17
+* Fixed:
+  * Legacy fact usage
+
 ### 1.33.0 / 2024-06-05
 * Fixed:
   * Update gem dependencies

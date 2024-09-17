@@ -46,8 +46,8 @@ module Simp::BeakerHelpers
         @sut.install_package("inspec-#{@inspec_version}")
       end
 
-      os = fact_on(@sut, 'operatingsystem')
-      os_rel = fact_on(@sut, 'operatingsystemmajrelease')
+      os = fact_on(@sut, 'os.name')
+      os_rel = fact_on(@sut, 'os.release.major')
 
       @profile = "#{os}-#{os_rel}-#{profile}"
       @profile_dir = '/tmp/inspec/inspec_profiles'
