@@ -1,6 +1,8 @@
 ### 1.34.0 / 2024-09-17
 * Fixed:
   * Legacy fact usage
+* Added:
+  * EL9 support in Simp::BeakerHelpers::SSG
 
 ### 1.33.0 / 2024-06-05
 * Fixed:
