@@ -1,18 +1,18 @@
 ---
 HOSTS:
-  oel7:
-    roles:
-      - default
-      - el7
-    platform: el-7-x86_64
-    box: generic/oracle7
-    hypervisor: "<%= ENV.fetch('BEAKER_HYPERVISOR', 'vagrant') %>"
-
   oel8:
     roles:
       - el8
     platform: el-8-x86_64
     box: generic/oracle8
+    hypervisor: "<%= ENV.fetch('BEAKER_HYPERVISOR', 'vagrant') %>"
+
+  oel9:
+    roles:
+      - default
+      - el9
+    platform: el-9-x86_64
+    box: generic/oracle9
     hypervisor: "<%= ENV.fetch('BEAKER_HYPERVISOR', 'vagrant') %>"
 
 CONFIG:
