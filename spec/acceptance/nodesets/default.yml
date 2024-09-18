@@ -1,19 +1,10 @@
 ---
 HOSTS:
-  el7:
+  el9:
     roles:
-      - default
-      - el7
-    platform: el-7-x86_64
-    box: centos/7
-    hypervisor: "<%= ENV.fetch('BEAKER_HYPERVISOR', 'vagrant') %>"
-    family: centos-cloud/centos-7
-    gce_machine_type: n1-standard-2
-  el8:
-    roles:
-      - el8
-    platform: el-8-x86_64
-    box: generic/centos8s
+      - el9
+    platform: el-9-x86_64
+    box: generic/centos9s
     hypervisor: "<%= ENV.fetch('BEAKER_HYPERVISOR', 'vagrant') %>"
     family: centos-cloud/centos-stream-8
     gce_machine_type: n1-standard-2

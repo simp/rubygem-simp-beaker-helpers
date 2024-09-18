@@ -1,20 +1,12 @@
 ---
 HOSTS:
-  el7.test.net:
+  el9.test.net:
     roles:
       - default
-      - el7
-    platform: el-7-x86_64
+      - el9
+    platform: el-9-x86_64
     hypervisor: docker
-    image: simpproject/simp_beaker_el7
-    docker_cmd: "/usr/sbin/sshd -D -E /var/log/sshd.log"
-
-  el8.test.net:
-    roles:
-      - el8
-    platform: el-8-x86_64
-    hypervisor: docker
-    image: simpproject/simp_beaker_el8
+    image: quay.io/centos/centos:stream9
     docker_cmd: "/usr/sbin/sshd -D -E /var/log/sshd.log"
 
 CONFIG:

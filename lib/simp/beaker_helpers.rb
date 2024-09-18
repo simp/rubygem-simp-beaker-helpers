@@ -723,8 +723,8 @@ module Simp::BeakerHelpers
       os_info = fact_on(sut, 'os')
 
       # Make sure we have a domain on our host
-      current_domain = fact_on(sut, 'domain').strip
-      hostname = fact_on(sut, 'hostname').strip
+      current_domain = fact_on(sut, 'networking.domain').strip
+      hostname = fact_on(sut, 'networking.hostname').strip
 
       if current_domain.empty?
         new_fqdn = hostname + '.beaker.test'
@@ -744,7 +744,7 @@ module Simp::BeakerHelpers
         end
       end
 
-      if fact_on(sut, 'domain').strip.empty?
+      if fact_on(sut, 'networking.domain').strip.empty?
         fail("Error: hosts must have an FQDN, got domain='#{current_domain}'")
       end
 
@@ -1004,7 +1004,7 @@ module Simp::BeakerHelpers
     suts_network_info = {}
 
     hosts.each do |host|
-      fqdn = fact_on(host, 'fqdn').strip
+      fqdn = fact_on(host, 'networking.fqdn').strip
 
       host_entry = { fqdn => [] }
 
@@ -1090,7 +1090,7 @@ module Simp::BeakerHelpers
   #                 public/fdqn.pub
   #                 private/fdqn.pem
   def copy_pki_to(sut, local_pki_dir, sut_base_dir = '/etc/pki/simp-testing')
-      fqdn                = fact_on(sut, 'fqdn')
+      fqdn                = fact_on(sut, 'networking.fqdn')
       sut_pki_dir         = File.join( sut_base_dir, 'pki' )
       local_host_pki_tree = File.join(local_pki_dir,'pki','keydist',fqdn)
       local_cacert = File.join(local_pki_dir,'pki','demoCA','cacert.pem')

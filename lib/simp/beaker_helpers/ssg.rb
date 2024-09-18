@@ -28,7 +28,7 @@ module Simp::BeakerHelpers
       'openscap-utils',
       'python-jinja2',
       'python-lxml',
-      'python-setuptools'
+      'python-setuptools',
     ]
 
     EL8_PACKAGES = [
@@ -43,7 +43,22 @@ module Simp::BeakerHelpers
       'python3-lxml',
       'python3-pyyaml',
       'python3-setuptools',
-      'libarchive'
+      'libarchive',
+    ]
+
+    EL9_PACKAGES = [
+      'cmake',
+      'git',
+      'make',
+      'openscap-python3',
+      'openscap-utils',
+      'openscap-scanner',
+      'python3',
+      'python3-jinja2',
+      'python3-lxml',
+      'python3-pyyaml',
+      'python3-setuptools',
+      'libarchive',
     ]
 
     OS_INFO = {
@@ -71,6 +86,14 @@ module Simp::BeakerHelpers
             'build_target'   => 'rhel8',
             'datastream'     => 'ssg-rhel8-ds.xml'
           }
+        },
+        '9' => {
+          'required_packages' => EL9_PACKAGES,
+          'ssg' => {
+            'profile_target' => 'rhel9',
+            'build_target'   => 'rhel9',
+            'datastream'     => 'ssg-rhel9-ds.xml'
+          }
         }
       },
       'CentOS' => {
@@ -97,6 +120,14 @@ module Simp::BeakerHelpers
             'build_target'   => 'centos8',
             'datastream'     => 'ssg-centos8-ds.xml'
           }
+        },
+        '9' => {
+          'required_packages' => EL9_PACKAGES,
+          'ssg' => {
+            'profile_target' => 'cs9',
+            'build_target'   => 'cs9',
+            'datastream'     => 'ssg-cs9-ds.xml'
+          }
         }
       },
       'Rocky' => {
@@ -106,6 +137,14 @@ module Simp::BeakerHelpers
             'profile_target' => 'centos8',
             'build_target'   => 'centos8',
             'datastream'     => 'ssg-centos8-ds.xml'
+          }
+        },
+        '9' => {
+          'required_packages' => EL9_PACKAGES,
+          'ssg' => {
+            'profile_target' => 'cs9',
+            'build_target'   => 'cs9',
+            'datastream'     => 'ssg-cs9-ds.xml'
           }
         }
       },
@@ -124,6 +163,14 @@ module Simp::BeakerHelpers
             'profile_target' => 'ol8',
             'build_target'   => 'ol8',
             'datastream'     => 'ssg-ol8-ds.xml'
+          }
+        },
+        '9' => {
+          'required_packages' => EL9_PACKAGES,
+          'ssg' => {
+            'profile_target' => 'ol9',
+            'build_target'   => 'ol9',
+            'datastream'     => 'ssg-ol9-ds.xml'
           }
         }
       }
