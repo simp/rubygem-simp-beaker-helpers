@@ -12,7 +12,15 @@ hosts.each do |host|
     end
 
     context 'default settings' do
-      before(:all) { install_simp_repos(host) }
+      before(:all) do
+        install_simp_repos(host)
+      rescue => e
+        if expect_failures
+          warn e.message
+        else
+          raise e
+        end
+      end
 
       it 'enables the correct repos' do
         skip "#{host} is not supported yet" if expect_failures
@@ -34,7 +42,15 @@ hosts.each do |host|
     end
 
     context 'when passed a disabled list ' do
-      before(:all) { install_simp_repos(host, ['simp-community-simp'] ) }
+      before(:all) do
+        install_simp_repos(host, ['simp-community-simp'] )
+      rescue => e
+        if expect_failures
+          warn e.message
+        else
+          raise e
+        end
+      end
 
       it 'enables the correct repos' do
         skip "#{host} is not supported yet" if expect_failures
