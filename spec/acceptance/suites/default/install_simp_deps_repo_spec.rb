@@ -2,7 +2,7 @@ require 'spec_helper_acceptance'
 
 hosts.each do |host|
   expect_failures = false
-  if hosts_with_role(hosts, 'el8').include?(host)
+  if hosts_with_role(hosts, 'el9').include?(host)
     expect_failures = true
   end
 
