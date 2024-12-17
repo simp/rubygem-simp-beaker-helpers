@@ -723,10 +723,10 @@ module Simp::BeakerHelpers
       os_info = fact_on(sut, 'os')
 
       # Make sure we have a domain on our host
-      current_domain = fact_on(sut, 'networking.domain').strip
+      current_domain = fact_on(sut, 'networking.domain')&.strip
       hostname = fact_on(sut, 'networking.hostname').strip
 
-      if current_domain.empty?
+      if current_domain.nil? || current_domain.empty?
         new_fqdn = hostname + '.beaker.test'
 
         safe_sed(sut, 's/#{hostname}.*/#{new_fqdn} #{hostname}/', '/etc/hosts')
@@ -744,9 +744,8 @@ module Simp::BeakerHelpers
         end
       end
 
-      if fact_on(sut, 'networking.domain').strip.empty?
-        fail("Error: hosts must have an FQDN, got domain='#{current_domain}'")
-      end
+      current_domain = fact_on(sut, 'networking.domain')&.strip
+      fail("Error: hosts must have an FQDN, got domain='#{current_domain}'") if current_domain.nil? || current_domain.empty?
 
       # This may not exist in docker so just skip the whole thing
       if sut.file_exist?('/etc/ssh')
