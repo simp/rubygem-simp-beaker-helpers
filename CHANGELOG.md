@@ -1,3 +1,7 @@
+### 1.34.1 / 2024-12-17
+* Fixed:
+  * Error when no domain is set (#222)
+
 ### 1.34.0 / 2024-09-17
 * Fixed:
   * Legacy fact usage
