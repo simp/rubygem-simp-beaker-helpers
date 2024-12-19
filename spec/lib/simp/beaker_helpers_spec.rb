@@ -28,41 +28,41 @@ describe 'Simp::BeakerHelpers' do
     @helper = MyTestClass.new
   end
 
-  let(:gem_search_results) {
+  let(:gem_search_results) do
     # subset of results, but still exercises code
     "puppet (5.5.1 ruby universal-darwin x64-mingw32 x86-mingw32, 5.5.0 ruby universal-darwin x64-mingw32 x86-mingw32, 5.4.0 ruby universal-darwin x64-mingw32 x86-mingw32, 5.3.6 ruby universal-darwin x64-mingw32 x86-mingw32, 5.3.5 ruby universal-darwin x64-mingw32 x86-mingw32, 5.3.4 ruby universal-darwin x64-mingw32 x86-mingw32, 5.3.3 ruby universal-darwin x64-mingw32 x86-mingw32, 5.3.2 ruby universal-darwin x64-mingw32 x86-mingw32, 5.3.1 ruby universal-darwin x64-mingw32 x86-mingw32, 5.2.0 ruby universal-darwin x64-mingw32 x86-mingw32, 5.1.0 ruby universal-darwin x64-mingw32 x86-mingw32, 5.0.1 ruby universal-darwin x64-mingw32 x86-mingw32, 5.0.0 ruby universal-darwin x64-mingw32 x86-mingw32, 4.10.11 ruby universal-darwin x64-mingw32 x86-mingw32, 4.10.10 ruby universal-darwin x64-mingw32 x86-mingw32, 4.10.9 ruby universal-darwin x64-mingw32 x86-mingw32, 4.10.8 ruby universal-darwin x64-mingw32 x86-mingw32, 4.10.7 ruby universal-darwin x64-mingw32 x86-mingw32, 4.10.6 ruby universal-darwin x64-mingw32 x86-mingw32, 4.10.5 ruby universal-darwin x64-mingw32 x86-mingw32, 4.10.4 ruby universal-darwin x64-mingw32 x86-mingw32, 4.10.1 ruby universal-darwin x64-mingw32 x86-mingw32, 4.10.0 ruby universal-darwin x64-mingw32 x86-mingw32, 4.9.4 ruby universal-darwin x64-mingw32 x86-mingw32, 4.9.3 ruby universal-darwin x64-mingw32 x86-mingw32, 4.9.2 ruby universal-darwin x64-mingw32 x86-mingw32, 4.9.1 ruby universal-darwin x64-mingw32 x86-mingw32, 4.9.0 ruby universal-darwin x64-mingw32 x86-mingw32, 4.8.2 ruby universal-darwin x64-mingw32 x86-mingw32, 4.8.1 ruby universal-darwin x64-mingw32 x86-mingw32, 4.8.0 ruby universal-darwin x64-mingw32 x86-mingw32)\n"
-  }
+  end
 
   context '#latest_puppet_agent_version_for' do
     context 'using table' do
       it 'maps exact Puppet version' do
-        expect( @helper.latest_puppet_agent_version_for('4.10.4') ).to eq '1.10.4'
+        expect(@helper.latest_puppet_agent_version_for('4.10.4')).to eq '1.10.4'
       end
 
       # remaining tests are only for a sampling of version specifictions with
       # operators,  because we are really only testing that the version specification
       # is proper;ly handed off to Gem::Requirement(), not that Gem::Requirement works.
       it "maps to appropriate Puppet version when '=' operator specified in version" do
-        expect( @helper.latest_puppet_agent_version_for('= 4.8') ).to eq '1.8.0'
+        expect(@helper.latest_puppet_agent_version_for('= 4.8')).to eq '1.8.0'
       end
 
       it "maps to appropriate Puppet version when '~>' operator specified in version" do
-        expect( @helper.latest_puppet_agent_version_for('~> 4.8.0') ).to eq '1.8.3'
+        expect(@helper.latest_puppet_agent_version_for('~> 4.8.0')).to eq '1.8.3'
       end
 
       it "maps to appropriate Puppet version when '<' operator specified in version" do
-        expect( @helper.latest_puppet_agent_version_for('< 4.9') ).to match /1.8.3/
+        expect(@helper.latest_puppet_agent_version_for('< 4.9')).to match(%r{1.8.3})
       end
 
-      it "maps to appropriate Puppet version when comma-separated operators specified in version" do
-        expect( @helper.latest_puppet_agent_version_for('>= 4.7, < 4.9') ).to match /1.8.3/
+      it 'maps to appropriate Puppet version when comma-separated operators specified in version' do
+        expect(@helper.latest_puppet_agent_version_for('>= 4.7, < 4.9')).to match(%r{1.8.3})
       end
     end
 
     context 'using gem lookup' do
       it 'maps exact Puppet version' do
         allow(@helper).to receive(:`).with('gem search -ra -e puppet').and_return(gem_search_results)
-        expect( @helper.latest_puppet_agent_version_for('5.3.1') ).to eq '5.3.1'
+        expect(@helper.latest_puppet_agent_version_for('5.3.1')).to eq '5.3.1'
       end
 
       # remaining tests are only for a sampling of version specifictions with
@@ -70,12 +70,12 @@ describe 'Simp::BeakerHelpers' do
       # is proper;ly handed off to Gem::Requirement(), not that Gem::Requirement works.
       it "maps to appropriate Puppet version when '=' operator specified in version" do
         allow(@helper).to receive(:`).with('gem search -ra -e puppet').and_return(gem_search_results)
-        expect( @helper.latest_puppet_agent_version_for('= 5.5') ).to eq '5.5.0'
+        expect(@helper.latest_puppet_agent_version_for('= 5.5')).to eq '5.5.0'
       end
 
       it "maps to appropriate Puppet version when '~>' operator specified in version" do
         allow(@helper).to receive(:`).with('gem search -ra -e puppet').and_return(gem_search_results)
-        expect( @helper.latest_puppet_agent_version_for('~> 5.3.0') ).to eq '5.3.6'
+        expect(@helper.latest_puppet_agent_version_for('~> 5.3.0')).to eq '5.3.6'
       end
 
       # this logic won't work properly without code changes that just aren't worth it because
@@ -86,15 +86,15 @@ describe 'Simp::BeakerHelpers' do
       #   expect( @helper.latest_puppet_agent_version_for('< 5.5') ).to match /5.4.0/
       # end
 
-      it "maps to appropriate Puppet version when comma-separated operators specified in version" do
+      it 'maps to appropriate Puppet version when comma-separated operators specified in version' do
         allow(@helper).to receive(:`).with('gem search -ra -e puppet').and_return(gem_search_results)
-        expect( @helper.latest_puppet_agent_version_for('>= 5, < 5.5') ).to match /5.4.0/
+        expect(@helper.latest_puppet_agent_version_for('>= 5, < 5.5')).to match(%r{5.4.0})
       end
     end
   end
 
   context '#get_puppet_install_info' do
-    after (:each) do
+    after(:each) do
       ENV['BEAKER_PUPPET_AGENT_VERSION'] = nil
       ENV['PUPPET_INSTALL_VERSION'] = nil
       ENV['PUPPET_VERSION'] = nil
@@ -103,9 +103,8 @@ describe 'Simp::BeakerHelpers' do
     end
 
     it 'uses defaults when no environment variables are set' do
-
       # Prevent namespace pollution
-      pipe_out,pipe_in = IO.pipe
+      pipe_out, pipe_in = IO.pipe
       fork do
         pipe_out.close
         require 'puppet'
@@ -115,81 +114,81 @@ describe 'Simp::BeakerHelpers' do
 
       expected_major_version = pipe_out.gets.split('.').first
 
-      expect( @helper.get_puppet_install_info[:puppet_collection] ).to eq("puppet#{expected_major_version}")
-      expect( @helper.get_puppet_install_info[:puppet_install_type] ).to eq('agent')
+      expect(@helper.get_puppet_install_info[:puppet_collection]).to eq("puppet#{expected_major_version}")
+      expect(@helper.get_puppet_install_info[:puppet_install_type]).to eq('agent')
     end
 
     it 'extracts info from PUPPET_INSTALL_VERSION for Puppet 5' do
       allow(@helper).to receive(:`).with('gem search -ra -e puppet').and_return(gem_search_results)
-      ENV['PUPPET_INSTALL_VERSION']= '5.5.0'
+      ENV['PUPPET_INSTALL_VERSION'] = '5.5.0'
       expected = {
-        :puppet_install_version   => '5.5.0',
-        :puppet_collection        => 'puppet5',
-        :puppet_install_type      => 'agent'
+        puppet_install_version: '5.5.0',
+        puppet_collection: 'puppet5',
+        puppet_install_type: 'agent'
       }
-      expect( @helper.get_puppet_install_info ).to eq expected
+      expect(@helper.get_puppet_install_info).to eq expected
     end
 
     it 'extracts info from PUPPET_INSTALL_VERSION even when BEAKER_PUPPET_COLLECTION is set' do
       allow(@helper).to receive(:`).with('gem search -ra -e puppet').and_return(gem_search_results)
-      ENV['PUPPET_INSTALL_VERSION']= '5.5.0'
-      ENV['BEAKER_PUPPET_COLLECTION']= 'puppet6'
+      ENV['PUPPET_INSTALL_VERSION'] = '5.5.0'
+      ENV['BEAKER_PUPPET_COLLECTION'] = 'puppet6'
       expected = {
-        :puppet_install_version   => '5.5.0',
-        :puppet_collection        => 'puppet5',
-        :puppet_install_type      => 'agent'
+        puppet_install_version: '5.5.0',
+        puppet_collection: 'puppet5',
+        puppet_install_type: 'agent'
       }
-      expect( @helper.get_puppet_install_info ).to eq expected
+      expect(@helper.get_puppet_install_info).to eq expected
     end
 
     it 'extracts info from PUPPET_INSTALL_VERSION even when host puppet_collection option is set' do
       allow(@helper).to receive(:`).with('gem search -ra -e puppet').and_return(gem_search_results)
-      ENV['PUPPET_INSTALL_VERSION']= '5.5.0'
-      @helper.host.options = {'puppet_collection' => 'puppet6'}
+      ENV['PUPPET_INSTALL_VERSION'] = '5.5.0'
+      @helper.host.options = { 'puppet_collection' => 'puppet6' }
       expected = {
-        :puppet_install_version   => '5.5.0',
-        :puppet_collection        => 'puppet5',
-        :puppet_install_type      => 'agent'
+        puppet_install_version: '5.5.0',
+        puppet_collection: 'puppet5',
+        puppet_install_type: 'agent'
       }
-      expect( @helper.get_puppet_install_info ).to eq expected
+      expect(@helper.get_puppet_install_info).to eq expected
     end
 
     it 'extracts info from BEAKER_PUPPET_COLLECTION' do
       allow(@helper).to receive(:`).with('gem search -ra -e puppet').and_return(gem_search_results)
-      ENV['BEAKER_PUPPET_COLLECTION']= 'puppet5'
+      ENV['BEAKER_PUPPET_COLLECTION'] = 'puppet5'
       expected = {
-        :puppet_install_version   => '5.5.1',
-        :puppet_collection        => 'puppet5',
-        :puppet_install_type      => 'agent'
+        puppet_install_version: '5.5.1',
+        puppet_collection: 'puppet5',
+        puppet_install_type: 'agent'
       }
-      expect( @helper.get_puppet_install_info ).to eq expected
+      expect(@helper.get_puppet_install_info).to eq expected
     end
 
     it 'extracts info from BEAKER_PUPPET_COLLECTION' do
       allow(@helper).to receive(:`).with('gem search -ra -e puppet').and_return(gem_search_results)
-      @helper.host.options = {'puppet_collection' => 'puppet5'}
+      @helper.host.options = { 'puppet_collection' => 'puppet5' }
       expected = {
-        :puppet_install_version   => '5.5.1',
-        :puppet_collection        => 'puppet5',
-        :puppet_install_type      => 'agent'
+        puppet_install_version: '5.5.1',
+        puppet_collection: 'puppet5',
+        puppet_install_type: 'agent'
       }
-      expect( @helper.get_puppet_install_info ).to eq expected
+      expect(@helper.get_puppet_install_info).to eq expected
     end
 
     it 'extracts info from PUPPET_INSTALL_TYPE' do
       ENV['PUPPET_INSTALL_TYPE'] = 'pe'
 
-      expect( @helper.get_puppet_install_info[:puppet_install_type] ).to eq('pe')
+      expect(@helper.get_puppet_install_info[:puppet_install_type]).to eq('pe')
     end
 
     it 'fails when BEAKER_PUPPET_COLLECTION is invalid' do
       ENV['BEAKER_PUPPET_COLLECTION'] = 'PUPPET5'
-      expect{ @helper.get_puppet_install_info }.to raise_error(/Error: Puppet Collection 'PUPPET5' must match/)
+      expect { @helper.get_puppet_install_info }.to raise_error(%r{Error: Puppet Collection 'PUPPET5' must match})
     end
 
     it 'fails when host options puppet_collection is invalid' do
-      @helper.host.options = {'puppet_collection' => 'PUPPET5'}
-      expect{ @helper.get_puppet_install_info }.to raise_error(/Error: Puppet Collection 'PUPPET5' must match/)
+      @helper.host.options = { 'puppet_collection' => 'PUPPET5' }
+      expect { @helper.get_puppet_install_info }.to raise_error(%r{Error: Puppet Collection 'PUPPET5' must match})
     end
   end
 end
