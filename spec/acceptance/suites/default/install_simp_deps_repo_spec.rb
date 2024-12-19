@@ -7,7 +7,7 @@ hosts.each do |host|
   end
 
   describe '#install_simp_repos' do
-    it 'should install yum utils' do
+    it 'installs yum utils' do
       host.install_package('yum-utils')
     end
 
@@ -15,11 +15,8 @@ hosts.each do |host|
       before(:all) do
         install_simp_repos(host)
       rescue => e
-        if expect_failures
-          warn e.message
-        else
-          raise e
-        end
+        raise e unless expect_failures
+        warn e.message
       end
 
       it 'enables the correct repos' do
@@ -43,13 +40,10 @@ hosts.each do |host|
 
     context 'when passed a disabled list ' do
       before(:all) do
-        install_simp_repos(host, ['simp-community-simp'] )
+        install_simp_repos(host, ['simp-community-simp'])
       rescue => e
-        if expect_failures
-          warn e.message
-        else
-          raise e
-        end
+        raise e unless expect_failures
+        warn e.message
       end
 
       it 'enables the correct repos' do
@@ -58,7 +52,7 @@ hosts.each do |host|
       end
 
       it 'disables the correct repos' do
-        on(host, 'yum -y list simp', :acceptable_exit_codes => [1])
+        on(host, 'yum -y list simp', acceptable_exit_codes: [1])
       end
     end
   end

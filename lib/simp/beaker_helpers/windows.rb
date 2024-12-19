@@ -5,7 +5,7 @@ module Simp::BeakerHelpers::Windows
   begin
     require 'beaker-windows'
   rescue LoadError
-    logger.error(%{You must include 'beaker-windows' in your Gemfile for windows support})
+    logger.error(%(You must include 'beaker-windows' in your Gemfile for windows support))
     exit 1
   end
 

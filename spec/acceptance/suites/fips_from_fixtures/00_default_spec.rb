@@ -25,7 +25,7 @@ new_fixtures['fixtures']['repositories']['augeasproviders_grub'] = 'https://gith
 new_fixtures['fixtures']['repositories']['simplib'] = 'https://github.com/simp/pupmod-simp-simplib'
 new_fixtures['fixtures']['repositories']['stdlib'] = 'https://github.com/simp/puppetlabs-stdlib'
 
-File.open(alt_fixtures, 'w'){ |fh| fh.puts(new_fixtures.to_yaml) }
+File.open(alt_fixtures, 'w') { |fh| fh.puts(new_fixtures.to_yaml) }
 
 ScrubFixtures.new
 
@@ -34,12 +34,12 @@ ENV['FIXTURES_YML'] = alt_fixtures
 
 beaker_gem_options = ENV['BEAKER_GEM_OPTIONS']
 
-Bundler.with_clean_env{
+Bundler.with_clean_env do
   ENV['BEAKER_GEM_OPTIONS'] = beaker_gem_options
   ENV['FIXTURES_YML'] = alt_fixtures
 
-  %x{bundle exec rake spec_prep}
-}
+  `bundle exec rake spec_prep`
+end
 
 require 'spec_helper_acceptance'
 

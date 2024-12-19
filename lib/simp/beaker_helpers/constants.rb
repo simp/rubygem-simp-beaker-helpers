@@ -5,13 +5,13 @@ module Simp::BeakerHelpers
   #
   # This is done so that we know if some new thing that we're using breaks the
   # oldest system that we support
-  DEFAULT_PUPPET_AGENT_VERSION = '~> 8.0'
+  DEFAULT_PUPPET_AGENT_VERSION = '~> 8.0'.freeze
 
   SSG_REPO_URL = ENV['BEAKER_ssg_repo'] || 'https://github.com/ComplianceAsCode/content.git'
 
-  if ['true','yes'].include?(ENV['BEAKER_online'])
+  if ['true', 'yes'].include?(ENV['BEAKER_online'])
     ONLINE = true
-  elsif ['false','no'].include?(ENV['BEAKER_online'])
+  elsif ['false', 'no'].include?(ENV['BEAKER_online'])
     ONLINE = false
   else
     require 'open-uri'
@@ -19,8 +19,8 @@ module Simp::BeakerHelpers
     begin
       if URI.respond_to?(:open)
         ONLINE = true if URI.open('http://google.com')
-      else
-        ONLINE = true if open('http://google.com')
+      elsif open('http://google.com')
+        ONLINE = true
       end
     rescue
       ONLINE = false
