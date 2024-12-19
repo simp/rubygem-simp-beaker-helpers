@@ -1,3 +1,7 @@
+### 1.34.2 / 2024-12-19
+* Fixed:
+  * Update /etc/hosts when hostname changes (#224)
+
 ### 1.34.1 / 2024-12-17
 * Fixed:
   * Error when no domain is set (#222)

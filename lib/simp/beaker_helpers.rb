@@ -729,7 +729,7 @@ module Simp::BeakerHelpers
       if current_domain.nil? || current_domain.empty?
         new_fqdn = hostname + '.beaker.test'
 
-        safe_sed(sut, 's/#{hostname}.*/#{new_fqdn} #{hostname}/', '/etc/hosts')
+        safe_sed(sut, "s/#{hostname}.*/#{new_fqdn} #{hostname}/", '/etc/hosts')
 
         if !sut.which('hostnamectl').empty?
           on(sut, "hostnamectl set-hostname #{new_fqdn}")
