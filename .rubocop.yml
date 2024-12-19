@@ -1,544 +1,699 @@
 ---
-require: rubocop-rspec
+require:
+  - rubocop-performance
+  - rubocop-rake
+  - rubocop-rspec
 AllCops:
-  TargetRubyVersion: 2.7
+  NewCops: enable
+  DisplayCopNames: true
+  TargetRubyVersion: "2.7"
   Include:
-    - ./**/*.rb
+    - "**/*.rb"
   Exclude:
-    - files/**/*
-    - vendor/**/*
-    - .vendor/**/*
+    - bin/*
+    - ".vendor/**/*"
     - pkg/**/*
     - spec/fixtures/**/*
-    - Gemfile
-    - Rakefile
-    - Guardfile
-    - Vagrantfile
-Layout/ConditionPosition:
-  Enabled: true
-
-Lint/ElseLayout:
-  Enabled: true
-
-Lint/UnreachableCode:
-  Enabled: true
-
-Lint/BinaryOperatorWithIdenticalOperands:
-  Enabled: true
-
-Lint/EnsureReturn:
-  Enabled: true
-
-Lint/SuppressedException:
-  Enabled: true
-
-Lint/LiteralAsCondition:
-  Enabled: true
-
-Lint/ShadowingOuterLocalVariable:
-  Enabled: true
-
-Lint/LiteralInInterpolation:
-  Enabled: true
-
-Style/HashSyntax:
-  Enabled: false
-
-Style/RedundantReturn:
-  Enabled: true
-
-Layout/EndOfLine:
-  Enabled: false
-
-Lint/AmbiguousOperator:
-  Enabled: true
-
-Lint/AssignmentInCondition:
-  Enabled: true
-
-Layout/SpaceBeforeComment:
-  Enabled: true
-
-Style/AndOr:
-  Enabled: true
-
-Style/RedundantSelf:
-  Enabled: true
-
-Metrics/BlockLength:
-  Enabled: false
-
-# Method length is not necessarily an indicator of code quality
-Metrics/MethodLength:
-  Enabled: false
-
-# Module length is not necessarily an indicator of code quality
-Metrics/ModuleLength:
-  Enabled: false
-
-Style/WhileUntilModifier:
-  Enabled: true
-
-Lint/AmbiguousRegexpLiteral:
-  Enabled: true
-
-Security/Eval:
-  Enabled: true
-
-Layout/BlockAlignment:
-  Enabled: true
-
-Layout/DefEndAlignment:
-  Enabled: true
-
-Layout/EndAlignment:
-  Enabled: true
-
-Lint/DeprecatedClassMethods:
-  Enabled: true
-
-Lint/Loop:
-  Enabled: true
-
-Lint/ParenthesesAsGroupedExpression:
-  Enabled: true
-
-Lint/RescueException:
-  Enabled: true
-
-Lint/RedundantStringCoercion:
-  Enabled: true
-
-Lint/UnusedBlockArgument:
-  Enabled: true
-
-Lint/UnusedMethodArgument:
-  Enabled: true
-
-Lint/UselessAccessModifier:
-  Enabled: true
-
-Lint/UselessAssignment:
-  Enabled: true
-
-Lint/Void:
-  Enabled: true
-
-Layout/AccessModifierIndentation:
-  Enabled: true
-
-Naming/AccessorMethodName:
-  Enabled: true
-
-Style/Alias:
-  Enabled: true
-
-Layout/ArrayAlignment:
-  Enabled: true
-
-Layout/HashAlignment:
-  Enabled: true
-
-Layout/ParameterAlignment:
-  Enabled: true
-
-Metrics/BlockNesting:
-  Enabled: true
-
-Style/AsciiComments:
-  Enabled: true
-
-Style/Attr:
-  Enabled: true
-
-Style/CaseEquality:
-  Enabled: true
-
-Layout/CaseIndentation:
-  Enabled: true
-
-Style/CharacterLiteral:
-  Enabled: true
-
-Naming/ClassAndModuleCamelCase:
-  Enabled: true
-
+    - vendor/**/*
+    - "**/Puppetfile"
+    - "**/Vagrantfile"
+    - "**/Guardfile"
+Layout/LineLength:
+  Description: People have wide screens, use them.
+  Max: 200
+RSpec/BeforeAfterAll:
+  Description:
+    Beware of using after(:all) as it may cause state to leak between tests.
+    A necessary evil in acceptance testing.
+  Exclude:
+    - spec/acceptance/**/*.rb
+RSpec/HookArgument:
+  Description: Prefer explicit :each argument, matching existing module's style
+  EnforcedStyle: each
+RSpec/DescribeSymbol:
+  Exclude:
+    - spec/unit/facter/**/*.rb
+Style/BlockDelimiters:
+  Description:
+    Prefer braces for chaining. Mostly an aesthetical choice. Better to
+    be consistent then.
+  EnforcedStyle: braces_for_chaining
 Style/ClassAndModuleChildren:
-  Enabled: false
-
-Style/ClassCheck:
-  Enabled: true
-
-# Class length is not necessarily an indicator of code quality
-Metrics/ClassLength:
-  Enabled: false
-
-Style/ClassMethods:
-  Enabled: true
-
-Style/ClassVars:
-  Enabled: true
-
-Style/WhenThen:
-  Enabled: true
-
+  Description: Compact style reduces the required amount of indentation.
+  EnforcedStyle: compact
+Style/EmptyElse:
+  Description: Enforce against empty else clauses, but allow `nil` for clarity.
+  EnforcedStyle: empty
+Style/FormatString:
+  Description: Following the main puppet project's style, prefer the % format format.
+  EnforcedStyle: percent
+Style/FormatStringToken:
+  Description:
+    Following the main puppet project's style, prefer the simpler template
+    tokens over annotated ones.
+  EnforcedStyle: template
+Style/Lambda:
+  Description: Prefer the keyword for easier discoverability.
+  EnforcedStyle: literal
+Style/RegexpLiteral:
+  Description: Community preference. See https://github.com/voxpupuli/modulesync_config/issues/168
+  EnforcedStyle: percent_r
+Style/TernaryParentheses:
+  Description:
+    Checks for use of parentheses around ternary conditions. Enforce parentheses
+    on complex expressions for better readability, but seriously consider breaking
+    it up.
+  EnforcedStyle: require_parentheses_when_complex
+Style/TrailingCommaInArguments:
+  Description:
+    Prefer always trailing comma on multiline argument lists. This makes
+    diffs, and re-ordering nicer.
+  EnforcedStyleForMultiline: comma
+Style/TrailingCommaInArrayLiteral:
+  Description:
+    Prefer always trailing comma on multiline literals. This makes diffs,
+    and re-ordering nicer.
+  EnforcedStyleForMultiline: comma
+Style/SymbolArray:
+  Description: Using percent style obscures symbolic intent of array's contents.
+  EnforcedStyle: brackets
+RSpec/MessageSpies:
+  EnforcedStyle: receive
+Style/Documentation:
+  Exclude:
+    - lib/puppet/parser/functions/**/*
+    - spec/**/*
 Style/WordArray:
+  EnforcedStyle: brackets
+Performance/AncestorsInclude:
   Enabled: true
-
-Style/RedundantPercentQ:
+Performance/BigDecimalWithNumericArgument:
   Enabled: true
-
-Layout/IndentationStyle:
+Performance/BlockGivenWithExplicitBlock:
   Enabled: true
-
-Layout/SpaceBeforeSemicolon:
+Performance/CaseWhenSplat:
   Enabled: true
-
-Layout/TrailingEmptyLines:
+Performance/ConstantRegexp:
   Enabled: true
-
-Layout/SpaceInsideBlockBraces:
+Performance/MethodObjectAsBlock:
   Enabled: true
-
-Layout/SpaceInsideHashLiteralBraces:
+Performance/RedundantSortBlock:
   Enabled: true
-
-Layout/SpaceInsideParens:
+Performance/RedundantStringChars:
   Enabled: true
-
-Layout/LeadingCommentSpace:
+Performance/ReverseFirst:
   Enabled: true
-
-Layout/SpaceBeforeFirstArg:
+Performance/SortReverse:
   Enabled: true
-
-Layout/SpaceAfterColon:
+Performance/Squeeze:
   Enabled: true
-
-Layout/SpaceAfterComma:
+Performance/StringInclude:
   Enabled: true
-
-Layout/SpaceAfterMethodName:
+Performance/Sum:
   Enabled: true
-
-Layout/SpaceAfterNot:
-  Enabled: true
-
-Layout/SpaceAfterSemicolon:
-  Enabled: true
-
-Layout/SpaceAroundEqualsInParameterDefault:
-  Enabled: true
-
-Layout/SpaceAroundOperators:
-  Enabled: true
-
-Layout/SpaceBeforeBlockBraces:
-  Enabled: true
-
-Layout/SpaceBeforeComma:
-  Enabled: true
-
 Style/CollectionMethods:
   Enabled: true
-
-Layout/CommentIndentation:
+Style/MethodCalledOnDoEndBlock:
   Enabled: true
-
-Style/ColonMethodCall:
+Style/StringMethods:
   Enabled: true
-
-Style/CommentAnnotation:
-  Enabled: true
-
-# 'Complexity' is very relative
-Metrics/CyclomaticComplexity:
+Bundler/GemFilename:
   Enabled: false
-
-Naming/ConstantName:
-  Enabled: true
-
-Style/Documentation:
+Bundler/InsecureProtocolSource:
   Enabled: false
-
-Style/DefWithParentheses:
-  Enabled: true
-
-Style/PreferredHashMethods:
-  Enabled: true
-
-Layout/DotPosition:
-  EnforcedStyle: trailing
-
-Style/DoubleNegation:
-  Enabled: true
-
-Style/EachWithObject:
-  Enabled: true
-
-Layout/EmptyLineBetweenDefs:
-  Enabled: true
-
-Layout/FirstArrayElementIndentation:
-  Enabled: true
-
-Layout/FirstHashElementIndentation:
-  Enabled: true
-
-Layout/IndentationConsistency:
-  Enabled: true
-
-Layout/IndentationWidth:
-  Enabled: true
-
-Layout/EmptyLines:
-  Enabled: true
-
-Layout/EmptyLinesAroundAccessModifier:
-  Enabled: true
-
-Style/EmptyLiteral:
-  Enabled: true
-
-# Configuration parameters: AllowURI, URISchemes.
-Layout/TrailingWhitespace:
-  Enabled: true
-
-Layout/LineLength:
+Gemspec/DuplicatedAssignment:
   Enabled: false
-
-Naming/BinaryOperatorParameterName:
-  Enabled: true
-
-Style/CommandLiteral:
-  EnforcedStyle: percent_x
-  Enabled: true
-
-Style/MethodCallWithoutArgsParentheses:
-  Enabled: true
-
-Style/MethodDefParentheses:
-  Enabled: true
-
-Style/LineEndConcatenation:
-  Enabled: true
-
-Style/StringLiterals:
-  Enabled: true
-
-Style/TrailingCommaInArguments:
-  Enabled: true
-
-Style/TrailingCommaInArrayLiteral:
-  Enabled: true
-
-Style/TrailingCommaInHashLiteral:
-  Enabled: true
-
-Style/GlobalVars:
-  Enabled: true
-
-Style/GuardClause:
-  Enabled: true
-
-Style/IfUnlessModifier:
-  Enabled: true
-
-Style/MultilineIfThen:
-  Enabled: true
-
-Style/NegatedIf:
-  Enabled: true
-
-Style/NegatedWhile:
-  Enabled: true
-
-Style/Next:
-  Enabled: true
-
-Style/SingleLineBlockParams:
-  Enabled: true
-
-Style/SingleLineMethods:
-  Enabled: true
-
-Style/SpecialGlobalVars:
-  Enabled: true
-
-Style/TrivialAccessors:
-  Enabled: true
-
-Style/UnlessElse:
-  Enabled: true
-
-Style/VariableInterpolation:
-  Enabled: true
-
-Naming/VariableName:
-  Enabled: true
-
-Style/WhileUntilDo:
-  Enabled: true
-
-Style/EvenOdd:
-  Enabled: true
-
-Naming/FileName:
-  Enabled: true
-
-Style/For:
-  Enabled: true
-
-Style/Lambda:
-  Enabled: true
-
-Naming/MethodName:
-  Enabled: true
-
-Style/MultilineTernaryOperator:
-  Enabled: true
-
-Style/NestedTernaryOperator:
-  Enabled: true
-
-Style/NilComparison:
-  Enabled: true
-
-Style/FormatString:
-  Enabled: true
-
-Style/MultilineBlockChain:
-  Enabled: true
-
-Style/Semicolon:
-  Enabled: true
-
-Style/SignalException:
-  Enabled: true
-
-Style/NonNilCheck:
-  Enabled: true
-
-Style/Not:
-  Enabled: true
-
-Style/NumericLiterals:
-  Enabled: true
-
-Style/OneLineConditional:
-  Enabled: true
-
-Style/ParenthesesAroundCondition:
-  Enabled: true
-
-Style/PercentLiteralDelimiters:
-  Enabled: true
-
-Style/PerlBackrefs:
-  Enabled: true
-
-Naming/PredicateName:
-  Enabled: true
-
-Style/RedundantException:
-  Enabled: true
-
-Style/SelfAssignment:
-  Enabled: true
-
-Style/Proc:
-  Enabled: true
-
-Style/RaiseArgs:
-  Enabled: true
-
-Style/RedundantBegin:
-  Enabled: true
-
-Style/RescueModifier:
-  Enabled: true
-
-# based on https://github.com/voxpupuli/modulesync_config/issues/168
-Style/RegexpLiteral:
-  EnforcedStyle: percent_r
-  Enabled: true
-
-Lint/UnderscorePrefixedVariableName:
-  Enabled: true
-
-Metrics/ParameterLists:
+Gemspec/OrderedDependencies:
   Enabled: false
-
-Lint/RequireParentheses:
-  Enabled: true
-
-Style/ModuleFunction:
-  Enabled: true
-
-Lint/Debugger:
-  Enabled: true
-
-Style/IfWithSemicolon:
-  Enabled: true
-
-Style/Encoding:
-  Enabled: true
-
-Style/BlockDelimiters:
-  Enabled: true
-
-Layout/MultilineBlockLayout:
-  Enabled: true
-
-# 'Complexity' is very relative
-Metrics/AbcSize:
+Gemspec/RequiredRubyVersion:
   Enabled: false
-
-# 'Complexity' is very relative
-Metrics/PerceivedComplexity:
+Gemspec/RubyVersionGlobalsUsage:
   Enabled: false
-
-Layout/ClosingParenthesisIndentation:
-  Enabled: true
-
-# RSpec
-
-RSpec/BeforeAfterAll:
-  Exclude:
-    - spec/acceptance/**/*
-
-# We don't use rspec in this way
-RSpec/DescribeClass:
+Layout/ArgumentAlignment:
   Enabled: false
-
-# Example length is not necessarily an indicator of code quality
-RSpec/ExampleLength:
+Layout/BeginEndAlignment:
   Enabled: false
-
-RSpec/NamedSubject:
+Layout/ClosingHeredocIndentation:
   Enabled: false
-
-# disabled for now since they cause a lot of issues
-# these issues aren't easy to fix
-RSpec/RepeatedDescription:
+Layout/EmptyComment:
   Enabled: false
-
-RSpec/NestedGroups:
+Layout/EmptyLineAfterGuardClause:
   Enabled: false
-
-# this is broken on ruby1.9
+Layout/EmptyLinesAroundArguments:
+  Enabled: false
+Layout/EmptyLinesAroundAttributeAccessor:
+  Enabled: false
+Layout/EndOfLine:
+  Enabled: false
+Layout/FirstArgumentIndentation:
+  Enabled: false
+Layout/HashAlignment:
+  Enabled: false
 Layout/HeredocIndentation:
   Enabled: false
-
-# disable Yaml safe_load. This is needed to support ruby2.0.0 development envs
-Security/YAMLLoad:
+Layout/LeadingEmptyLines:
   Enabled: false
-
-# This affects hiera interpolation, as well as some configs that we push.
-Style/FormatStringToken:
+Layout/SpaceAroundMethodCallOperator:
   Enabled: false
-
-# This is useful, but sometimes a little too picky about where unit tests files
-# are located.
-RSpec/FilePath:
+Layout/SpaceInsideArrayLiteralBrackets:
+  Enabled: false
+Layout/SpaceInsideReferenceBrackets:
+  Enabled: false
+Lint/BigDecimalNew:
+  Enabled: false
+Lint/BooleanSymbol:
+  Enabled: false
+Lint/ConstantDefinitionInBlock:
+  Enabled: false
+Lint/DeprecatedOpenSSLConstant:
+  Enabled: false
+Lint/DisjunctiveAssignmentInConstructor:
+  Enabled: false
+Lint/DuplicateElsifCondition:
+  Enabled: false
+Lint/DuplicateRequire:
+  Enabled: false
+Lint/DuplicateRescueException:
+  Enabled: false
+Lint/EmptyConditionalBody:
+  Enabled: false
+Lint/EmptyFile:
+  Enabled: false
+Lint/ErbNewArguments:
+  Enabled: false
+Lint/FloatComparison:
+  Enabled: false
+Lint/HashCompareByIdentity:
+  Enabled: false
+Lint/IdentityComparison:
+  Enabled: false
+Lint/InterpolationCheck:
+  Enabled: false
+Lint/MissingCopEnableDirective:
+  Enabled: false
+Lint/MixedRegexpCaptureTypes:
+  Enabled: false
+Lint/NestedPercentLiteral:
+  Enabled: false
+Lint/NonDeterministicRequireOrder:
+  Enabled: false
+Lint/OrderedMagicComments:
+  Enabled: false
+Lint/OutOfRangeRegexpRef:
+  Enabled: false
+Lint/RaiseException:
+  Enabled: false
+Lint/RedundantCopEnableDirective:
+  Enabled: false
+Lint/RedundantRequireStatement:
+  Enabled: false
+Lint/RedundantSafeNavigation:
+  Enabled: false
+Lint/RedundantWithIndex:
+  Enabled: false
+Lint/RedundantWithObject:
+  Enabled: false
+Lint/RegexpAsCondition:
+  Enabled: false
+Lint/ReturnInVoidContext:
+  Enabled: false
+Lint/SafeNavigationConsistency:
+  Enabled: false
+Lint/SafeNavigationWithEmpty:
+  Enabled: false
+Lint/SelfAssignment:
+  Enabled: false
+Lint/SendWithMixinArgument:
+  Enabled: false
+Lint/ShadowedArgument:
+  Enabled: false
+Lint/StructNewOverride:
+  Enabled: false
+Lint/ToJSON:
+  Enabled: false
+Lint/TopLevelReturnWithArgument:
+  Enabled: false
+Lint/TrailingCommaInAttributeDeclaration:
+  Enabled: false
+Lint/UnreachableLoop:
+  Enabled: false
+Lint/UriEscapeUnescape:
+  Enabled: false
+Lint/UriRegexp:
+  Enabled: false
+Lint/UselessMethodDefinition:
+  Enabled: false
+Lint/UselessTimes:
+  Enabled: false
+Metrics/AbcSize:
+  Enabled: false
+Metrics/BlockLength:
+  Enabled: false
+Metrics/BlockNesting:
+  Enabled: false
+Metrics/ClassLength:
+  Enabled: false
+Metrics/CyclomaticComplexity:
+  Enabled: false
+Metrics/MethodLength:
+  Enabled: false
+Metrics/ModuleLength:
+  Enabled: false
+Metrics/ParameterLists:
+  Enabled: false
+Metrics/PerceivedComplexity:
+  Enabled: false
+Migration/DepartmentName:
+  Enabled: false
+Naming/AccessorMethodName:
+  Enabled: false
+Naming/BlockParameterName:
+  Enabled: false
+Naming/HeredocDelimiterCase:
+  Enabled: false
+Naming/HeredocDelimiterNaming:
+  Enabled: false
+Naming/MemoizedInstanceVariableName:
+  Enabled: false
+Naming/MethodParameterName:
+  Enabled: false
+Naming/RescuedExceptionsVariableName:
+  Enabled: false
+Naming/VariableNumber:
+  Enabled: false
+Performance/BindCall:
+  Enabled: false
+Performance/DeletePrefix:
+  Enabled: false
+Performance/DeleteSuffix:
+  Enabled: false
+Performance/InefficientHashSearch:
+  Enabled: false
+Performance/UnfreezeString:
+  Enabled: false
+Performance/UriDefaultParser:
+  Enabled: false
+RSpec/Be:
+  Enabled: false
+RSpec/Dialect:
+  Enabled: false
+RSpec/ContainExactly:
+  Enabled: false
+RSpec/ContextMethod:
+  Enabled: false
+RSpec/ContextWording:
+  Enabled: false
+RSpec/DescribeClass:
+  Enabled: false
+RSpec/EmptyHook:
+  Enabled: false
+RSpec/EmptyLineAfterExample:
+  Enabled: false
+RSpec/EmptyLineAfterExampleGroup:
+  Enabled: false
+RSpec/EmptyLineAfterHook:
+  Enabled: false
+RSpec/ExampleLength:
+  Enabled: false
+RSpec/ExampleWithoutDescription:
+  Enabled: false
+RSpec/ExpectChange:
+  Enabled: false
+RSpec/ExpectInHook:
+  Enabled: false
+RSpec/HooksBeforeExamples:
+  Enabled: false
+RSpec/ImplicitBlockExpectation:
+  Enabled: false
+RSpec/ImplicitSubject:
+  Enabled: false
+RSpec/LeakyConstantDeclaration:
+  Enabled: false
+RSpec/LetBeforeExamples:
+  Enabled: false
+RSpec/MatchArray:
+  Enabled: false
+RSpec/MissingExampleGroupArgument:
+  Enabled: false
+RSpec/MultipleExpectations:
+  Enabled: false
+RSpec/MultipleMemoizedHelpers:
+  Enabled: false
+RSpec/MultipleSubjects:
+  Enabled: false
+RSpec/NestedGroups:
+  Enabled: false
+RSpec/PredicateMatcher:
+  Enabled: false
+RSpec/ReceiveCounts:
+  Enabled: false
+RSpec/ReceiveNever:
+  Enabled: false
+RSpec/RepeatedExampleGroupBody:
+  Enabled: false
+RSpec/RepeatedExampleGroupDescription:
+  Enabled: false
+RSpec/RepeatedIncludeExample:
+  Enabled: false
+RSpec/ReturnFromStub:
+  Enabled: false
+RSpec/SharedExamples:
+  Enabled: false
+RSpec/StubbedMock:
+  Enabled: false
+RSpec/UnspecifiedException:
+  Enabled: false
+RSpec/VariableDefinition:
+  Enabled: false
+RSpec/VoidExpect:
+  Enabled: false
+RSpec/Yield:
+  Enabled: false
+Security/Open:
+  Enabled: false
+Style/AccessModifierDeclarations:
+  Enabled: false
+Style/AccessorGrouping:
+  Enabled: false
+Style/BisectedAttrAccessor:
+  Enabled: false
+Style/CaseLikeIf:
+  Enabled: false
+Style/ClassEqualityComparison:
+  Enabled: false
+Style/ColonMethodDefinition:
+  Enabled: false
+Style/CombinableLoops:
+  Enabled: false
+Style/CommentedKeyword:
+  Enabled: false
+Style/Dir:
+  Enabled: false
+Style/DoubleCopDisableDirective:
+  Enabled: false
+Style/EmptyBlockParameter:
+  Enabled: false
+Style/EmptyLambdaParameter:
+  Enabled: false
+Style/Encoding:
+  Enabled: false
+Style/EvalWithLocation:
+  Enabled: false
+Style/ExpandPathArguments:
+  Enabled: false
+Style/ExplicitBlockArgument:
+  Enabled: false
+Style/ExponentialNotation:
+  Enabled: false
+Style/FloatDivision:
+  Enabled: false
+Style/FrozenStringLiteralComment:
+  Enabled: false
+Style/GlobalStdStream:
+  Enabled: false
+Style/HashAsLastArrayItem:
+  Enabled: false
+Style/HashLikeCase:
+  Enabled: false
+Style/HashTransformKeys:
+  Enabled: false
+Style/HashTransformValues:
+  Enabled: false
+Style/IfUnlessModifier:
+  Enabled: false
+Style/KeywordParametersOrder:
+  Enabled: false
+Style/MinMax:
+  Enabled: false
+Style/MixinUsage:
+  Enabled: false
+Style/MultilineWhenThen:
+  Enabled: false
+Style/NegatedUnless:
+  Enabled: false
+Style/NumericPredicate:
+  Enabled: false
+Style/OptionalBooleanParameter:
+  Enabled: false
+Style/OrAssignment:
+  Enabled: false
+Style/RandomWithOffset:
+  Enabled: false
+Style/RedundantAssignment:
+  Enabled: false
+Style/RedundantCondition:
+  Enabled: false
+Style/RedundantConditional:
+  Enabled: false
+Style/RedundantFetchBlock:
+  Enabled: false
+Style/RedundantFileExtensionInRequire:
+  Enabled: false
+Style/RedundantRegexpCharacterClass:
+  Enabled: false
+Style/RedundantRegexpEscape:
+  Enabled: false
+Style/RedundantSelfAssignment:
+  Enabled: false
+Style/RedundantSort:
+  Enabled: false
+Style/RescueStandardError:
+  Enabled: false
+Style/SingleArgumentDig:
+  Enabled: false
+Style/SlicingWithRange:
+  Enabled: false
+Style/SoleNestedConditional:
+  Enabled: false
+Style/StderrPuts:
+  Enabled: false
+Style/StringConcatenation:
+  Enabled: false
+Style/Strip:
+  Enabled: false
+Style/SymbolProc:
+  Enabled: false
+Style/TrailingBodyOnClass:
+  Enabled: false
+Style/TrailingBodyOnMethodDefinition:
+  Enabled: false
+Style/TrailingBodyOnModule:
+  Enabled: false
+Style/TrailingCommaInHashLiteral:
+  Enabled: false
+Style/TrailingMethodEndStatement:
+  Enabled: false
+Style/UnpackFirst:
+  Enabled: false
+Gemspec/DeprecatedAttributeAssignment:
+  Enabled: false
+Gemspec/DevelopmentDependencies:
+  Enabled: false
+Gemspec/RequireMFA:
+  Enabled: false
+Layout/LineContinuationLeadingSpace:
+  Enabled: false
+Layout/LineContinuationSpacing:
+  Enabled: false
+Layout/LineEndStringConcatenationIndentation:
+  Enabled: false
+Layout/SpaceBeforeBrackets:
+  Enabled: false
+Lint/AmbiguousAssignment:
+  Enabled: false
+Lint/AmbiguousOperatorPrecedence:
+  Enabled: false
+Lint/AmbiguousRange:
+  Enabled: false
+Lint/ConstantOverwrittenInRescue:
+  Enabled: false
+Lint/DeprecatedConstants:
+  Enabled: false
+Lint/DuplicateBranch:
+  Enabled: false
+Lint/DuplicateMagicComment:
+  Enabled: false
+Lint/DuplicateMatchPattern:
+  Enabled: false
+Lint/DuplicateRegexpCharacterClassElement:
+  Enabled: false
+Lint/EmptyBlock:
+  Enabled: false
+Lint/EmptyClass:
+  Enabled: false
+Lint/EmptyInPattern:
+  Enabled: false
+Lint/IncompatibleIoSelectWithFiberScheduler:
+  Enabled: false
+Lint/LambdaWithoutLiteralBlock:
+  Enabled: false
+Lint/NoReturnInBeginEndBlocks:
+  Enabled: false
+Lint/NonAtomicFileOperation:
+  Enabled: false
+Lint/NumberedParameterAssignment:
+  Enabled: false
+Lint/OrAssignmentToConstant:
+  Enabled: false
+Lint/RedundantDirGlobSort:
+  Enabled: false
+Lint/RefinementImportMethods:
+  Enabled: false
+Lint/RequireRangeParentheses:
+  Enabled: false
+Lint/RequireRelativeSelfPath:
+  Enabled: false
+Lint/SymbolConversion:
+  Enabled: false
+Lint/ToEnumArguments:
+  Enabled: false
+Lint/TripleQuotes:
+  Enabled: false
+Lint/UnexpectedBlockArity:
+  Enabled: false
+Lint/UnmodifiedReduceAccumulator:
+  Enabled: false
+Lint/UselessRescue:
+  Enabled: false
+Lint/UselessRuby2Keywords:
+  Enabled: false
+Metrics/CollectionLiteralLength:
+  Enabled: false
+Naming/BlockForwarding:
+  Enabled: false
+Performance/CollectionLiteralInLoop:
+  Enabled: false
+Performance/ConcurrentMonotonicTime:
+  Enabled: false
+Performance/MapCompact:
+  Enabled: false
+Performance/RedundantEqualityComparisonBlock:
+  Enabled: false
+Performance/RedundantSplitRegexpArgument:
+  Enabled: false
+Performance/StringIdentifierArgument:
+  Enabled: false
+RSpec/BeEq:
+  Enabled: false
+RSpec/BeNil:
+  Enabled: false
+RSpec/ChangeByZero:
+  Enabled: false
+RSpec/ClassCheck:
+  Enabled: false
+RSpec/DuplicatedMetadata:
+  Enabled: false
+RSpec/ExcessiveDocstringSpacing:
+  Enabled: false
+RSpec/IdenticalEqualityAssertion:
+  Enabled: false
+RSpec/NoExpectationExample:
+  Enabled: false
+RSpec/PendingWithoutReason:
+  Enabled: false
+RSpec/RedundantAround:
+  Enabled: false
+RSpec/SkipBlockInsideExample:
+  Enabled: false
+RSpec/SortMetadata:
+  Enabled: false
+RSpec/SubjectDeclaration:
+  Enabled: false
+RSpec/VerifiedDoubleReference:
+  Enabled: false
+Security/CompoundHash:
+  Enabled: false
+Security/IoMethods:
+  Enabled: false
+Style/ArgumentsForwarding:
+  Enabled: false
+Style/ArrayIntersect:
+  Enabled: false
+Style/CollectionCompact:
+  Enabled: false
+Style/ComparableClamp:
+  Enabled: false
+Style/ConcatArrayLiterals:
+  Enabled: false
+Style/DataInheritance:
+  Enabled: false
+Style/DirEmpty:
+  Enabled: false
+Style/DocumentDynamicEvalDefinition:
+  Enabled: false
+Style/EmptyHeredoc:
+  Enabled: false
+Style/EndlessMethod:
+  Enabled: false
+Style/EnvHome:
+  Enabled: false
+Style/FetchEnvVar:
+  Enabled: false
+Style/FileEmpty:
+  Enabled: false
+Style/FileRead:
+  Enabled: false
+Style/FileWrite:
+  Enabled: false
+Style/HashConversion:
+  Enabled: false
+Style/HashExcept:
+  Enabled: false
+Style/IfWithBooleanLiteralBranches:
+  Enabled: false
+Style/InPatternThen:
+  Enabled: false
+Style/MagicCommentFormat:
+  Enabled: false
+Style/MapCompactWithConditionalBlock:
+  Enabled: false
+Style/MapToHash:
+  Enabled: false
+Style/MapToSet:
+  Enabled: false
+Style/MinMaxComparison:
+  Enabled: false
+Style/MultilineInPatternThen:
+  Enabled: false
+Style/NegatedIfElseCondition:
+  Enabled: false
+Style/NestedFileDirname:
+  Enabled: false
+Style/NilLambda:
+  Enabled: false
+Style/NumberedParameters:
+  Enabled: false
+Style/NumberedParametersLimit:
+  Enabled: false
+Style/ObjectThen:
+  Enabled: false
+Style/OpenStructUse:
+  Enabled: false
+Style/OperatorMethodCall:
+  Enabled: false
+Style/QuotedSymbols:
+  Enabled: false
+Style/RedundantArgument:
+  Enabled: false
+Style/RedundantConstantBase:
+  Enabled: false
+Style/RedundantDoubleSplatHashBraces:
+  Enabled: false
+Style/RedundantEach:
+  Enabled: false
+Style/RedundantHeredocDelimiterQuotes:
+  Enabled: false
+Style/RedundantInitialize:
+  Enabled: false
+Style/RedundantLineContinuation:
+  Enabled: false
+Style/RedundantSelfAssignmentBranch:
+  Enabled: false
+Style/RedundantStringEscape:
+  Enabled: false
+Style/SelectByRegexp:
+  Enabled: false
+Style/StringChars:
+  Enabled: false
+Style/SwapValues:
   Enabled: false

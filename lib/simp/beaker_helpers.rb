@@ -1,3 +1,4 @@
+require 'English'
 require 'beaker-puppet'
 require 'bundler'
 
@@ -17,8 +18,8 @@ module Simp::BeakerHelpers
 
   # Stealing this from the Ruby 2.5 Dir::Tmpname workaround from Rails
   def self.tmpname
-    t = Time.new.strftime("%Y%m%d")
-    "simp-beaker-helpers-#{t}-#{$$}-#{rand(0x100000000).to_s(36)}.tmp"
+    t = Time.new.strftime('%Y%m%d')
+    "simp-beaker-helpers-#{t}-#{$PROCESS_ID}-#{rand(0x100000000).to_s(36)}.tmp"
   end
 
   # Sets a single YUM option in the form that yum-config-manager/dnf
@@ -28,8 +29,8 @@ module Simp::BeakerHelpers
   #
   # Has no effect if yum or dnf is not present.
   def set_yum_opt_on(suts, key, value)
-    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
-      repo,target = key.split('.')
+    block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
+      repo, target = key.split('.')
 
       unless target
         key = "\\*.#{repo}"
@@ -37,13 +38,13 @@ module Simp::BeakerHelpers
 
       command = nil
       if !sut.which('dnf').empty?
-        install_package_unless_present_on(sut, 'dnf-plugins-core', :accept_all_exit_codes => true)
+        install_package_unless_present_on(sut, 'dnf-plugins-core', accept_all_exit_codes: true)
         command = 'dnf config-manager'
       elsif !sut.which('yum').empty?
         command = 'yum-config-manager'
       end
 
-      on(sut, %{#{command} --save --setopt=#{key}=#{value}}, :silent => true) if command
+      on(sut, %(#{command} --save --setopt=#{key}=#{value}), silent: true) if command
     end
   end
 
@@ -57,21 +58,21 @@ module Simp::BeakerHelpers
   #     'skip_if_unavailable' => '1', # Applies globally
   #     'foo.installonly_limit' => '5' # Applies only to the 'foo' repo
   #   }
-  def set_yum_opts_on(suts, yum_opts={})
-    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
-      yum_opts.each_pair do |k,v|
+  def set_yum_opts_on(suts, yum_opts = {})
+    block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
+      yum_opts.each_pair do |k, v|
         set_yum_opt_on(sut, k, v)
       end
     end
   end
 
-  def install_package_unless_present_on(suts, package_name, package_source=nil, opts={})
+  def install_package_unless_present_on(suts, package_name, package_source = nil, opts = {})
     default_opts = {
       max_retries: 3,
       retry_interval: 10
     }
 
-    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
+    block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
       package_source = package_name unless package_source
 
       unless sut.check_for_package(package_name)
@@ -79,26 +80,26 @@ module Simp::BeakerHelpers
           package_source,
           '',
           nil,
-          default_opts.merge(opts)
+          default_opts.merge(opts),
         )
       end
     end
   end
 
-  def install_latest_package_on(suts, package_name, package_source=nil, opts={})
+  def install_latest_package_on(suts, package_name, package_source = nil, opts = {})
     default_opts = {
       max_retries: 3,
       retry_interval: 10
     }
 
-    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
+    block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
       package_source = package_name unless package_source
 
       if sut.check_for_package(package_name)
         sut.upgrade_package(
           package_source,
           '',
-          default_opts.merge(opts)
+          default_opts.merge(opts),
         )
       else
         install_package_unless_present_on(sut, package_name, package_source, opts)
@@ -107,20 +108,19 @@ module Simp::BeakerHelpers
   end
 
   def is_windows?(sut)
-    sut[:platform] =~ /windows/i
+    sut[:platform] =~ %r{windows}i
   end
 
   # We can't cache this because it may change during a run
   def fips_enabled(sut)
-    return on( sut,
+    on(sut,
               'cat /proc/sys/crypto/fips_enabled 2>/dev/null',
-              :accept_all_exit_codes => true
-             ).output.strip == '1'
+              accept_all_exit_codes: true).output.strip == '1'
   end
 
   def rsync_functional_on?(sut)
     # We have to check if rsync *still* works otherwise
-    return false if (@rsync_functional == false)
+    return false if @rsync_functional == false
 
     require 'facter'
     unless Facter::Util::Resolution.which('rsync')
@@ -143,38 +143,38 @@ module Simp::BeakerHelpers
       testfile.unlink
     end
 
-    return true
+    true
   end
 
   # Figure out the best method to copy files to a host and use it
   #
   # Will create the directories leading up to the target if they don't exist
-  def copy_to(sut, src, dest, opts={})
+  def copy_to(sut, src, dest, opts = {})
     sut.mkdir_p(File.dirname(dest))
 
     if sut[:hypervisor] == 'docker'
       exclude_list = []
       opts[:silent] ||= true
 
-      if opts.has_key?(:ignore) && !opts[:ignore].empty?
+      if opts.key?(:ignore) && !opts[:ignore].empty?
         opts[:ignore].each do |value|
           exclude_list << "--exclude '#{value}'"
         end
       end
 
       # Work around for breaking changes in beaker-docker
-      if sut.host_hash[:docker_container]
-        container_id = sut.host_hash[:docker_container].id
-      else
-        container_id = sut.host_hash[:docker_container_id]
-      end
+      container_id = if sut.host_hash[:docker_container]
+                       sut.host_hash[:docker_container].id
+                     else
+                       sut.host_hash[:docker_container_id]
+                     end
 
       if ENV['BEAKER_docker_cmd']
         docker_cmd = ENV['BEAKER_docker_cmd']
       else
         docker_cmd = 'docker'
 
-        if ::Docker.version['Components'].any?{|x| x['Name'] =~ /podman/i}
+        if ::Docker.version['Components'].any? { |x| x['Name'] =~ %r{podman}i }
           docker_cmd = 'podman'
 
           if ENV['CONTAINER_HOST']
@@ -187,16 +187,16 @@ module Simp::BeakerHelpers
 
       sut.mkdir_p(File.dirname(dest)) unless directory_exists_on(sut, dest)
 
-      if File.file?(src)
-        cmd = %{#{docker_cmd} cp "#{src}" "#{container_id}:#{dest}"}
-      else
-        cmd = [
-          %{tar #{exclude_list.join(' ')} -hcf - -C "#{File.dirname(src)}" "#{File.basename(src)}"},
-          %{#{docker_cmd} exec -i "#{container_id}" tar -C "#{dest}" -xf -}
-        ].join(' | ')
-      end
+      cmd = if File.file?(src)
+              %(#{docker_cmd} cp "#{src}" "#{container_id}:#{dest}")
+            else
+              [
+                %(tar #{exclude_list.join(' ')} -hcf - -C "#{File.dirname(src)}" "#{File.basename(src)}"),
+                %(#{docker_cmd} exec -i "#{container_id}" tar -C "#{dest}" -xf -),
+              ].join(' | ')
+            end
 
-      %x(#{cmd})
+      `#{cmd}`
     elsif rsync_functional_on?(sut)
       # This makes rsync_to work like beaker and scp usually do
       exclude_hack = %(__-__' -L --exclude '__-__)
@@ -237,21 +237,20 @@ module Simp::BeakerHelpers
     if sut.which('puppet').empty?
       found_fact = fact_on(sut, fact_name)
     else
-      facts_json = nil
       begin
-        cmd_output = on(sut, 'facter -p --json', :silent => true)
+        cmd_output = on(sut, 'facter -p --json', silent: true)
         # Facter 4+
-        raise('skip facter -p') if (cmd_output.stderr =~ /no longer supported/)
+        raise('skip facter -p') if cmd_output.stderr.include?('no longer supported')
 
         facts = JSON.parse(cmd_output.stdout)
       rescue StandardError
         # If *anything* fails, we need to fall back to `puppet facts`
 
-        facts_json = retry_on(sut, 'puppet facts find garbage_xxx', :silent => true, :max_retries => 4).stdout
+        facts_json = retry_on(sut, 'puppet facts find garbage_xxx', silent: true, max_retries: 4).stdout
         facts = JSON.parse(facts_json)['values']
       end
 
-      found_fact = facts.dig(*(fact_name.split('.')))
+      found_fact = facts.dig(*fact_name.split('.'))
 
       # If we did not find a fact, we should use the upstream function since
       # puppet may be installed via a gem or through some other means.
@@ -264,7 +263,7 @@ module Simp::BeakerHelpers
   end
 
   # Returns the modulepath on the SUT, as an Array
-  def puppet_modulepath_on(sut, environment='production')
+  def puppet_modulepath_on(sut, _environment = 'production')
     splitchar = ':'
     splitchar = ';' if is_windows?(sut)
 
@@ -275,7 +274,7 @@ module Simp::BeakerHelpers
   end
 
   # Return the default environment path
-  def puppet_environment_path_on(sut, environment='production')
+  def puppet_environment_path_on(sut, _environment = 'production')
     File.dirname(sut.puppet_configprint['manifest'])
   end
 
@@ -289,12 +288,9 @@ module Simp::BeakerHelpers
 
     dir = File.join(File.expand_path(dir), 'fixtures')
 
-    if File.directory?(dir)
-      @fixtures_path = dir
-      return @fixtures_path
-    else
-      raise("Could not find fixtures directory at '#{dir}'")
-    end
+    raise("Could not find fixtures directory at '#{dir}'") unless File.directory?(dir)
+    @fixtures_path = dir
+    @fixtures_path
   end
 
   # Locates .fixture.yml in or above this directory.
@@ -308,8 +304,8 @@ module Simp::BeakerHelpers
     else
       fixtures_yml = ''
       dir          = '.'
-      while( fixtures_yml.empty? && File.expand_path(dir) != '/' ) do
-        file = File.expand_path( '.fixtures.yml', dir )
+      while fixtures_yml.empty? && File.expand_path(dir) != '/'
+        file = File.expand_path('.fixtures.yml', dir)
         STDERR.puts "  ** fixtures_yml_path: #{file}" if ENV['BEAKER_helpers_verbose']
         if File.exist? file
           fixtures_yml = file
@@ -325,9 +321,8 @@ module Simp::BeakerHelpers
 
     @fixtures_yml_path = fixtures_yml
 
-    return @fixtures_yml_path
+    @fixtures_yml_path
   end
-
 
   # returns an Array of puppet modules declared in .fixtures.yml
   def pupmods_in_fixtures_yml
@@ -335,52 +330,50 @@ module Simp::BeakerHelpers
 
     STDERR.puts '  ** pupmods_in_fixtures_yml' if ENV['BEAKER_helpers_verbose']
     fixtures_yml = fixtures_yml_path
-    data         = YAML.load_file( fixtures_yml )
+    data         = YAML.load_file(fixtures_yml)
     repos        = data.fetch('fixtures').fetch('repositories', {}).keys || []
     symlinks     = data.fetch('fixtures').fetch('symlinks', {}).keys     || []
     STDERR.puts '  ** pupmods_in_fixtures_yml: finished' if ENV['BEAKER_helpers_verbose']
 
     @pupmods_in_fixtures_yml = (repos + symlinks)
 
-    return @pupmods_in_fixtures_yml
+    @pupmods_in_fixtures_yml
   end
-
 
   # Ensures that the fixture modules (under `spec/fixtures/modules`) exists.
   # if any fixture modules are missing, run 'rake spec_prep' to populate the
   # fixtures/modules
   def ensure_fixture_modules
-    STDERR.puts "  ** ensure_fixture_modules" if ENV['BEAKER_helpers_verbose']
+    STDERR.puts '  ** ensure_fixture_modules' if ENV['BEAKER_helpers_verbose']
     unless ENV['BEAKER_spec_prep'] == 'no'
-      puts "== checking prepped modules from .fixtures.yml"
-      puts "  -- (use BEAKER_spec_prep=no to disable)"
+      puts '== checking prepped modules from .fixtures.yml'
+      puts '  -- (use BEAKER_spec_prep=no to disable)'
       missing_modules = []
       pupmods_in_fixtures_yml.each do |pupmod|
         STDERR.puts "  **  -- ensure_fixture_modules: '#{pupmod}'" if ENV['BEAKER_helpers_verbose']
-        mod_root = File.expand_path( "spec/fixtures/modules/#{pupmod}", File.dirname( fixtures_yml_path ))
+        mod_root = File.expand_path("spec/fixtures/modules/#{pupmod}", File.dirname(fixtures_yml_path))
         missing_modules << pupmod unless File.directory? mod_root
       end
       puts "  -- #{missing_modules.size} modules need to be prepped"
-      unless missing_modules.empty?
+      if missing_modules.empty?
+        puts '  == all fixture modules present'
+      else
         cmd = 'bundle exec rake spec_prep'
         puts "  -- running spec_prep: '#{cmd}'"
-        %x(#{cmd})
-      else
-        puts "  == all fixture modules present"
+        `#{cmd}`
       end
     end
-    STDERR.puts "  **  -- ensure_fixture_modules: finished" if ENV['BEAKER_helpers_verbose']
+    STDERR.puts '  **  -- ensure_fixture_modules: finished' if ENV['BEAKER_helpers_verbose']
   end
 
-
   # Copy the local fixture modules (under `spec/fixtures/modules`) onto each SUT
-  def copy_fixture_modules_to( suts = hosts, opts = {})
+  def copy_fixture_modules_to(suts = hosts, opts = {})
     ensure_fixture_modules
 
     opts[:pluginsync] = opts.fetch(:pluginsync, true)
 
     unless ENV['BEAKER_copy_fixtures'] == 'no'
-      block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
+      block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
         STDERR.puts "  ** copy_fixture_modules_to: '#{sut}'" if ENV['BEAKER_helpers_verbose']
 
         # Use spec_prep to provide modules (this supports isolated networks)
@@ -392,7 +385,7 @@ module Simp::BeakerHelpers
           # `modulepath` and targets the first one.
           target_module_path = puppet_modulepath_on(sut).first
 
-          mod_root = File.expand_path( "spec/fixtures/modules", File.dirname( fixtures_yml_path ))
+          mod_root = File.expand_path('spec/fixtures/modules', File.dirname(fixtures_yml_path))
 
           Dir.chdir(mod_root) do
             # Have to do things the slow way on Windows
@@ -440,17 +433,14 @@ module Simp::BeakerHelpers
               begin
                 tarfile = "#{Simp::BeakerHelpers.tmpname}.tar"
 
-                excludes = (PUPPET_MODULE_INSTALL_IGNORE + ['spec']).map do |x|
-                  x = "--exclude '*/#{x}'"
-                end.join(' ')
+                excludes = (PUPPET_MODULE_INSTALL_IGNORE + ['spec']).map { |x|
+                  "--exclude '*/#{x}'"
+                }.join(' ')
 
-                %x(tar -ch #{excludes} -f #{tarfile} *)
+                `tar -ch #{excludes} -f #{tarfile} *`
 
-                if File.exist?(tarfile)
-                  copy_to(sut, tarfile, target_module_path, opts)
-                else
-                  fail("Error: module tar file '#{tarfile}' could not be created at #{mod_root}")
-                end
+                raise("Error: module tar file '#{tarfile}' could not be created at #{mod_root}") unless File.exist?(tarfile)
+                copy_to(sut, tarfile, target_module_path, opts)
 
                 on(sut, "cd #{target_module_path} && tar -xf #{File.basename(tarfile)}")
               ensure
@@ -471,14 +461,15 @@ module Simp::BeakerHelpers
     file_exists_on(sut, '/etc/crypto-policies/config')
   end
 
-  def munge_ssh_crypto_policies(suts, key_types=['ssh-rsa'])
-    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
+  def munge_ssh_crypto_policies(suts, key_types = ['ssh-rsa'])
+    block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
       if has_crypto_policies(sut)
-        install_latest_package_on(sut, 'crypto-policies', nil, :accept_all_exit_codes => true)
+        install_latest_package_on(sut, 'crypto-policies', nil, accept_all_exit_codes: true)
 
         # Since we may be doing this prior to having a box flip into FIPS mode, we
         # need to find and modify *all* of the affected policies
-        on( sut, %{sed --follow-symlinks -i 's/\\(HostKeyAlgorithms\\|PubkeyAcceptedKeyTypes\\)\\(.\\)/\\1\\2#{key_types.join(',')},/g' $( grep -L ssh-rsa $( find /etc/crypto-policies /usr/share/crypto-policies -type f -a \\( -name '*.txt' -o -name '*.config' \\) -exec grep -l PubkeyAcceptedKeyTypes {} \\; ) ) })
+        on(sut,
+%{sed --follow-symlinks -i 's/\\(HostKeyAlgorithms\\|PubkeyAcceptedKeyTypes\\)\\(.\\)/\\1\\2#{key_types.join(',')},/g' $( grep -L ssh-rsa $( find /etc/crypto-policies /usr/share/crypto-policies -type f -a \\( -name '*.txt' -o -name '*.config' \\) -exec grep -l PubkeyAcceptedKeyTypes {} \\; ) ) })
       end
     end
   end
@@ -487,13 +478,13 @@ module Simp::BeakerHelpers
   #
   # Required for many container targets
   def safe_sed(suts = hosts, pattern, target_file)
-    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
+    block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
       tmpfile = sut.tmpfile('safe_sed')
 
       command = [
         "cp #{target_file} #{tmpfile}",
         "sed -i '#{pattern}' #{tmpfile}",
-        "cat #{tmpfile} > #{target_file}"
+        "cat #{tmpfile} > #{target_file}",
       ].join(' && ')
 
       on(sut, command)
@@ -503,11 +494,11 @@ module Simp::BeakerHelpers
   end
 
   # Configure and reboot SUTs into FIPS mode
-  def enable_fips_mode_on( suts = hosts )
+  def enable_fips_mode_on(suts = hosts)
     puts '== configuring FIPS mode on SUTs'
     puts '  -- (use BEAKER_fips=no to disable)'
 
-    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
+    block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
       next if sut[:hypervisor] == 'docker'
 
       if is_windows?(sut)
@@ -527,7 +518,7 @@ module Simp::BeakerHelpers
       # TODO Use simp-ssh Puppet module appropriately (i.e., in a fashion
       #      that doesn't break vagrant access and is appropriate for
       #      typical module tests.)
-      fips_ssh_ciphers = [ 'aes256-ctr','aes192-ctr','aes128-ctr']
+      fips_ssh_ciphers = [ 'aes256-ctr', 'aes192-ctr', 'aes128-ctr']
       safe_sed(sut, '/Ciphers /d', '/etc/ssh/sshd_config')
       on(sut, %(echo 'Ciphers #{fips_ssh_ciphers.join(',')}' >> /etc/ssh/sshd_config))
 
@@ -579,19 +570,17 @@ module Simp::BeakerHelpers
   #     gpgkeys:
   #       - <URL to GPGKEY1>
   #       - <URL to GPGKEY2>
-  def enable_yum_repos_on( suts = hosts )
-    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
-      if sut['yum_repos']
-        sut['yum_repos'].each_pair do |repo, metadata|
-          repo_manifest = create_yum_resource(repo, metadata)
+  def enable_yum_repos_on(suts = hosts)
+    block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
+      sut['yum_repos']&.each_pair do |repo, metadata|
+        repo_manifest = create_yum_resource(repo, metadata)
 
-          apply_manifest_on(sut, repo_manifest, :catch_failures => true)
-        end
+        apply_manifest_on(sut, repo_manifest, catch_failures: true)
       end
     end
   end
 
-  def create_yum_resource( repo, metadata )
+  def create_yum_resource(repo, metadata)
     repo_attrs = [
       :assumeyes,
       :bandwidth,
@@ -629,46 +618,46 @@ module Simp::BeakerHelpers
       :sslverify,
       :target,
       :throttle,
-      :timeout
+      :timeout,
     ]
 
-      repo_manifest = %(yumrepo { #{repo}:)
+    repo_manifest = %(yumrepo { #{repo}:)
 
-      repo_manifest_opts = []
+    repo_manifest_opts = []
 
-      # Legacy Support
-      urls = !metadata[:url].nil? ? metadata[:url] : metadata[:baseurl]
-      if urls
-        repo_manifest_opts << 'baseurl => ' + '"' + Array(urls).flatten.join('\n        ').gsub('$','\$') + '"'
+    # Legacy Support
+    urls = (!metadata[:url].nil?) ? metadata[:url] : metadata[:baseurl]
+    if urls
+      repo_manifest_opts << 'baseurl => ' + '"' + Array(urls).flatten.join('\n        ').gsub('$', '\$') + '"'
+    end
+
+    # Legacy Support
+    gpgkeys = (!metadata[:gpgkeys].nil?) ? metadata[:gpgkeys] : metadata[:gpgkey]
+    if gpgkeys
+      repo_manifest_opts << 'gpgkey => ' + '"' + Array(gpgkeys).flatten.join('\n       ').gsub('$', '\$') + '"'
+    end
+
+    repo_attrs.each do |attr|
+      if metadata[attr]
+        repo_manifest_opts << "#{attr} => '#{metadata[attr]}'"
       end
+    end
 
-      # Legacy Support
-      gpgkeys = !metadata[:gpgkeys].nil? ? metadata[:gpgkeys] : metadata[:gpgkey]
-      if gpgkeys
-        repo_manifest_opts << 'gpgkey => ' + '"' + Array(gpgkeys).flatten.join('\n       ').gsub('$','\$') + '"'
-      end
-
-      repo_attrs.each do |attr|
-        if metadata[attr]
-          repo_manifest_opts << "#{attr} => '#{metadata[attr]}'"
-        end
-      end
-
-      repo_manifest = repo_manifest + %(\n#{repo_manifest_opts.join(",\n")}) + "\n}\n"
+    repo_manifest + %(\n#{repo_manifest_opts.join(",\n")}) + "\n}\n"
   end
 
   # Enable EPEL if appropriate to do so and the system is online
   #
   # Can be disabled by setting BEAKER_enable_epel=no
   def enable_epel_on(suts)
-    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
+    block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
       if ONLINE
         os_info = fact_on(sut, 'os')
         os_maj_rel = os_info['release']['major']
 
         # This is based on the official EPEL docs https://fedoraproject.org/wiki/EPEL
         case os_info['name']
-        when 'RedHat','CentOS','AlmaLinux','Rocky'
+        when 'RedHat', 'CentOS', 'AlmaLinux', 'Rocky'
           install_latest_package_on(
             sut,
             'epel-release',
@@ -677,42 +666,42 @@ module Simp::BeakerHelpers
 
           if os_info['name'] == 'RedHat' && ENV['BEAKER_RHSM_USER'] && ENV['BEAKER_RHSM_PASS']
             if os_maj_rel == '7'
-              on sut, %{subscription-manager repos --enable "rhel-*-extras-rpms"}
-              on sut, %{subscription-manager repos --enable "rhel-ha-for-rhel-*-server-rpms"}
+              on sut, %(subscription-manager repos --enable "rhel-*-extras-rpms")
+              on sut, %(subscription-manager repos --enable "rhel-ha-for-rhel-*-server-rpms")
             end
 
             if os_maj_rel == '8'
-              on sut, %{subscription-manager repos --enable "codeready-builder-for-rhel-8-#{os_info['architecture']}-rpms"}
+              on sut, %(subscription-manager repos --enable "codeready-builder-for-rhel-8-#{os_info['architecture']}-rpms")
             end
           end
 
-          if ['CentOS','AlmaLinux','Rocky'].include?(os_info['name'])
+          if ['CentOS', 'AlmaLinux', 'Rocky'].include?(os_info['name'])
             if os_maj_rel == '8'
               # 8.0 fallback
               install_latest_package_on(sut, 'dnf-plugins-core')
-              on sut, %{dnf config-manager --set-enabled powertools || dnf config-manager --set-enabled PowerTools}
+              on sut, %(dnf config-manager --set-enabled powertools || dnf config-manager --set-enabled PowerTools)
             end
           end
         when 'OracleLinux'
           package_name = "oracle-epel-release-el#{os_maj_rel}"
-          install_latest_package_on(sut,package_name)
+          install_latest_package_on(sut, package_name)
         when 'Amazon'
-          on sut, %{amazon-linux-extras install epel -y}
+          on sut, %(amazon-linux-extras install epel -y)
         end
       end
     end
   end
 
   def update_package_from_centos_stream(suts, package_name)
-    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
+    block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
       sut.install_package('centos-release-stream') unless sut.check_for_package('centos-release-stream')
       install_latest_package_on(sut, package_name)
       sut.uninstall_package('centos-release-stream')
     end
   end
 
-  def linux_errata( suts )
-    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
+  def linux_errata(suts)
+    block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
       # Set the locale if not set
       sut.set_env_var('LANG', 'en_US.UTF-8') unless sut.get_env_var('LANG')
 
@@ -734,8 +723,8 @@ module Simp::BeakerHelpers
         if !sut.which('hostnamectl').empty?
           on(sut, "hostnamectl set-hostname #{new_fqdn}")
         else
-          on(sut, "echo '#{new_fqdn}' > /etc/hostname", :accept_all_exit_codes => true)
-          on(sut, "hostname #{new_fqdn}", :accept_all_exit_codes => true)
+          on(sut, "echo '#{new_fqdn}' > /etc/hostname", accept_all_exit_codes: true)
+          on(sut, "hostname #{new_fqdn}", accept_all_exit_codes: true)
         end
 
         if sut.file_exist?('/etc/sysconfig/network')
@@ -745,7 +734,7 @@ module Simp::BeakerHelpers
       end
 
       current_domain = fact_on(sut, 'networking.domain')&.strip
-      fail("Error: hosts must have an FQDN, got domain='#{current_domain}'") if current_domain.nil? || current_domain.empty?
+      raise("Error: hosts must have an FQDN, got domain='#{current_domain}'") if current_domain.nil? || current_domain.empty?
 
       # This may not exist in docker so just skip the whole thing
       if sut.file_exist?('/etc/ssh')
@@ -767,15 +756,15 @@ module Simp::BeakerHelpers
           user_info.map do |u|
             u.strip!
             u = u.split(':')
-            u[5] =~ %r{^(/|/dev/.*|/s?bin/?.*|/proc/?.*)$} ? [nil] : [u[0], u[5]]
+            %r{^(/|/dev/.*|/s?bin/?.*|/proc/?.*)$}.match?(u[5]) ? [nil] : [u[0], u[5]]
           end
         ]
 
-        user_info.keys.each do |user|
+        user_info.each_key do |user|
           src_file = "#{user_info[user]}/.ssh/authorized_keys"
           tgt_file = "/etc/ssh/local_keys/#{user}"
 
-          on(sut, %{if [ -f "#{src_file}" ]; then cp -a -f "#{src_file}" "#{tgt_file}" && chmod 644 "#{tgt_file}"; fi}, :silent => true)
+          on(sut, %(if [ -f "#{src_file}" ]; then cp -a -f "#{src_file}" "#{tgt_file}" && chmod 644 "#{tgt_file}"; fi), silent: true)
         end
       end
 
@@ -807,22 +796,22 @@ module Simp::BeakerHelpers
         end
 
         if [
-            'AlmaLinux',
-            'Amazon',
-            'CentOS',
-            'OracleLinux',
-            'RedHat',
-            'Rocky'
+          'AlmaLinux',
+          'Amazon',
+          'CentOS',
+          'OracleLinux',
+          'RedHat',
+          'Rocky',
         ].include?(os_info['name'])
           enable_yum_repos_on(sut)
           enable_epel_on(sut)
 
           # net-tools required for netstat utility being used by be_listening
-          if (os_info['release']['major'].to_i >= 7) ||((os_info['name'] == 'Amazon') && (os_info['release']['major'].to_i >= 2))
+          if (os_info['release']['major'].to_i >= 7) || ((os_info['name'] == 'Amazon') && (os_info['release']['major'].to_i >= 2))
             pp = <<-EOS
               package { 'net-tools': ensure => installed }
             EOS
-            apply_manifest_on(sut, pp, :catch_failures => false)
+            apply_manifest_on(sut, pp, catch_failures: false)
           end
 
           # Clean up YUM prior to starting our test runs.
@@ -839,30 +828,30 @@ module Simp::BeakerHelpers
   def rhel_rhsm_subscribe(suts, *opts)
     require 'securerandom'
 
-    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
+    block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
       rhsm_opts = {
-        :username => ENV['BEAKER_RHSM_USER'],
-        :password => ENV['BEAKER_RHSM_PASS'],
-        :system_name => "#{sut}_beaker_#{Time.now.to_i}_#{SecureRandom.uuid}",
-        :repo_list => {
+        username: ENV['BEAKER_RHSM_USER'],
+        password: ENV['BEAKER_RHSM_PASS'],
+        system_name: "#{sut}_beaker_#{Time.now.to_i}_#{SecureRandom.uuid}",
+        repo_list: {
           '7' => [
             'rhel-7-server-extras-rpms',
             'rhel-7-server-rh-common-rpms',
             'rhel-7-server-rpms',
-            'rhel-7-server-supplementary-rpms'
+            'rhel-7-server-supplementary-rpms',
           ],
           '8' => [
             'rhel-8-for-x86_64-baseos-rpms',
-            'rhel-8-for-x86_64-supplementary-rpms'
+            'rhel-8-for-x86_64-supplementary-rpms',
           ],
           '9' => [
             'rhel-9-for-x86_64-appstream-rpms',
-            'rhel-9-for-x86_64-baseos-rpms'
+            'rhel-9-for-x86_64-baseos-rpms',
           ]
         }
       }
 
-      if opts && opts.is_a?(Hash)
+      if opts&.is_a?(Hash)
         rhsm_opts.merge!(opts)
       end
 
@@ -871,14 +860,14 @@ module Simp::BeakerHelpers
 
       if os == 'RedHat'
         unless rhsm_opts[:username] && rhsm_opts[:password]
-          warn("BEAKER_RHSM_USER and/or BEAKER_RHSM_PASS not set on RHEL system.", "Assuming that subscription-manager is not needed. This may prevent packages from installing")
+          warn('BEAKER_RHSM_USER and/or BEAKER_RHSM_PASS not set on RHEL system.', 'Assuming that subscription-manager is not needed. This may prevent packages from installing')
           return
         end
 
-        sub_status = on(sut, 'subscription-manager status', :accept_all_exit_codes => true)
+        sub_status = on(sut, 'subscription-manager status', accept_all_exit_codes: true)
         unless sub_status.exit_code == 0
           logger.info("Registering #{sut} via subscription-manager")
-          on(sut, %{subscription-manager register --auto-attach --name='#{rhsm_opts[:system_name]}' --username='#{rhsm_opts[:username]}' --password='#{rhsm_opts[:password]}'}, :silent => true)
+          on(sut, %(subscription-manager register --auto-attach --name='#{rhsm_opts[:system_name]}' --username='#{rhsm_opts[:username]}' --password='#{rhsm_opts[:password]}'), silent: true)
         end
 
         if rhsm_opts[:repo_list][os_release]
@@ -889,17 +878,17 @@ module Simp::BeakerHelpers
 
         # Ensure that all users can access the entitlements since we don't know
         # who we'll be running jobs as (often not root)
-        on(sut, 'chmod -R ugo+rX /etc/pki/entitlement', :accept_all_exit_codes => true)
+        on(sut, 'chmod -R ugo+rX /etc/pki/entitlement', accept_all_exit_codes: true)
       end
     end
   end
 
-  def sosreport(suts, dest='sosreports')
-    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
+  def sosreport(suts, dest = 'sosreports')
+    block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
       install_latest_package_on(sut, 'sos')
       on(sut, 'sosreport --batch')
 
-      files = on(sut, 'ls /var/tmp/sosreport* /tmp/sosreport* 2>/dev/null', :accept_all_exit_codes => true).output.lines.map(&:strip)
+      files = on(sut, 'ls /var/tmp/sosreport* /tmp/sosreport* 2>/dev/null', accept_all_exit_codes: true).output.lines.map(&:strip)
 
       FileUtils.mkdir_p(dest)
 
@@ -910,42 +899,39 @@ module Simp::BeakerHelpers
   end
 
   def rhel_repo_enable(suts, repos)
-    if ENV['BEAKER_RHSM_USER'] && ENV['BEAKER_RHSM_PASS']
-      block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
-        Array(repos).each do |repo|
-          on(sut, %{subscription-manager repos --enable #{repo}})
-        end
+    return unless ENV['BEAKER_RHSM_USER'] && ENV['BEAKER_RHSM_PASS']
+    block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
+      Array(repos).each do |repo|
+        on(sut, %(subscription-manager repos --enable #{repo}))
       end
     end
   end
 
   def rhel_repo_disable(suts, repos)
-    if ENV['BEAKER_RHSM_USER'] && ENV['BEAKER_RHSM_PASS']
-      block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
-        Array(repos).each do |repo|
-          on(sut, %{subscription-manager repos --disable #{repo}}, :accept_all_exit_codes => true)
-        end
+    return unless ENV['BEAKER_RHSM_USER'] && ENV['BEAKER_RHSM_PASS']
+    block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
+      Array(repos).each do |repo|
+        on(sut, %(subscription-manager repos --disable #{repo}), accept_all_exit_codes: true)
       end
     end
   end
 
   def rhel_rhsm_unsubscribe(suts)
-    if ENV['BEAKER_RHSM_USER'] && ENV['BEAKER_RHSM_PASS']
-      block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
-        on(sut, %{subscription-manager unregister}, :accept_all_exit_codes => true)
-      end
+    return unless ENV['BEAKER_RHSM_USER'] && ENV['BEAKER_RHSM_PASS']
+    block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
+      on(sut, %(subscription-manager unregister), accept_all_exit_codes: true)
     end
   end
 
   # Apply known OS fixes we need to run Beaker on each SUT
-  def fix_errata_on( suts = hosts )
+  def fix_errata_on(suts = hosts)
     windows_suts = suts.select { |sut| is_windows?(sut) }
     linux_suts = suts - windows_suts
 
     linux_errata(linux_suts) unless linux_suts.empty?
 
     unless windows_suts.empty?
-      block_on(windows_suts, :run_in_parallel => @run_in_parallel) do |sut|
+      block_on(windows_suts, run_in_parallel: @run_in_parallel) do |sut|
         # Load the Windows requirements
         require 'simp/beaker_helpers/windows'
 
@@ -980,9 +966,8 @@ module Simp::BeakerHelpers
     end
 
     # Configure and reboot SUTs into FIPS mode
-    if ENV['BEAKER_fips'] == 'yes'
-      enable_fips_mode_on(suts)
-    end
+    return unless ENV['BEAKER_fips'] == 'yes'
+    enable_fips_mode_on(suts)
   end
 
   # Generate a fake openssl CA + certs for each host on a given SUT
@@ -992,13 +977,13 @@ module Simp::BeakerHelpers
   # NOTE: This generates everything within an SUT and copies it back out.
   #       This is because it is assumed the SUT will have the appropriate
   #       openssl in its environment, which may not be true of the host.
-  def run_fake_pki_ca_on( ca_sut = master, suts = hosts, local_dir = '' )
-    puts "== Fake PKI CA"
-    pki_dir  = File.expand_path( "../../files/pki", File.dirname(__FILE__))
+  def run_fake_pki_ca_on(ca_sut = master, _suts = hosts, local_dir = '')
+    puts '== Fake PKI CA'
+    pki_dir  = File.expand_path('../../files/pki', File.dirname(__FILE__))
     host_dir = '/root/pki'
 
     ca_sut.mkdir_p(host_dir)
-    Dir[ File.join(pki_dir, '*') ].each{|f| copy_to( ca_sut, f, host_dir)}
+    Dir[ File.join(pki_dir, '*') ].each { |f| copy_to(ca_sut, f, host_dir) }
 
     # Collect network information from all SUTs
     #
@@ -1011,14 +996,14 @@ module Simp::BeakerHelpers
       host_entry = { fqdn => [] }
 
       # Add the short name because containers can't change the hostname
-      host_entry[fqdn] << host.name if (host[:hypervisor] == 'docker')
+      host_entry[fqdn] << host.name if host[:hypervisor] == 'docker'
 
       # Ensure that all interfaces are active prior to collecting data
       activate_interfaces(host)
 
       networking_fact = pfact_on(host, 'networking')
       if networking_fact && networking_fact['interfaces']
-        networking_fact['interfaces'].each do |iface, data|
+        networking_fact['interfaces'].each_value do |data|
           next unless data['ip']
           next if data['ip'].start_with?('127.')
 
@@ -1049,10 +1034,10 @@ module Simp::BeakerHelpers
     #   3. Pull out an Array of all of the common element keys for future
     #      comparison
     common_ip_addresses = suts_network_info
-      .values.flatten
-      .group_by{ |x| x }
-      .select{|k,v| v.size > 1}
-      .keys
+                          .values.flatten
+                          .group_by { |x| x }
+                          .select { |_k, v| v.size > 1 }
+                          .keys
 
     # generate PKI certs for each SUT
     Dir.mktmpdir do |dir|
@@ -1071,10 +1056,9 @@ module Simp::BeakerHelpers
     end
 
     # if a local_dir was provided, copy everything down to it
-    unless local_dir.empty?
-      FileUtils.mkdir_p local_dir
-      scp_from( ca_sut, host_dir, local_dir )
-    end
+    return if local_dir.empty?
+    FileUtils.mkdir_p local_dir
+    scp_from(ca_sut, host_dir, local_dir)
   end
 
   # Copy a single SUT's PKI certs (with cacerts) onto an SUT.
@@ -1092,26 +1076,26 @@ module Simp::BeakerHelpers
   #                 public/fdqn.pub
   #                 private/fdqn.pem
   def copy_pki_to(sut, local_pki_dir, sut_base_dir = '/etc/pki/simp-testing')
-      fqdn                = fact_on(sut, 'networking.fqdn')
-      sut_pki_dir         = File.join( sut_base_dir, 'pki' )
-      local_host_pki_tree = File.join(local_pki_dir,'pki','keydist',fqdn)
-      local_cacert = File.join(local_pki_dir,'pki','demoCA','cacert.pem')
+    fqdn = fact_on(sut, 'networking.fqdn')
+    sut_pki_dir         = File.join(sut_base_dir, 'pki')
+    local_host_pki_tree = File.join(local_pki_dir, 'pki', 'keydist', fqdn)
+    local_cacert = File.join(local_pki_dir, 'pki', 'demoCA', 'cacert.pem')
 
-      sut.mkdir_p("#{sut_pki_dir}/public")
-      sut.mkdir_p("#{sut_pki_dir}/private")
-      sut.mkdir_p("#{sut_pki_dir}/cacerts")
-      copy_to(sut, "#{local_host_pki_tree}/#{fqdn}.pem", "#{sut_pki_dir}/private/")
-      copy_to(sut, "#{local_host_pki_tree}/#{fqdn}.pub", "#{sut_pki_dir}/public/")
+    sut.mkdir_p("#{sut_pki_dir}/public")
+    sut.mkdir_p("#{sut_pki_dir}/private")
+    sut.mkdir_p("#{sut_pki_dir}/cacerts")
+    copy_to(sut, "#{local_host_pki_tree}/#{fqdn}.pem", "#{sut_pki_dir}/private/")
+    copy_to(sut, "#{local_host_pki_tree}/#{fqdn}.pub", "#{sut_pki_dir}/public/")
 
-      copy_to(sut, local_cacert, "#{sut_pki_dir}/cacerts/simp_auto_ca.pem")
+    copy_to(sut, local_cacert, "#{sut_pki_dir}/cacerts/simp_auto_ca.pem")
 
-      # NOTE: to match pki::copy, 'cacert.pem' is copied to 'cacerts.pem'
-      copy_to(sut, local_cacert, "#{sut_pki_dir}/cacerts/cacerts.pem")
+    # NOTE: to match pki::copy, 'cacert.pem' is copied to 'cacerts.pem'
+    copy_to(sut, local_cacert, "#{sut_pki_dir}/cacerts/cacerts.pem")
 
-      # Need to hash all of the CA certificates so that apps can use them
-      # properly! This must happen on the host itself since it needs to match
-      # the native hashing algorithms.
-      hash_cmd = <<~EOM.strip
+    # Need to hash all of the CA certificates so that apps can use them
+    # properly! This must happen on the host itself since it needs to match
+    # the native hashing algorithms.
+    hash_cmd = <<~EOM.strip
         PATH=/opt/puppetlabs/puppet/bin:$PATH; \
         cd #{sut_pki_dir}/cacerts; \
         for x in *; do \
@@ -1125,14 +1109,14 @@ module Simp::BeakerHelpers
         done
         EOM
 
-      on(sut, hash_cmd)
+    on(sut, hash_cmd)
   end
 
   # Copy a CA keydist/ directory of CA+host certs into an SUT
   #
   # This simulates the output of FakeCA's gencerts_nopass.sh to keydist/
-  def copy_keydist_to( ca_sut = master, host_keydist_dir = nil  )
-    if !host_keydist_dir
+  def copy_keydist_to(ca_sut = master, host_keydist_dir = nil)
+    unless host_keydist_dir
       modulepath = puppet_modulepath_on(ca_sut)
 
       host_keydist_dir = "#{modulepath.first}/pki/files/keydist"
@@ -1152,8 +1136,8 @@ module Simp::BeakerHelpers
   def activate_interfaces(hosts)
     return if ENV['BEAKER_no_fix_interfaces']
 
-    block_on(hosts, :run_in_parallel => @run_in_parallel) do |host|
-      if host[:platform] =~ /windows/
+    block_on(hosts, run_in_parallel: @run_in_parallel) do |host|
+      if host[:platform].include?('windows')
         puts "  -- SKIPPING #{host} because it is windows"
         next
       end
@@ -1161,18 +1145,18 @@ module Simp::BeakerHelpers
       networking_fact = pfact_on(host, 'networking')
       if networking_fact && networking_fact['interfaces']
         networking_fact['interfaces'].each do |iface, data|
-          next if ( ( data['ip'] && !data['ip'].empty? ) || ( data['ip6'] && !data['ip6'].empty? ) )
-          on(host, "ifup #{iface}", :accept_all_exit_codes => true)
+          next if (data['ip'] && !data['ip'].empty?) || (data['ip6'] && !data['ip6'].empty?)
+          on(host, "ifup #{iface}", accept_all_exit_codes: true)
         end
       else
         interfaces_fact = pfact_on(host, 'interfaces')
 
         interfaces = interfaces_fact.strip.split(',')
-        interfaces.delete_if { |x| x =~ /^lo/ }
+        interfaces.delete_if { |x| x =~ %r{^lo} }
 
         interfaces.each do |iface|
           if pfact_on(host, "ipaddress_#{iface}")
-            on(host, "ifup #{iface}", :accept_all_exit_codes => true)
+            on(host, "ifup #{iface}", accept_all_exit_codes: true)
           end
         end
       end
@@ -1189,7 +1173,7 @@ module Simp::BeakerHelpers
   require 'rspec'
   RSpec.configure do |c|
     c.before(:all) do
-      @temp_hieradata_dirs = @temp_hieradata_dirs || []
+      @temp_hieradata_dirs ||= []
 
       # We can't guarantee that the upstream vendor isn't disabling interfaces
       activate_interfaces(hosts)
@@ -1207,18 +1191,18 @@ module Simp::BeakerHelpers
   # @param trim [Boolean] remove leading and trailing whitespace
   #
   # @return [String, nil] the contents of the remote file
-  def file_content_on(sut, path, trim=true)
+  def file_content_on(sut, path, _trim = true)
     file_content = nil
 
     if file_exists_on(sut, path)
       Dir.mktmpdir do |dir|
         scp_from(sut, path, dir)
 
-        file_content = File.read(File.join(dir,File.basename(path)))
+        file_content = File.read(File.join(dir, File.basename(path)))
       end
     end
 
-    return file_content
+    file_content
   end
 
   # Retrieve the default hiera.yaml path
@@ -1270,7 +1254,7 @@ module Simp::BeakerHelpers
   #   using `#clear_temp_hieradata` in the `after(:all)` hook.  It may also be
   #   retained for debugging purposes.
   #
-  def write_hieradata_to(sut, hieradata, terminus = 'deprecated')
+  def write_hieradata_to(sut, hieradata, _terminus = 'deprecated')
     @temp_hieradata_dirs ||= []
     data_dir = Dir.mktmpdir('hieradata')
     @temp_hieradata_dirs << data_dir
@@ -1308,20 +1292,20 @@ module Simp::BeakerHelpers
     sut_environment = sut.puppet_configprint['environment']
 
     # This output lets us know where Hiera is configured to look on the system
-    puppet_lookup_info = on(sut, "puppet lookup --explain --environment #{sut_environment} test__simp__test", :silent => true).output.strip.lines
+    puppet_lookup_info = on(sut, "puppet lookup --explain --environment #{sut_environment} test__simp__test", silent: true).output.strip.lines
 
     if sut.puppet_configprint['manifest'].nil? || sut.puppet_configprint['manifest'].empty?
-      fail("No output returned from `puppet config print manifest` on #{sut}")
+      raise("No output returned from `puppet config print manifest` on #{sut}")
     end
 
     puppet_env_path = puppet_environment_path_on(sut)
 
     # We'll just take the first match since Hiera will find things there
-    puppet_lookup_info = puppet_lookup_info.grep(/Path "/).grep(Regexp.new(puppet_env_path))
+    puppet_lookup_info = puppet_lookup_info.grep(%r{Path "}).grep(Regexp.new(puppet_env_path))
 
     # Grep always returns an Array
     if puppet_lookup_info.empty?
-      fail("Could not determine hiera data directory under #{puppet_env_path} on #{sut}")
+      raise("Could not determine hiera data directory under #{puppet_env_path} on #{sut}")
     end
 
     # Snag the actual path without the extra bits
@@ -1343,7 +1327,7 @@ module Simp::BeakerHelpers
     datadir_path = puppet_env_path + file_sep + datadir_name
 
     # Return the path to the data directory
-    return datadir_path
+    datadir_path
   end
 
   # Write the provided data structure to Hiera's :datadir and configure Hiera to
@@ -1363,29 +1347,26 @@ module Simp::BeakerHelpers
   #
   # @return [Nil]
   #
-  def set_hieradata_on(sut, hieradata, terminus = 'deprecated')
+  def set_hieradata_on(sut, hieradata, _terminus = 'deprecated')
     write_hieradata_to sut, hieradata
   end
-
 
   # Clean up all temporary hiera data files.
   #
   # Meant to be called from after(:all)
   def clear_temp_hieradata
-    if @temp_hieradata_dirs && !@temp_hieradata_dirs.empty?
-      @temp_hieradata_dirs.each do |data_dir|
-        if File.exist?(data_dir)
-          FileUtils.rm_r(data_dir)
-        end
+    return unless @temp_hieradata_dirs && !@temp_hieradata_dirs.empty?
+    @temp_hieradata_dirs.each do |data_dir|
+      if File.exist?(data_dir)
+        FileUtils.rm_r(data_dir)
       end
     end
   end
 
-
   # pluginsync custom facts for all modules
-  def pluginsync_on( suts = hosts )
+  def pluginsync_on(_suts = hosts)
     puts "== pluginsync_on'" if ENV['BEAKER_helpers_verbose']
-    pluginsync_manifest =<<-PLUGINSYNC_MANIFEST
+    pluginsync_manifest = <<-PLUGINSYNC_MANIFEST
     file { $::settings::libdir:
           ensure  => directory,
           source  => 'puppet:///plugins',
@@ -1395,9 +1376,8 @@ module Simp::BeakerHelpers
           noop    => false
         }
     PLUGINSYNC_MANIFEST
-    apply_manifest_on(hosts, pluginsync_manifest, :run_in_parallel => @run_in_parallel)
+    apply_manifest_on(hosts, pluginsync_manifest, run_in_parallel: @run_in_parallel)
   end
-
 
   # Looks up latest `puppet-agent` version by the version of its `puppet` gem
   #
@@ -1406,7 +1386,7 @@ module Simp::BeakerHelpers
   #
   # @return [String,Nil] the `puppet-agent` version or nil
   #
-  def latest_puppet_agent_version_for( puppet_version )
+  def latest_puppet_agent_version_for(puppet_version)
     return nil if puppet_version.nil?
 
     require 'rubygems/requirement'
@@ -1415,27 +1395,27 @@ module Simp::BeakerHelpers
 
     _puppet_version = puppet_version.strip.split(',')
 
-
     @agent_version_table ||= YAML.load_file(
                                File.expand_path(
                                  '../../files/puppet-agent-versions.yaml',
-                                 File.dirname(__FILE__)
-                             )).fetch('version_mappings')
-    _pair = @agent_version_table.find do |k,v|
+                                 File.dirname(__FILE__),
+                               ),
+                             ).fetch('version_mappings')
+    _pair = @agent_version_table.find do |k, _v|
       Gem::Requirement.new(_puppet_version).satisfied_by?(Gem::Version.new(k))
     end
-    result = _pair ? _pair.last : nil
+    result = _pair&.last
 
     # If we didn't get a match, go look for published rubygems
     unless result
       puppet_gems = nil
 
       Bundler.with_unbundled_env do
-        puppet_gems = %x(gem search -ra -e puppet).match(/\((.+)\)/)
+        puppet_gems = `gem search -ra -e puppet`.match(%r{\((.+)\)})
       end
 
       if puppet_gems
-        puppet_gems = puppet_gems[1].split(/,?\s+/).select{|x| x =~ /^\d/}
+        puppet_gems = puppet_gems[1].split(%r{,?\s+}).select { |x| x =~ %r{^\d} }
 
         # If we don't have a full version string, we need to massage it for the
         # match.
@@ -1443,7 +1423,7 @@ module Simp::BeakerHelpers
           if _puppet_version.size == 1
             Gem::Version.new(_puppet_version[0])
             if _puppet_version[0].count('.') < 2
-             _puppet_version = "~> #{_puppet_version[0]}"
+              _puppet_version = "~> #{_puppet_version[0]}"
             end
           end
         rescue ArgumentError
@@ -1457,7 +1437,7 @@ module Simp::BeakerHelpers
       end
     end
 
-    return result
+    result
   end
 
   # returns hash with :puppet_install_version, :puppet_collection,
@@ -1474,18 +1454,16 @@ module Simp::BeakerHelpers
     # The first match is internal Beaker and the second is legacy SIMP
     puppet_install_version = ENV['BEAKER_PUPPET_AGENT_VERSION'] || ENV['PUPPET_INSTALL_VERSION'] || ENV['PUPPET_VERSION']
 
-    if puppet_install_version and !puppet_install_version.strip.empty?
+    if puppet_install_version && !puppet_install_version.strip.empty?
       puppet_agent_version = latest_puppet_agent_version_for(puppet_install_version.strip)
     end
 
     if puppet_agent_version.nil?
-      if puppet_collection = (ENV['BEAKER_PUPPET_COLLECTION'] || host.options['puppet_collection'])
-        if puppet_collection =~ /puppet(\d+)/
-          puppet_install_version = "~> #{$1}"
-          puppet_agent_version = latest_puppet_agent_version_for(puppet_install_version)
-        else
-          raise("Error: Puppet Collection '#{puppet_collection}' must match /puppet(\\d+)/")
-        end
+      if (puppet_collection = ENV['BEAKER_PUPPET_COLLECTION'] || host.options['puppet_collection'])
+        raise("Error: Puppet Collection '#{puppet_collection}' must match /puppet(\\d+)/") unless puppet_collection =~ %r{puppet(\d+)}
+        puppet_install_version = "~> #{::Regexp.last_match(1)}"
+        puppet_agent_version = latest_puppet_agent_version_for(puppet_install_version)
+
       else
         puppet_agent_version = latest_puppet_agent_version_for(DEFAULT_PUPPET_AGENT_VERSION)
       end
@@ -1497,12 +1475,11 @@ module Simp::BeakerHelpers
     end
 
     {
-      :puppet_install_version => puppet_agent_version,
-      :puppet_collection      => puppet_collection,
-      :puppet_install_type    => ENV.fetch('PUPPET_INSTALL_TYPE', 'agent')
+      puppet_install_version: puppet_agent_version,
+      puppet_collection: puppet_collection,
+      puppet_install_type: ENV.fetch('PUPPET_INSTALL_TYPE', 'agent')
     }
   end
-
 
   # Replacement for `install_puppet` in spec_helper_acceptance.rb
   def install_puppet
@@ -1550,27 +1527,27 @@ module Simp::BeakerHelpers
   def install_simp_repos(suts, disable = [])
     # NOTE: Do *NOT* use puppet in this method since it may not be available yet
 
-    return if (ENV.fetch('SIMP_install_repos', 'yes') == 'no')
+    return if ENV.fetch('SIMP_install_repos', 'yes') == 'no'
 
-    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
+    block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
       install_package_unless_present_on(sut, 'yum-utils')
 
       os = fact_on(sut, 'os.name')
       release = fact_on(sut, 'os.release.major')
 
       # Work around Amazon 2 compatibility
-      if (( os == 'Amazon' ) && ( "#{release}" == '2' ))
+      if (os == 'Amazon') && (release.to_s == '2')
         release = '7'
       end
 
       install_package_unless_present_on(
         sut,
         'simp-release-community',
-        "https://download.simp-project.com/simp-release-community.el#{release}.rpm"
+        "https://download.simp-project.com/simp-release-community.el#{release}.rpm",
       )
 
       # TODO: Remove this hack-around when there's a version for AL2
-      if ( os == 'Amazon' )
+      if os == 'Amazon'
         on(sut, %(sed -i 's/$releasever/#{release}/g' /etc/yum.repos.d/simp*))
       end
 
@@ -1603,7 +1580,7 @@ module Simp::BeakerHelpers
           to_disable << 'puppet6--simp'
         end
 
-        logger.info(%{INFO: repos to disable: '#{to_disable.join("', '")}'.})
+        logger.info(%(INFO: repos to disable: '#{to_disable.join("', '")}'.))
 
         # NOTE: This --enablerepo enables the repos for listing and is inherited
         # from YUM. This does not actually "enable" the repos, that would require
@@ -1611,26 +1588,25 @@ module Simp::BeakerHelpers
         #
         # Note: Certain versions of EL8 do not dump by default and EL7 does not
         # have the '--dump' option.
-        x = on(sut, %{yum repolist all || dnf repolist --all}).stdout.lines
-        y = x.map{|z| z.gsub(%r{/.*\Z},'')}
-        available_repos = y.grep(/\A([a-zA-Z][a-zA-Z0-9:_-]+)\s*/){|x| $1}
-        logger.info(%{INFO: available repos: '#{available_repos.join("', '")}'.})
+        x = on(sut, %(yum repolist all || dnf repolist --all)).stdout.lines
+        y = x.map { |z| z.gsub(%r{/.*\Z}, '') }
+        available_repos = y.grep(%r{\A([a-zA-Z][a-zA-Z0-9:_-]+)\s*}) { |_x| ::Regexp.last_match(1) }
+        logger.info(%(INFO: available repos: '#{available_repos.join("', '")}'.))
 
         invalid_repos = (to_disable - available_repos)
 
         # Verify that the repos passed to disable are in the list of valid repos
         unless invalid_repos.empty?
-          logger.warn(%{WARN: install_simp_repo - requested repos to disable do not exist on the target system '#{invalid_repos.join("', '")}'.})
+          logger.warn(%(WARN: install_simp_repo - requested repos to disable do not exist on the target system '#{invalid_repos.join("', '")}'.))
         end
 
-
         (to_disable - invalid_repos).each do |repo|
-          on(sut, %{yum-config-manager --disable "#{repo}"})
+          on(sut, %(yum-config-manager --disable "#{repo}"))
         end
       end
     end
 
-    set_yum_opts_on(suts, {'simp*.skip_if_unavailable' => '1' })
+    set_yum_opts_on(suts, { 'simp*.skip_if_unavailable' => '1' })
   end
 
   # Set the release and release type of the SIMP yum repos
@@ -1638,11 +1614,11 @@ module Simp::BeakerHelpers
   # Environment variables may be used to set either one
   #   * BEAKER_SIMP_repo_release => The actual release (version number)
   #   * BEAKER_SIMP_repo_release_type => The type of release (stable, unstable, rolling, etc...)
-  def set_simp_repo_release(sut, simp_release_type='stable', simp_release='6')
+  def set_simp_repo_release(sut, simp_release_type = 'stable', simp_release = '6')
     simp_release = ENV.fetch('BEAKER_SIMP_repo_release', simp_release)
     simp_release_type = ENV.fetch('BEAKER_SIMP_repo_release_type', simp_release_type)
 
-    simp_release_type = 'releases' if (simp_release_type == 'stable')
+    simp_release_type = 'releases' if simp_release_type == 'stable'
 
     create_remote_file(sut, '/etc/yum/vars/simprelease', simp_release)
     create_remote_file(sut, '/etc/yum/vars/simpreleasetype', simp_release_type)

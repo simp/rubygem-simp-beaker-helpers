@@ -19,11 +19,11 @@ hosts.each do |host|
         Simp::BeakerHelpers::Snapshot.restore(host, 'test')
       end
 
-      it 'should have the keep file' do
+      it 'has the keep file' do
         expect(host.file_exist?('/root/keep')).to be true
       end
 
-      it 'should not have the trash file' do
+      it 'does not have the trash file' do
         expect(host.file_exist?('/root/trash')).to be false
       end
 
@@ -43,12 +43,12 @@ hosts.each do |host|
         Simp::BeakerHelpers::Snapshot.restore(host, 'test')
       end
 
-      it 'should have all keep files' do
+      it 'has all keep files' do
         expect(host.file_exist?('/root/keep')).to be true
         expect(host.file_exist?('/root/keep2')).to be true
       end
 
-      it 'should not have the trash file' do
+      it 'does not have the trash file' do
         expect(host.file_exist?('/root/trash')).to be false
       end
 
@@ -57,7 +57,7 @@ hosts.each do |host|
       end
 
       it 'can list the snapshots' do
-        expect(Simp::BeakerHelpers::Snapshot.list(host)).to eq ["#{host}", 'test', 'test2']
+        expect(Simp::BeakerHelpers::Snapshot.list(host)).to eq [host.to_s, 'test', 'test2']
       end
 
       it 'can query for a specific snapshot' do
@@ -67,8 +67,8 @@ hosts.each do |host|
       end
 
       it 'restores to the internal base' do
-         Simp::BeakerHelpers::Snapshot.restore_to_base(host)
-       end
+        Simp::BeakerHelpers::Snapshot.restore_to_base(host)
+      end
 
       it 'creates a file that should be saved' do
         on(host, 'echo "keep" > /root/keep')

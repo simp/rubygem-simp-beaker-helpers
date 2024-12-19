@@ -28,13 +28,12 @@ env:
 
 jobs:
   ruby-style:
-    if: false # TODO Modules will need: rubocop in Gemfile, .rubocop.yml
     name: 'Ruby Style (experimental)'
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v2
-      - name: "Install Ruby ${{matrix.puppet.ruby_version}}"
+      - uses: actions/checkout@v3
+      - name: "Install Ruby 2.7"
         uses: ruby/setup-ruby@v1
         with:
           ruby-version: 2.7
@@ -56,11 +55,11 @@ jobs:
           - label: 'Puppet 8.x'
             puppet_version: '~> 8.0'
             ruby_version: '3.2'
-            experimental: true
+            experimental: false
     env:
       PUPPET_VERSION: ${{matrix.puppet.puppet_version}}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: 'Install Ruby ${{matrix.puppet.ruby_version}}'
         uses: ruby/setup-ruby@v1
         with:
