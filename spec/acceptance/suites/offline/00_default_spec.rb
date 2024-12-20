@@ -66,7 +66,7 @@ describe 'Offline mode' do
           'seabios',
           'sqlite-devel',
           'util-linux',
-          'which'
+          'which',
         ]
 
         on(host, %(yum -y install #{required_packages.join(' ')}))
@@ -84,7 +84,8 @@ describe 'Offline mode' do
       end
 
       it 'installs the VirtualBox extension pack' do
-        on(host, 'VERSION=$(VBoxManage --version | tail -1 | cut -f 1 -d "r") && curl -Lo ${TMPDIR}/Oracle_VM_VirtualBox_Extension_Pack-${VERSION}.vbox-extpack http://download.virtualbox.org/virtualbox/${VERSION}/Oracle_VM_VirtualBox_Extension_Pack-${VERSION}.vbox-extpack && yes | VBoxManage extpack install ${TMPDIR}/Oracle_VM_VirtualBox_Extension_Pack-${VERSION}.vbox-extpack && rm -rf ${TMPDIR}/Oracle_VM_VirtualBox_Extension_Pack-${VERSION}.vbox-extpack')
+        on(host,
+'VERSION=$(VBoxManage --version | tail -1 | cut -f 1 -d "r") && curl -Lo ${TMPDIR}/Oracle_VM_VirtualBox_Extension_Pack-${VERSION}.vbox-extpack http://download.virtualbox.org/virtualbox/${VERSION}/Oracle_VM_VirtualBox_Extension_Pack-${VERSION}.vbox-extpack && yes | VBoxManage extpack install ${TMPDIR}/Oracle_VM_VirtualBox_Extension_Pack-${VERSION}.vbox-extpack && rm -rf ${TMPDIR}/Oracle_VM_VirtualBox_Extension_Pack-${VERSION}.vbox-extpack')
       end
 
       it 'adds the build user to the vboxusers group' do
@@ -97,9 +98,11 @@ describe 'Offline mode' do
 
       it 'installs RPM for the build user' do
         # Install RVM
-        on(host, %(#{build_user_cmd} "for i in {1..5}; do { gpg2 --keyserver hkp://pgp.mit.edu --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 || gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 || gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3; } && { gpg2 --keyserver hkp://pgp.mit.edu --recv-keys 7D2BAF1CF37B13E2069D6956105BD0E739499BDB || gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 7D2BAF1CF37B13E2069D6956105BD0E739499BDB; } && break || sleep 1; done"))
+        on(host,
+%(#{build_user_cmd} "for i in {1..5}; do { gpg2 --keyserver hkp://pgp.mit.edu --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 || gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 || gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3; } && { gpg2 --keyserver hkp://pgp.mit.edu --recv-keys 7D2BAF1CF37B13E2069D6956105BD0E739499BDB || gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 7D2BAF1CF37B13E2069D6956105BD0E739499BDB; } && break || sleep 1; done"))
         on(host, %(#{build_user_cmd} "gpg2 --refresh-keys"))
-        on(host, %(#{build_user_cmd} "curl -sSL https://raw.githubusercontent.com/rvm/rvm/stable/binscripts/rvm-installer -o rvm-installer && curl -sSL https://raw.githubusercontent.com/rvm/rvm/stable/binscripts/rvm-installer.asc -o rvm-installer.asc && gpg2 --verify rvm-installer.asc rvm-installer && bash rvm-installer"))
+        on(host,
+%(#{build_user_cmd} "curl -sSL https://raw.githubusercontent.com/rvm/rvm/stable/binscripts/rvm-installer -o rvm-installer && curl -sSL https://raw.githubusercontent.com/rvm/rvm/stable/binscripts/rvm-installer.asc -o rvm-installer.asc && gpg2 --verify rvm-installer.asc rvm-installer && bash rvm-installer"))
         on(host, %(#{build_user_cmd} "rvm install 2.4.4 --disable-binary"))
         on(host, %(#{build_user_cmd} "rvm use --default 2.4.4"))
         on(host, %(#{build_user_cmd} "rvm all do gem install bundler -v '~> 1.16' --no-document"))

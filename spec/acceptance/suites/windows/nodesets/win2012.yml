@@ -2,7 +2,7 @@
 HOSTS:
   win:
     roles:
-    - windows
+      - windows
     platform: windows-server-amd64
     box: devopsgroup-io/windows_server-2012r2-standard-amd64-nocm
     hypervisor: "<%= ENV.fetch('BEAKER_HYPERVISOR', 'vagrant') %>"
@@ -16,7 +16,7 @@ HOSTS:
     gce_machine_type: n1-standard-2
   el7:
     roles:
-    - default
+      - default
     platform: el-7-x86_64
     box: centos/7
     hypervisor: "<%= ENV.fetch('BEAKER_HYPERVISOR', 'vagrant') %>"
@@ -25,4 +25,4 @@ HOSTS:
 CONFIG:
   log_level: verbose
   type: aio
-  puppet_collection: "<%= ENV.fetch('BEAKER_PUPPET_COLLECTION', 'puppet7') %>"
+  puppet_collection: "<%= ENV.fetch('BEAKER_PUPPET_COLLECTION', 'puppet8') %>"
