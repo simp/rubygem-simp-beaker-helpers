@@ -1,3 +1,7 @@
+### 1.34.3 / 2024-12-20
+* Fixed:
+  * Update /etc/hosts on all nodes when hostname changes (#227)
+
 ### 1.34.2 / 2024-12-19
 * Fixed:
   * Update /etc/hosts when hostname changes (#224)

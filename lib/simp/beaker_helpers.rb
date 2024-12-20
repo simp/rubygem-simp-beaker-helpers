@@ -729,7 +729,7 @@ module Simp::BeakerHelpers
       if current_domain.nil? || current_domain.empty?
         new_fqdn = hostname + '.beaker.test'
 
-        safe_sed(sut, "s/#{hostname}.*/#{new_fqdn} #{hostname}/", '/etc/hosts')
+        safe_sed(suts, "s/#{hostname}.*/#{new_fqdn} #{hostname}/", '/etc/hosts')
 
         if !sut.which('hostnamectl').empty?
           on(sut, "hostnamectl set-hostname #{new_fqdn}")
@@ -939,8 +939,13 @@ module Simp::BeakerHelpers
 
   # Apply known OS fixes we need to run Beaker on each SUT
   def fix_errata_on( suts = hosts )
-    block_on(suts, :run_in_parallel => @run_in_parallel) do |sut|
-      if is_windows?(sut)
+    windows_suts = suts.select { |sut| is_windows?(sut) }
+    linux_suts = suts - windows_suts
+
+    linux_errata(linux_suts) unless linux_suts.empty?
+
+    unless windows_suts.empty?
+      block_on(windows_suts, :run_in_parallel => @run_in_parallel) do |sut|
         # Load the Windows requirements
         require 'simp/beaker_helpers/windows'
 
@@ -971,8 +976,6 @@ module Simp::BeakerHelpers
         EOM
 
         install_cert_on_windows(sut, 'geotrustglobal', geotrust_global_ca)
-      else
-        linux_errata(sut)
       end
     end
 
