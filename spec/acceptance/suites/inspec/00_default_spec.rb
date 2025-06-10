@@ -22,7 +22,7 @@ describe 'Inspec STIG Profile' do
               Simp::BeakerHelpers::Inspec.new(host, profile)
             end
 
-            let(:inspec_report_data) { nil }
+            let(:inspec_report_data) { inspec.process_inspec_results }
 
             # rubocop:disable RSpec/RepeatedDescription
             it 'runs inspec' do
@@ -31,8 +31,6 @@ describe 'Inspec STIG Profile' do
             # rubocop:enable RSpec/RepeatedDescription
 
             it 'has an inspec report' do
-              inspec_report_data = inspec.process_inspec_results
-
               expect(inspec_report_data).not_to be_nil
 
               inspec.write_report(inspec_report_data)

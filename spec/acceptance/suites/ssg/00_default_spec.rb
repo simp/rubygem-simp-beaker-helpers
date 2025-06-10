@@ -7,7 +7,13 @@ describe 'run the SSG against an SCAP profile' do
     context "on #{host}" do
       let(:ssg) { Simp::BeakerHelpers::SSG.new(host) }
 
-      let(:ssg_report_data) { nil }
+      let(:ssg_report_data) do
+        # Validate that the filter works
+        filter = '_rule_audit'
+        host_exclusions = ['ssh_']
+
+        ssg_report_data = ssg.process_ssg_results(filter, host_exclusions)
+      end
 
       it 'runs the SSG' do
         profiles = ssg.get_profiles
@@ -23,12 +29,6 @@ describe 'run the SSG against an SCAP profile' do
       end
 
       it 'has an SSG report' do
-        # Validate that the filter works
-        filter = '_rule_audit'
-        host_exclusions = ['ssh_']
-
-        ssg_report_data = ssg.process_ssg_results(filter, host_exclusions)
-
         expect(ssg_report_data).not_to be_nil
 
         ssg.write_report(ssg_report_data)
