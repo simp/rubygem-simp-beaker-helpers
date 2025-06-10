@@ -12,7 +12,7 @@ describe 'run the SSG against an SCAP profile' do
         filter = '_rule_audit'
         host_exclusions = ['ssh_']
 
-        ssg_report_data = ssg.process_ssg_results(filter, host_exclusions)
+        ssg.process_ssg_results(filter, host_exclusions)
       end
 
       it 'runs the SSG' do
