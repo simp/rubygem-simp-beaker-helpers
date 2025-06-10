@@ -48,7 +48,7 @@ RSpec.configure do |c|
   rescue StandardError, ScriptError => e
     raise e unless ENV['PRY']
     require 'pry'
-    binding.pry
+    binding.pry # rubocop:disable Lint/Debugger
   end
 end
 

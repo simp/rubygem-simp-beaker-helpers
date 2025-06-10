@@ -9,7 +9,7 @@ require 'puppetlabs_spec_helper/tasks/fixtures'
 module Simp; end
 
 class Simp::Rake::Beaker < ::Rake::TaskLib
-  def initialize(base_dir)
+  def initialize(base_dir) # rubocop:disable Lint/MissingSuper
     @base_dir   = base_dir
     @clean_list = []
 

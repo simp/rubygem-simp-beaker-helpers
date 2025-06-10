@@ -17,34 +17,37 @@ describe 'Inspec STIG Profile' do
             )
 
           if File.exist?(profile_path)
-            before(:all) do
+            let(:inspec) do
               Simp::BeakerHelpers::Inspec.enable_repo_on(hosts)
-              @inspec = Simp::BeakerHelpers::Inspec.new(host, profile)
-
-              # If we don't do this, the variable gets reset
-              @inspec_report = { data: nil }
+              Simp::BeakerHelpers::Inspec.new(host, profile)
             end
 
+            let(:inspec_report_data) { nil }
+
+            # rubocop:disable RSpec/RepeatedDescription
             it 'runs inspec' do
-              @inspec.run
+              inspec.run
             end
+            # rubocop:enable RSpec/RepeatedDescription
 
             it 'has an inspec report' do
-              @inspec_report[:data] = @inspec.process_inspec_results
+              inspec_report_data = inspec.process_inspec_results
 
-              expect(@inspec_report[:data]).not_to be_nil
+              expect(inspec_report_data).not_to be_nil
 
-              @inspec.write_report(@inspec_report[:data])
+              inspec.write_report(inspec_report_data)
             end
 
             it 'has a report' do
-              expect(@inspec_report[:data][:report]).not_to be_nil
-              puts @inspec_report[:data][:report]
+              expect(inspec_report_data[:report]).not_to be_nil
+              puts inspec_report_data[:report]
             end
           else
+            # rubocop:disable RSpec/RepeatedDescription
             it 'runs inspec' do
               skip("No matching profile available at #{profile_path}")
             end
+            # rubocop:enable RSpec/RepeatedDescription
           end
         end
       end

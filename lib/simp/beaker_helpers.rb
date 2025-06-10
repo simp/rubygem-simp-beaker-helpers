@@ -204,9 +204,9 @@ module Simp::BeakerHelpers
       # There appears to be a single copy of 'opts' that gets passed around
       # through all of the different hosts so we're going to make a local deep
       # copy so that we don't destroy the world accidentally.
-      _opts = Marshal.load(Marshal.dump(opts))
-      _opts[:ignore] ||= []
-      _opts[:ignore] << exclude_hack
+      local_opts = Marshal.load(Marshal.dump(opts))
+      local_opts[:ignore] ||= []
+      local_opts[:ignore] << exclude_hack
 
       if File.directory?(src)
         dest = File.join(dest, File.basename(src)) if File.directory?(src)
@@ -216,7 +216,7 @@ module Simp::BeakerHelpers
       # End rsync hackery
 
       begin
-        rsync_to(sut, src, dest, _opts)
+        rsync_to(sut, src, dest, local_opts)
       rescue
         # Depending on what is getting tested, a new SSH session might not
         # work. In this case, we fall back to SSH.
@@ -468,8 +468,13 @@ module Simp::BeakerHelpers
 
         # Since we may be doing this prior to having a box flip into FIPS mode, we
         # need to find and modify *all* of the affected policies
-        on(sut,
-%{sed --follow-symlinks -i 's/\\(HostKeyAlgorithms\\|PubkeyAcceptedKeyTypes\\)\\(.\\)/\\1\\2#{key_types.join(',')},/g' $( grep -L ssh-rsa $( find /etc/crypto-policies /usr/share/crypto-policies -type f -a \\( -name '*.txt' -o -name '*.config' \\) -exec grep -l PubkeyAcceptedKeyTypes {} \\; ) ) })
+        on(
+          sut,
+          [
+            %{sed --follow-symlinks -i 's/\\(HostKeyAlgorithms\\|PubkeyAcceptedKeyTypes\\)\\(.\\)/\\1\\2#{key_types.join(',')},/g'},
+            "$( grep -L ssh-rsa $( find /etc/crypto-policies /usr/share/crypto-policies -type f -a \\( -name '*.txt' -o -name '*.config' \\) -exec grep -l PubkeyAcceptedKeyTypes {} \\; ) )",
+          ].join(' '),
+        )
       end
     end
   end
@@ -477,7 +482,7 @@ module Simp::BeakerHelpers
   # Perform the equivalend of an in-place sed without changing the target inode
   #
   # Required for many container targets
-  def safe_sed(suts = hosts, pattern, target_file)
+  def safe_sed(suts = hosts, pattern, target_file) # rubocop:disable Style/OptionalArguments
     block_on(suts, run_in_parallel: @run_in_parallel) do |sut|
       tmpfile = sut.tmpfile('safe_sed')
 
@@ -1393,7 +1398,7 @@ module Simp::BeakerHelpers
     require 'rubygems/version'
     require 'yaml'
 
-    _puppet_version = puppet_version.strip.split(',')
+    split_puppet_version = puppet_version.strip.split(',')
 
     @agent_version_table ||= YAML.load_file(
                                File.expand_path(
@@ -1401,10 +1406,10 @@ module Simp::BeakerHelpers
                                  File.dirname(__FILE__),
                                ),
                              ).fetch('version_mappings')
-    _pair = @agent_version_table.find do |k, _v|
-      Gem::Requirement.new(_puppet_version).satisfied_by?(Gem::Version.new(k))
+    pair = @agent_version_table.find do |k, _v|
+      Gem::Requirement.new(split_puppet_version).satisfied_by?(Gem::Version.new(k))
     end
-    result = _pair&.last
+    result = pair&.last
 
     # If we didn't get a match, go look for published rubygems
     unless result
@@ -1420,19 +1425,19 @@ module Simp::BeakerHelpers
         # If we don't have a full version string, we need to massage it for the
         # match.
         begin
-          if _puppet_version.size == 1
-            Gem::Version.new(_puppet_version[0])
-            if _puppet_version[0].count('.') < 2
-              _puppet_version = "~> #{_puppet_version[0]}"
+          if split_puppet_version.size == 1
+            Gem::Version.new(split_puppet_version[0])
+            if split_puppet_version[0].count('.') < 2
+              split_puppet_version = "~> #{split_puppet_version[0]}"
             end
           end
         rescue ArgumentError
-          # this means _puppet_version is not just a version, but a version
+          # this means split_puppet_version is not just a version, but a version
           # specifier such as "= 5.2.3", "<= 5.1", "> 4", "~> 4.10.7"
         end
 
         result = puppet_gems.find do |ver|
-          Gem::Requirement.new(_puppet_version).satisfied_by?(Gem::Version.new(ver))
+          Gem::Requirement.new(split_puppet_version).satisfied_by?(Gem::Version.new(ver))
         end
       end
     end

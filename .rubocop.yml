@@ -697,3 +697,5 @@ Style/StringChars:
   Enabled: false
 Style/SwapValues:
   Enabled: false
+Naming/PredicateName:
+  Enabled: false

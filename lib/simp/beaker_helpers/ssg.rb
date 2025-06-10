@@ -320,9 +320,9 @@ module Simp::BeakerHelpers
           '//rule-result[(',
         ]
 
-        xpath_query << filter.map do |flt|
+        xpath_query << filter.map { |flt|
           "contains(@idref,'#{flt}')"
-        end.join(' or ')
+        }.join(' or ')
 
         xpath_query << ')' if filter.size > 1
 
@@ -330,9 +330,9 @@ module Simp::BeakerHelpers
         unless exclusions.empty?
           xpath_query << 'and not('
 
-          xpath_query << exclusions.map do |exl|
+          xpath_query << exclusions.map { |exl|
             "contains(@idref,'#{exl}')"
-          end.join(' or ')
+          }.join(' or ')
 
           xpath_query << ')' unless exclusions.empty?
         end
