@@ -5,14 +5,14 @@ test_name 'SSG Functionality Validation'
 describe 'run the SSG against an SCAP profile' do
   hosts.each do |host|
     context "on #{host}" do
-      let(:ssg) { Simp::BeakerHelpers::SSG.new(host) }
+      ssg = nil
+      ssg_report = nil
 
-      let(:ssg_report_data) do
-        # Validate that the filter works
-        filter = '_rule_audit'
-        host_exclusions = ['ssh_']
+      before(:all) do
+        ssg = Simp::BeakerHelpers::SSG.new(host)
 
-        ssg.process_ssg_results(filter, host_exclusions)
+        # If we don't do this, the variable gets reset
+        ssg_report = { data: nil }
       end
 
       it 'runs the SSG' do
@@ -29,14 +29,20 @@ describe 'run the SSG against an SCAP profile' do
       end
 
       it 'has an SSG report' do
-        expect(ssg_report_data).not_to be_nil
+        # Validate that the filter works
+        filter = '_rule_audit'
+        host_exclusions = ['ssh_']
 
-        ssg.write_report(ssg_report_data)
+        ssg_report[:data] = ssg.process_ssg_results(filter, host_exclusions)
+
+        expect(ssg_report[:data]).not_to be_nil
+
+        ssg.write_report(ssg_report[:data])
       end
 
       it 'has a report' do
-        expect(ssg_report_data[:report]).not_to be_nil
-        puts ssg_report_data[:report]
+        expect(ssg_report[:data][:report]).not_to be_nil
+        puts ssg_report[:data][:report]
       end
     end
   end
