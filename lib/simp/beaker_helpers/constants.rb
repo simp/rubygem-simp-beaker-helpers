@@ -1,5 +1,7 @@
+# SIMP namespace
 module Simp; end
 
+# SIMP Beaker helper methods for testing
 module Simp::BeakerHelpers
   # This is the *oldest* puppet-agent version that the latest release of SIMP supports
   #

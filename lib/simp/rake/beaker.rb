@@ -6,8 +6,10 @@ require 'beaker/tasks/rake_task'
 require 'beaker-rspec/rake_task'
 require 'puppetlabs_spec_helper/tasks/fixtures'
 
+# SIMP namespace
 module Simp; end
 
+# Rake tasks for SIMP Beaker testing
 class Simp::Rake::Beaker < ::Rake::TaskLib
   def initialize(base_dir) # rubocop:disable Lint/MissingSuper
     @base_dir   = base_dir

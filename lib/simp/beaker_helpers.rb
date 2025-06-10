@@ -2,8 +2,10 @@ require 'English'
 require 'beaker-puppet'
 require 'bundler'
 
+# SIMP namespace
 module Simp; end
 
+# SIMP Beaker helper methods for testing
 module Simp::BeakerHelpers
   include BeakerPuppet
 

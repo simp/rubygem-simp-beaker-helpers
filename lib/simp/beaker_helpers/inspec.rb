@@ -1,3 +1,4 @@
+# SIMP Beaker helper methods for testing
 module Simp::BeakerHelpers
   require 'simp/beaker_helpers/constants'
 

@@ -1,6 +1,9 @@
+# SIMP namespace
 module Simp; end
+# SIMP Beaker helper methods for testing
 module Simp::BeakerHelpers; end
 
+# Windows-specific helper methods
 module Simp::BeakerHelpers::Windows
   begin
     require 'beaker-windows'
