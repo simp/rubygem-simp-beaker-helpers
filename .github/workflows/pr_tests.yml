@@ -28,7 +28,7 @@ env:
 
 jobs:
   ruby-style:
-    name: 'Ruby Style (experimental)'
+    name: 'Ruby Style'
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
@@ -40,7 +40,7 @@ jobs:
           bundler-cache: true
       - run: |
           bundle show
-          bundle exec rake rubocop
+          bundle exec rubocop
 
   spec-tests:
     name: 'Spec'
