@@ -448,7 +448,7 @@ module Simp::BeakerHelpers
 
         on(@sut, %(mkdir -p scap-content && tar -xj -C scap-content --strip-components 1 -f #{ssg_release} && cp scap-content/*ds.xml #{@scap_working_dir}))
       else
-        on(@sut, %(git clone #{GIT_REPO} scap-content))
+        on(@sut, %(rm -rf scap-content && git clone #{GIT_REPO} scap-content))
         if GIT_BRANCH
           on(@sut, %(cd scap-content; git checkout #{GIT_BRANCH}))
         else
