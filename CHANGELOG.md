@@ -1,3 +1,7 @@
+### 1.35.1 / 2025-06-11
+* Fixed:
+  * `TypeError: Rake is not a class` error (#231)
+
 ### 1.35.0 / 2024-12-19
 * Fixed:
   * Clean up for rubocop

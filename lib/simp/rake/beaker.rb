@@ -6,9 +6,10 @@ require 'beaker/tasks/rake_task'
 require 'beaker-rspec/rake_task'
 require 'puppetlabs_spec_helper/tasks/fixtures'
 
-# Simp::Rake namespace
+# Simp namespace
 module Simp; end
-class Simp::Rake; end
+# Simp::Rake namespace
+module Simp::Rake; end
 
 # Rake tasks for SIMP Beaker testing
 class Simp::Rake::Beaker < ::Rake::TaskLib
