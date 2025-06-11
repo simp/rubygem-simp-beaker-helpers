@@ -24,18 +24,18 @@ hosts.each do |host|
 
         it 'restores the snapshot' do
           if init_snapshot == 'missing'
-            expect { Simp::BeakerHelpers::Snapshot.restore(host, init_snapshot) }.to raise_error(/not found/)
+            expect { Simp::BeakerHelpers::Snapshot.restore(host, init_snapshot) }.to raise_error(%r{not found})
             Simp::BeakerHelpers::Snapshot.restore_to_base(host)
           else
             Simp::BeakerHelpers::Snapshot.restore(host, init_snapshot)
           end
         end
 
-        it 'should have the keep file' do
+        it 'has the keep file' do
           expect(host.file_exist?('/root/keep')).to be true
         end
 
-        it 'should not have the tracking file' do
+        it 'does not have the tracking file' do
           expect(host.file_exist?('/root/tracking')).to be false
         end
       end

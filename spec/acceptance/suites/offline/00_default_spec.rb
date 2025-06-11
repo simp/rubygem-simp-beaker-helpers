@@ -66,7 +66,7 @@ describe 'Offline mode' do
           'seabios',
           'sqlite-devel',
           'util-linux',
-          'which'
+          'which',
         ]
 
         on(host, %(yum -y install #{required_packages.join(' ')}))
@@ -84,7 +84,15 @@ describe 'Offline mode' do
       end
 
       it 'installs the VirtualBox extension pack' do
-        on(host, 'VERSION=$(VBoxManage --version | tail -1 | cut -f 1 -d "r") && curl -Lo ${TMPDIR}/Oracle_VM_VirtualBox_Extension_Pack-${VERSION}.vbox-extpack http://download.virtualbox.org/virtualbox/${VERSION}/Oracle_VM_VirtualBox_Extension_Pack-${VERSION}.vbox-extpack && yes | VBoxManage extpack install ${TMPDIR}/Oracle_VM_VirtualBox_Extension_Pack-${VERSION}.vbox-extpack && rm -rf ${TMPDIR}/Oracle_VM_VirtualBox_Extension_Pack-${VERSION}.vbox-extpack')
+        on(
+          host,
+          [
+            'VERSION=$(VBoxManage --version | tail -1 | cut -f 1 -d "r")',
+            '&& curl -Lo ${TMPDIR}/Oracle_VM_VirtualBox_Extension_Pack-${VERSION}.vbox-extpack http://download.virtualbox.org/virtualbox/${VERSION}/Oracle_VM_VirtualBox_Extension_Pack-${VERSION}.vbox-extpack',
+            '&& yes | VBoxManage extpack install ${TMPDIR}/Oracle_VM_VirtualBox_Extension_Pack-${VERSION}.vbox-extpack',
+            '&& rm -rf ${TMPDIR}/Oracle_VM_VirtualBox_Extension_Pack-${VERSION}.vbox-extpack',
+          ].join(' '),
+        )
       end
 
       it 'adds the build user to the vboxusers group' do
@@ -97,9 +105,28 @@ describe 'Offline mode' do
 
       it 'installs RPM for the build user' do
         # Install RVM
-        on(host, %(#{build_user_cmd} "for i in {1..5}; do { gpg2 --keyserver hkp://pgp.mit.edu --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 || gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3 || gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3; } && { gpg2 --keyserver hkp://pgp.mit.edu --recv-keys 7D2BAF1CF37B13E2069D6956105BD0E739499BDB || gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 7D2BAF1CF37B13E2069D6956105BD0E739499BDB; } && break || sleep 1; done"))
+        on(
+          host,
+          [
+            %(#{build_user_cmd} "for i in {1..5}; do {),
+            'gpg2 --keyserver hkp://pgp.mit.edu --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3',
+            '|| gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3',
+            '|| gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 409B6B1796C275462A1703113804BB82D39DC0E3; }',
+            '&& { gpg2 --keyserver hkp://pgp.mit.edu --recv-keys 7D2BAF1CF37B13E2069D6956105BD0E739499BDB',
+            '|| gpg2 --keyserver hkp://keys.gnupg.net --recv-keys 7D2BAF1CF37B13E2069D6956105BD0E739499BDB; }',
+            '&& break || sleep 1; done',
+          ].join(' '),
+        )
         on(host, %(#{build_user_cmd} "gpg2 --refresh-keys"))
-        on(host, %(#{build_user_cmd} "curl -sSL https://raw.githubusercontent.com/rvm/rvm/stable/binscripts/rvm-installer -o rvm-installer && curl -sSL https://raw.githubusercontent.com/rvm/rvm/stable/binscripts/rvm-installer.asc -o rvm-installer.asc && gpg2 --verify rvm-installer.asc rvm-installer && bash rvm-installer"))
+        on(
+          host,
+          [
+            %(#{build_user_cmd} "curl -sSL https://raw.githubusercontent.com/rvm/rvm/stable/binscripts/rvm-installer -o rvm-installer),
+            'curl -sSL https://raw.githubusercontent.com/rvm/rvm/stable/binscripts/rvm-installer.asc -o rvm-installer.asc',
+            'gpg2 --verify rvm-installer.asc rvm-installer',
+            'bash rvm-installer',
+          ].join(' && '),
+        )
         on(host, %(#{build_user_cmd} "rvm install 2.4.4 --disable-binary"))
         on(host, %(#{build_user_cmd} "rvm use --default 2.4.4"))
         on(host, %(#{build_user_cmd} "rvm all do gem install bundler -v '~> 1.16' --no-document"))
@@ -118,14 +145,14 @@ describe 'Offline mode' do
         build_user_homedir = on(host, "readlink -f ~#{build_user}").output.strip
         vagrant_testdir = "#{build_user_homedir}/vagrant_test"
 
-        vagrant_test_file = <<-EOM
-Vagrant.configure("2") do |c|
-  c.vm.define 'test' do |v|
-    v.vm.hostname = 'centos7.test.net'
-    v.vm.box = 'centos/7'
-    v.vm.box_check_update = 'false'
-  end
-end
+        vagrant_test_file = <<~EOM
+          Vagrant.configure("2") do |c|
+            c.vm.define 'test' do |v|
+              v.vm.hostname = 'centos7.test.net'
+              v.vm.box = 'centos/7'
+              v.vm.box_check_update = 'false'
+            end
+          end
         EOM
 
         host.mkdir_p(vagrant_testdir)
@@ -148,18 +175,22 @@ end
         on(host, %(#{build_user_cmd} "cd pupmod-simp-at; bundle update"))
       end
 
+      # rubocop:disable RSpec/RepeatedExample
       it 'runs a network-connected test' do
         on(host, %(#{build_user_cmd} "cd pupmod-simp-at; rake beaker:suites"))
       end
+      # rubocop:enable RSpec/RepeatedExample
 
       it 'disables all internet network traffic via iptables' do
         on(host, %(iptables -I OUTPUT -d `ip route | awk '/default/ {print $3}'`/16 -j ACCEPT))
         on(host, 'iptables -A OUTPUT -j DROP')
       end
 
+      # rubocop:disable RSpec/RepeatedExample
       xit 'runs a network-disconnected test' do
         on(host, %(#{build_user_cmd} "cd pupmod-simp-at; rake beaker:suites"))
       end
+      # rubocop:enable RSpec/RepeatedExample
     end
   end
 end

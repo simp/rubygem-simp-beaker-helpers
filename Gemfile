@@ -40,8 +40,11 @@ group :system_tests do
   gem 'beaker-windows'
   gem 'ed25519'
   gem 'net-ssh'
+  gem 'pry-byebug', '~> 3.10.0'
   gem 'puppet', ENV.fetch('PUPPET_VERSION', ['>= 7.0.0', '< 9.0.0'])
   gem 'puppetlabs_spec_helper', '>= 4.0.0', '< 8.0.0'
-  gem 'rubocop'
-  gem 'rubocop-rspec'
+  gem 'rubocop', '~> 1.69.2'
+  gem 'rubocop-performance', '~> 1.23.0'
+  gem 'rubocop-rake', '~> 0.6.0'
+  gem 'rubocop-rspec', '~> 3.3.0'
 end

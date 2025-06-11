@@ -23,7 +23,7 @@ jobs:
           - label: 'Puppet 8.x'
             puppet_version: '~> 8.0'
             ruby_version: '3.2'
-            experimental: true
+            experimental: false
         beaker:
           - label: beaker
             suite: default

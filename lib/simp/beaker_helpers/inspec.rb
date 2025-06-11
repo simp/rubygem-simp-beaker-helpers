@@ -1,9 +1,9 @@
+# SIMP Beaker helper methods for testing
 module Simp::BeakerHelpers
   require 'simp/beaker_helpers/constants'
 
   # Helpers for working with Inspec
   class Inspec
-
     require 'json'
 
     attr_reader :profile
@@ -12,16 +12,16 @@ module Simp::BeakerHelpers
 
     def self.enable_repo_on(suts)
       parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
-      block_on(suts, :run_in_parallel => parallel) do |sut|
+      block_on(suts, run_in_parallel: parallel) do |sut|
         repo_manifest = create_yum_resource(
           'chef-current',
           {
-            :baseurl => "https://packages.chef.io/repos/yum/current/el/#{fact_on(sut,'os.release.major')}/$basearch",
-            :gpgkeys => ['https://packages.chef.io/chef.asc']
-          }
+            baseurl: "https://packages.chef.io/repos/yum/current/el/#{fact_on(sut, 'os.release.major')}/$basearch",
+            gpgkeys: ['https://packages.chef.io/chef.asc']
+          },
         )
 
-        apply_manifest_on(sut, repo_manifest, :catch_failures => true)
+        apply_manifest_on(sut, repo_manifest, catch_failures: true)
       end
     end
 
@@ -85,13 +85,13 @@ module Simp::BeakerHelpers
       inspec_version = Gem::Version.new(on(@sut, 'inspec --version').output.lines.first.strip)
 
       # See: https://github.com/inspec/inspec/pull/3935
-      if inspec_version <= Gem::Version.new('3.9.0')
-        inspec_cmd = "inspec exec '#{@test_dir}' --reporter json > #{sut_inspec_results}"
-      else
-        inspec_cmd = "inspec exec '#{@test_dir}' --chef-license accept --reporter json > #{sut_inspec_results}"
-      end
+      inspec_cmd = if inspec_version <= Gem::Version.new('3.9.0')
+                     "inspec exec '#{@test_dir}' --reporter json > #{sut_inspec_results}"
+                   else
+                     "inspec exec '#{@test_dir}' --chef-license accept --reporter json > #{sut_inspec_results}"
+                   end
 
-      result = on(@sut, inspec_cmd, :accept_all_exit_codes => true)
+      result = on(@sut, inspec_cmd, accept_all_exit_codes: true)
 
       tmpdir = Dir.mktmpdir
       begin
@@ -110,7 +110,7 @@ module Simp::BeakerHelpers
                 line.start_with?('{') && line.end_with?('}')
               end
 
-              @results = JSON.load(inspec_json) if inspec_json
+              @results = JSON.parse(inspec_json) if inspec_json
             rescue JSON::ParserError, JSON::GeneratorError
               @results = nil
             end
@@ -120,16 +120,15 @@ module Simp::BeakerHelpers
         FileUtils.remove_entry_secure tmpdir
       end
 
-      if @results.nil? || @results.empty?
-        File.open(@result_file + '.err', 'w') do |fh|
-          fh.puts(result.stderr.strip)
-        end
-
-        err_msg = ["Error running inspec command #{inspec_cmd}"]
-        err_msg << "Error captured in #{@result_file}" + '.err'
-
-        fail(err_msg.join("\n"))
+      return unless @results.nil? || @results.empty?
+      File.open(@result_file + '.err', 'w') do |fh|
+        fh.puts(result.stderr.strip)
       end
+
+      err_msg = ["Error running inspec command #{inspec_cmd}"]
+      err_msg << "Error captured in #{@result_file}" + '.err'
+
+      raise(err_msg.join("\n"))
     end
 
     # Output the report
@@ -162,36 +161,34 @@ module Simp::BeakerHelpers
 
       stats = {
         # Legacy metrics counters for backwards compatibility
-        :failed     => 0,
-        :passed     => 0,
-        :skipped    => 0,
-        :overridden => 0,
+        failed: 0,
+        passed: 0,
+        skipped: 0,
+        overridden: 0,
         # End legacy stuff
-        :global   => {
-          :failed     => [],
-          :passed     => [],
-          :skipped    => [],
-          :overridden => []
+        global: {
+          failed: [],
+          passed: [],
+          skipped: [],
+          overridden: []
         },
-        :score    => 0,
-        :report   => nil,
-        :profiles => {}
+        score: 0,
+        report: nil,
+        profiles: {}
       }
 
       if results.is_a?(String)
-        if File.readable?(results)
-          profiles = JSON.load(File.read(results))['profiles']
-        else
-          fail("Error: Could not read results file at #{results}")
-        end
+        raise("Error: Could not read results file at #{results}") unless File.readable?(results)
+        profiles = JSON.parse(File.read(results))['profiles']
+
       elsif results.is_a?(Hash)
         profiles = results['profiles']
       else
-        fail("Error: first argument must be a String path to a file or a Hash")
+        raise('Error: first argument must be a String path to a file or a Hash')
       end
 
       if !profiles || profiles.empty?
-        fail("Error: Could not find 'profiles' in the passed results")
+        raise("Error: Could not find 'profiles' in the passed results")
       end
 
       profiles.each do |profile|
@@ -200,7 +197,7 @@ module Simp::BeakerHelpers
         next unless profile_name
 
         stats[:profiles][profile_name] = {
-          :controls => {}
+          controls: {}
         }
 
         profile['controls'].each do |control|
@@ -208,7 +205,7 @@ module Simp::BeakerHelpers
 
           next unless title
 
-          base_title = title.scan(/.{1,60}\W|.{1,60}/).map(&:strip).join("\n           ")
+          base_title = title.scan(%r{.{1,60}\W|.{1,60}}).map(&:strip).join("\n           ")
 
           if control['results'] && (control['results'].size > 1)
             control['results'].each do |result|
@@ -221,12 +218,12 @@ module Simp::BeakerHelpers
 
               stats[:profiles][profile_name][:controls][full_title][:formatted_title] = formatted_title
 
-              if result['status'] =~ /^fail/
+              if %r{^fail}.match?(result['status'])
                 status = :failed
-                color = 'red'
+                'red'
               else
                 status = :passed
-                color = 'green'
+                'green'
               end
 
               stats[:global][status] << formatted_title.color
@@ -245,8 +242,8 @@ module Simp::BeakerHelpers
               status = :passed
               color = 'green'
 
-              control['results'].each do |result|
-                if results['status'] =~ /^fail/
+              control['results'].each do |_result|
+                if %r{^fail}.match?(results['status'])
                   status = :failed
                   color = 'red'
                 end
@@ -273,15 +270,15 @@ module Simp::BeakerHelpers
       end
 
       status_colors = {
-        :failed     => 'red',
-        :passed     => 'green',
-        :skipped    => 'yellow',
-        :overridden => 'white'
+        failed: 'red',
+        passed: 'green',
+        skipped: 'yellow',
+        overridden: 'white'
       }
 
       report = []
 
-      stats[:profiles].keys.each do |profile|
+      stats[:profiles].each_key do |profile|
         report << "Profile: #{profile}"
 
         stats[:profiles][profile][:controls].each do |control|
@@ -311,14 +308,14 @@ module Simp::BeakerHelpers
       stats[:skipped]    = num_skipped
       stats[:overridden] = num_overridden
 
-      report << "Statistics:"
+      report << 'Statistics:'
       report << "  * Passed: #{num_passed.to_s.green}"
       report << "  * Failed: #{num_failed.to_s.red}"
       report << "  * Skipped: #{num_skipped.to_s.yellow}"
 
       score = 0
       if (stats[:global][:passed].count + stats[:global][:failed].count) > 0
-        score = ((stats[:global][:passed].count.to_f/(stats[:global][:passed].count + stats[:global][:failed].count)) * 100.0).round(0)
+        score = ((stats[:global][:passed].count.to_f / (stats[:global][:passed].count + stats[:global][:failed].count)) * 100.0).round(0)
       end
 
       report << "\n Score: #{score}%"
@@ -326,7 +323,7 @@ module Simp::BeakerHelpers
       stats[:score] = score
       stats[:report] = report.join("\n")
 
-      return stats
+      stats
     end
   end
 end

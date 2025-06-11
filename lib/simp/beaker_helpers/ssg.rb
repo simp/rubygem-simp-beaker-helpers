@@ -1,15 +1,15 @@
+# SIMP Beaker helper methods for testing
 module Simp::BeakerHelpers
   require 'simp/beaker_helpers/constants'
 
   # Helpers for working with the SCAP Security Guide
   class SSG
-
     if ENV['BEAKER_ssg_repo']
       GIT_REPO = ENV['BEAKER_ssg_repo']
     else
-      fail('You are offline: Set BEAKER_ssg_repo to point to the git repo that hosts the SSG content') unless ONLINE
+      raise('You are offline: Set BEAKER_ssg_repo to point to the git repo that hosts the SSG content') unless ONLINE
 
-      GIT_REPO = 'https://github.com/ComplianceAsCode/content.git'
+      GIT_REPO = 'https://github.com/ComplianceAsCode/content.git'.freeze
     end
 
     # If this is not set, the highest numeric tag will be used
@@ -29,7 +29,7 @@ module Simp::BeakerHelpers
       'python-jinja2',
       'python-lxml',
       'python-setuptools',
-    ]
+    ].freeze
 
     EL8_PACKAGES = [
       'cmake',
@@ -44,7 +44,7 @@ module Simp::BeakerHelpers
       'python3-pyyaml',
       'python3-setuptools',
       'libarchive',
-    ]
+    ].freeze
 
     EL9_PACKAGES = [
       'cmake',
@@ -59,7 +59,7 @@ module Simp::BeakerHelpers
       'python3-pyyaml',
       'python3-setuptools',
       'libarchive',
-    ]
+    ].freeze
 
     OS_INFO = {
       'RedHat' => {
@@ -174,7 +174,7 @@ module Simp::BeakerHelpers
           }
         }
       }
-    }
+    }.freeze
 
     attr_accessor :scap_working_dir
 
@@ -194,7 +194,7 @@ module Simp::BeakerHelpers
       @scap_working_dir = on(sut, 'cd scap_working_dir && pwd').stdout.strip
 
       unless OS_INFO[@os]
-        fail("Error: The '#{@os}' Operating System is not supported")
+        raise("Error: The '#{@os}' Operating System is not supported")
       end
 
       OS_INFO[@os][@os_rel]['required_packages'].each do |pkg|
@@ -222,14 +222,14 @@ module Simp::BeakerHelpers
         .stdout
         .strip
         .lines
-        .map{|x| x.split(':').first}
+        .map { |x| x.split(':').first }
     end
 
     def remediate(profile)
       evaluate(profile, true)
     end
 
-    def evaluate(profile, remediate=false)
+    def evaluate(profile, remediate = false)
       cmd = "cd #{@scap_working_dir}; oscap xccdf eval"
 
       if remediate
@@ -241,13 +241,13 @@ module Simp::BeakerHelpers
       # We accept all exit codes here because there have occasionally been
       # failures in the SSG content and we're not testing that.
 
-      on(@sut, cmd, :accept_all_exit_codes => true)
+      on(@sut, cmd, accept_all_exit_codes: true)
 
       ['xml', 'html'].each do |ext|
         path = "#{@scap_working_dir}/#{@result_file}.#{ext}"
         scp_from(@sut, path, @output_dir)
 
-        fail("Could not retrieve #{path} from #{@sut}") unless File.exist?(File.join(@output_dir, "#{@result_file}.#{ext}"))
+        raise("Could not retrieve #{path} from #{@sut}") unless File.exist?(File.join(@output_dir, "#{@result_file}.#{ext}"))
       end
     end
 
@@ -278,11 +278,11 @@ module Simp::BeakerHelpers
     #   set of STIG ids, but don't see those ids in the oscap results xml.
     #   Further mapping is required...
     # - Create the same report structure as inspec
-    def process_ssg_results(filter=nil, exclusions=nil)
+    def process_ssg_results(filter = nil, exclusions = nil)
       self.class.process_ssg_results(
         File.join(@output_dir, @result_file) + '.xml',
         filter,
-        exclusions
+        exclusions,
       )
     end
 
@@ -300,13 +300,13 @@ module Simp::BeakerHelpers
     #
     # @return [Hash] A Hash of statistics and a formatted report
     #
-    def self.process_ssg_results(result_file, filter=nil, exclusions=nil)
+    def self.process_ssg_results(result_file, filter = nil, exclusions = nil)
       require 'highline'
       require 'nokogiri'
 
       HighLine.colorize_strings
 
-      fail("Could not find results XML file '#{result_file}'") unless File.exist?(result_file)
+      raise("Could not find results XML file '#{result_file}'") unless File.exist?(result_file)
 
       puts "Processing #{result_file}"
       doc = Nokogiri::XML(File.open(result_file))
@@ -321,9 +321,9 @@ module Simp::BeakerHelpers
           '//rule-result[(',
         ]
 
-        xpath_query << filter.map do |flt|
+        xpath_query << filter.map { |flt|
           "contains(@idref,'#{flt}')"
-        end.join(' or ')
+        }.join(' or ')
 
         xpath_query << ')' if filter.size > 1
 
@@ -331,11 +331,11 @@ module Simp::BeakerHelpers
         unless exclusions.empty?
           xpath_query << 'and not('
 
-          xpath_query << exclusions.map do |exl|
+          xpath_query << exclusions.map { |exl|
             "contains(@idref,'#{exl}')"
-          end.join(' or ')
+          }.join(' or ')
 
-          xpath_query << ')' if exclusions.size > 0
+          xpath_query << ')' unless exclusions.empty?
         end
 
         xpath_query << ')]'
@@ -352,12 +352,12 @@ module Simp::BeakerHelpers
       end
 
       stats = {
-        :failed  => [],
-        :passed  => [],
-        :skipped => [],
-        :filter  => filter.nil? ? 'No Filter' : filter,
-        :report  => nil,
-        :score   => 0
+        failed: [],
+        passed: [],
+        skipped: [],
+        filter: filter.nil? ? 'No Filter' : filter,
+        report: nil,
+        score: 0
       }
 
       result_nodes.each do |rule_result|
@@ -385,7 +385,7 @@ module Simp::BeakerHelpers
             result_value << "    *  #{src}"
             result_value << "      * #{items.join(', ')}"
           end
-          result_value << '  Description: ' + doc.xpath("//Rule[@id='#{result_id}']/description").text.gsub("\n","\n    ")
+          result_value << '  Description: ' + doc.xpath("//Rule[@id='#{result_id}']/description").text.gsub("\n", "\n    ")
         end
 
         result_value = result_value.join("\n")
@@ -410,7 +410,6 @@ module Simp::BeakerHelpers
       report << '== Failed =='
       report << stats[:failed].join("\n")
 
-
       report << 'OSCAP Statistics:'
 
       if filter
@@ -424,7 +423,7 @@ module Simp::BeakerHelpers
       score = 0
 
       if (stats[:passed].count + stats[:failed].count) > 0
-        score = ((stats[:passed].count.to_f/(stats[:passed].count + stats[:failed].count)) * 100.0).round(0)
+        score = ((stats[:passed].count.to_f / (stats[:passed].count + stats[:failed].count)) * 100.0).round(0)
       end
 
       report << "\n Score: #{score}%"
@@ -432,7 +431,7 @@ module Simp::BeakerHelpers
       stats[:score]  = score
       stats[:report] = report.join("\n")
 
-      return stats
+      stats
     end
 
     private
@@ -455,8 +454,8 @@ module Simp::BeakerHelpers
         else
           tags = on(@sut, %(cd scap-content; git tag -l)).output
           target_tag = tags.lines.map(&:strip)
-            .select{|x| x.match?(/^v(\d+\.)+\d+$/)}
-            .sort.last
+                           .select { |x| x.match?(%r{^v(\d+\.)+\d+$}) }
+                           .sort.last
 
           on(@sut, %(cd scap-content; git checkout #{target_tag}))
         end
@@ -470,7 +469,7 @@ module Simp::BeakerHelpers
         safe_sed(
           @sut,
           's/ssg.build_derivatives.profile_handling/__simp_dontcare__ = None #ssg.build_derivatives.profile_handling/g',
-          'scap-content/build-scripts/enable_derivatives.py'
+          'scap-content/build-scripts/enable_derivatives.py',
         )
 
         on(@sut, %(cd scap-content/build; cmake ../; make -j4 #{OS_INFO[@os][@os_rel]['ssg']['build_target']}-content && cp *ds.xml #{@scap_working_dir}))

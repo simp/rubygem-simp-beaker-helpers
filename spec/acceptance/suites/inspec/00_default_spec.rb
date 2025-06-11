@@ -4,7 +4,6 @@ require 'json'
 test_name 'Inspec STIG Profile'
 
 describe 'Inspec STIG Profile' do
-
   profiles_to_validate = ['disa_stig']
 
   hosts.each do |host|
@@ -14,38 +13,39 @@ describe 'Inspec STIG Profile' do
           profile_path = File.join(
               fixtures_path,
               'inspec_profiles',
-              "#{fact_on(host, 'os.name')}-#{fact_on(host, 'os.release.major')}-#{profile}"
+              "#{fact_on(host, 'os.name')}-#{fact_on(host, 'os.release.major')}-#{profile}",
             )
 
-          unless File.exist?(profile_path)
-            it 'should run inspec' do
-              skip("No matching profile available at #{profile_path}")
+          if File.exist?(profile_path)
+            let(:inspec) do
+              Simp::BeakerHelpers::Inspec.enable_repo_on(hosts)
+              Simp::BeakerHelpers::Inspec.new(host, profile)
+            end
+
+            let(:inspec_report_data) { inspec.process_inspec_results }
+
+            # rubocop:disable RSpec/RepeatedDescription
+            it 'runs inspec' do
+              inspec.run
+            end
+            # rubocop:enable RSpec/RepeatedDescription
+
+            it 'has an inspec report' do
+              expect(inspec_report_data).not_to be_nil
+
+              inspec.write_report(inspec_report_data)
+            end
+
+            it 'has a report' do
+              expect(inspec_report_data[:report]).not_to be_nil
+              puts inspec_report_data[:report]
             end
           else
-            before(:all) do
-              Simp::BeakerHelpers::Inspec.enable_repo_on(hosts)
-              @inspec = Simp::BeakerHelpers::Inspec.new(host, profile)
-
-              # If we don't do this, the variable gets reset
-              @inspec_report = { :data => nil }
+            # rubocop:disable RSpec/RepeatedDescription
+            it 'runs inspec' do
+              skip("No matching profile available at #{profile_path}")
             end
-
-            it 'should run inspec' do
-              @inspec.run
-            end
-
-            it 'should have an inspec report' do
-              @inspec_report[:data] = @inspec.process_inspec_results
-
-              expect(@inspec_report[:data]).to_not be_nil
-
-              @inspec.write_report(@inspec_report[:data])
-            end
-
-            it 'should have a report' do
-              expect(@inspec_report[:data][:report]).to_not be_nil
-              puts @inspec_report[:data][:report]
-            end
+            # rubocop:enable RSpec/RepeatedDescription
           end
         end
       end

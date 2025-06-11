@@ -1,3 +1,7 @@
+### 1.35.0 / 2024-12-19
+* Fixed:
+  * Clean up for rubocop
+
 ### 1.34.3 / 2024-12-20
 * Fixed:
   * Update /etc/hosts on all nodes when hostname changes (#227)
