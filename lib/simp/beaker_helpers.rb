@@ -1488,6 +1488,15 @@ module Simp::BeakerHelpers
     }
   end
 
+
+  def run_puppet_install_helper_on(hosts)
+    block_on hosts, run_in_parallel: true do |host|
+      BeakerPuppetHelpers::InstallUtils.install_puppet_release_repo_on(host, collection)
+      package_name = ENV.fetch('BEAKER_PUPPET_PACKAGE_NAME', BeakerPuppetHelpers::InstallUtils.collection2packagename(host, collection))
+      host.install_package(package_name)
+    end
+  end
+
   # Replacement for `install_puppet` in spec_helper_acceptance.rb
   def install_puppet
     install_info = get_puppet_install_info
@@ -1498,13 +1507,7 @@ module Simp::BeakerHelpers
     end
 
     require 'beaker_puppet_helpers'
-    def run_puppet_install_helper_on(hosts)
-      block_on hosts, run_in_parallel: true do |host|
-        BeakerPuppetHelpers::InstallUtils.install_puppet_release_repo_on(host, collection)
-        package_name = ENV.fetch('BEAKER_PUPPET_PACKAGE_NAME', BeakerPuppetHelpers::InstallUtils.collection2packagename(host, collection))
-        host.install_package(package_name)
-      end
-    end
+    run_puppet_install_helper_on(hosts)
   end
   alias_method :install_openvox, :install_puppet
 
