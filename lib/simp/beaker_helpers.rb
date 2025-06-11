@@ -1467,8 +1467,8 @@ module Simp::BeakerHelpers
 
     if puppet_agent_version.nil?
       if (puppet_collection = ENV['BEAKER_PUPPET_COLLECTION'] || host.options['puppet_collection'])
-        raise("Error: Puppet Collection '#{puppet_collection}' must match /puppet(\\d+)/") unless puppet_collection =~ %r{puppet(\d+)}
-        puppet_install_version = "~> #{::Regexp.last_match(1)}"
+        raise("Error: Puppet Collection '#{puppet_collection}' must match /puppet(\\d+)/") unless puppet_collection =~ %r{(puppet|openvox)(\d+)}
+        puppet_install_version = "~> #{::Regexp.last_match(2)}"
         puppet_agent_version = latest_puppet_agent_version_for(puppet_install_version)
 
       else
@@ -1493,14 +1493,20 @@ module Simp::BeakerHelpers
     install_info = get_puppet_install_info
 
     # In case  Beaker needs this info internally
-    ENV['PUPPET_INSTALL_VERSION'] = install_info[:puppet_install_version]
     if install_info[:puppet_collection]
       ENV['BEAKER_PUPPET_COLLECTION'] = install_info[:puppet_collection]
     end
 
-    require 'beaker-puppet'
-    install_puppet_on(hosts, version: install_info[:puppet_install_version])
+    require 'beaker_puppet_helpers'
+    def run_puppet_install_helper_on(hosts)
+      block_on hosts, run_in_parallel: true do |host|
+        BeakerPuppetHelpers::InstallUtils.install_puppet_release_repo_on(host, collection)
+        package_name = ENV.fetch('BEAKER_PUPPET_PACKAGE_NAME', BeakerPuppetHelpers::InstallUtils.collection2packagename(host, collection))
+        host.install_package(package_name)
+      end
+    end
   end
+  alias_method :install_openvox, :install_puppet
 
   # Configure all SIMP repos on a host and disable all repos in the disable Array
   #

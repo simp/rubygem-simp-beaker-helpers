@@ -37,6 +37,7 @@ group :system_tests do
 
   gem 'bcrypt_pbkdf'
   gem 'beaker-rspec'
+  gem 'beaker_puppet_helpers'
   gem 'beaker-windows'
   gem 'ed25519'
   gem 'net-ssh'
