@@ -1499,7 +1499,6 @@ module Simp::BeakerHelpers
 
 
   def run_puppet_install_helper_on(hosts)
-    require 'pry'; binding.pry
     block_on hosts, run_in_parallel: true do |host|
       BeakerPuppetHelpers::InstallUtils.install_puppet_release_repo_on(host, ENV['BEAKER_PUPPET_COLLECTION'])
       package_name = ENV.fetch('BEAKER_PUPPET_PACKAGE_NAME', BeakerPuppetHelpers::InstallUtils.collection2packagename(host, ENV['BEAKER_PUPPET_COLLECTION']))
