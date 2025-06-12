@@ -49,5 +49,3 @@ group :system_tests do
   gem 'rubocop-rake', '~> 0.6.0'
   gem 'rubocop-rspec', '~> 3.3.0'
 end
-
-gem "pry", "~> 0.15.2"
