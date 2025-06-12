@@ -1393,7 +1393,11 @@ module Simp::BeakerHelpers
   #
   # @return [String,Nil] the `puppet-agent` version or nil
   #
+<<<<<<< HEAD
   def latest_puppet_agent_version_for(puppet_version)
+=======
+  def latest_puppet_agent_version_for( puppet_version, puppet_collection_name = 'puppet' )
+>>>>>>> c8fb28b (Additional changes to support installing openvox)
     return nil if puppet_version.nil?
 
     require 'rubygems/requirement'
@@ -1418,7 +1422,11 @@ module Simp::BeakerHelpers
       puppet_gems = nil
 
       Bundler.with_unbundled_env do
+<<<<<<< HEAD
         puppet_gems = `gem search -ra -e puppet`.match(%r{\((.+)\)})
+=======
+        puppet_gems = %x(gem search -ra -e #{puppet_collection_name}).match(/\((.+)\)/)
+>>>>>>> c8fb28b (Additional changes to support installing openvox)
       end
 
       if puppet_gems
@@ -1468,6 +1476,7 @@ module Simp::BeakerHelpers
     if puppet_agent_version.nil?
       if (puppet_collection = ENV['BEAKER_PUPPET_COLLECTION'] || host.options['puppet_collection'])
         raise("Error: Puppet Collection '#{puppet_collection}' must match /puppet(\\d+)/") unless puppet_collection =~ %r{(puppet|openvox)(\d+)}
+        puppet_collection_name = ::Regexp.last_match(1)
         puppet_install_version = "~> #{::Regexp.last_match(2)}"
         puppet_agent_version = latest_puppet_agent_version_for(puppet_install_version)
 
