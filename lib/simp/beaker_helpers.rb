@@ -764,7 +764,7 @@ module Simp::BeakerHelpers
             u.strip!
             u = u.split(':')
             %r{^(/|/dev/.*|/s?bin/?.*|/proc/?.*)$}.match?(u[5]) ? [nil] : [u[0], u[5]]
-          end
+          end,
         ]
 
         user_info.each_key do |user|
@@ -1488,7 +1488,6 @@ module Simp::BeakerHelpers
     }
   end
 
-
   def run_puppet_install_helper_on(hosts)
     block_on hosts, run_in_parallel: true do |host|
       BeakerPuppetHelpers::InstallUtils.install_puppet_release_repo_on(host, ENV['BEAKER_PUPPET_COLLECTION'])
@@ -1509,7 +1508,7 @@ module Simp::BeakerHelpers
     require 'beaker_puppet_helpers'
     run_puppet_install_helper_on(hosts)
   end
-  alias_method :install_openvox, :install_puppet
+  alias install_openvox install_puppet
 
   # Configure all SIMP repos on a host and disable all repos in the disable Array
   #
