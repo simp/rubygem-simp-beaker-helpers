@@ -222,6 +222,17 @@ describe 'Simp::BeakerHelpers' do
       expect(helper.get_puppet_install_info).to eq expected
     end
 
+    it 'extracts openvox info from BEAKER_PUPPET_COLLECTION' do
+      allow(helper).to receive(:`).with('gem search -ra -e openvox').and_return(openvox_gem_search_results)
+      helper.host.options = { 'puppet_collection' => '<= ENV.fetch("BEAKER_PUPPET_COLLECTION", "openvox8") %>' }
+      expected = {
+        puppet_install_version: '8.19.2',
+        puppet_collection: 'openvox8',
+        puppet_install_type: 'agent'
+      }
+      expect(helper.get_puppet_install_info).to eq expected
+    end
+
     it 'extracts info from PUPPET_INSTALL_TYPE' do
       ENV['PUPPET_INSTALL_TYPE'] = 'pe'
 

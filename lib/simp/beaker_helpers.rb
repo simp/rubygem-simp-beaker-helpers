@@ -1467,7 +1467,7 @@ module Simp::BeakerHelpers
 
     if puppet_agent_version.nil?
       if (puppet_collection = ENV['BEAKER_PUPPET_COLLECTION'] || host.options['puppet_collection'])
-        raise("Error: Puppet Collection '#{puppet_collection}' must match /puppet(\\d+)/") unless puppet_collection =~ %r{(puppet|openvox)(\d+)}
+        raise("Error: Puppet Collection '#{puppet_collection}' must match /(puppet|openvox)(\\d+)/") unless puppet_collection =~ %r{(puppet|openvox)(\d+)}
         puppet_collection_name = ::Regexp.last_match(1)
         puppet_install_version = "~> #{::Regexp.last_match(2)}"
         puppet_agent_version = latest_puppet_agent_version_for(puppet_install_version, puppet_collection_name)
