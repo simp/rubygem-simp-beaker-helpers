@@ -39,7 +39,7 @@
 ---
 name: 'Tag: Release to GitHub + rubygems.org (no RPMS)'
 
-on:
+'on':
   push:
     tags:
       # NOTE: These filter patterns aren't actually regexes:
@@ -48,7 +48,7 @@ on:
       - '[0-9]+\.[0-9]+\.[0-9]+\-[a-z]+[0-9]+'
 
 env:
-  PUPPET_VERSION: '~> 7'
+  PUPPET_VERSION: '~> 8'
   LOCAL_WORKFLOW_CONFIG_FILE: .github/workflows.local.json
 
 jobs:
@@ -108,7 +108,8 @@ jobs:
 
   create-github-release:
     name: Deploy GitHub Release
-    needs: [ releng-checks ]
+    needs:
+      - releng-checks
     if: github.repository_owner == 'simp'
     runs-on: ubuntu-latest
     outputs:
@@ -162,13 +163,15 @@ jobs:
         run: |
           echo "${RELEASE_MESSAGE}" > /tmp/.commit-msg.txt
           args=(-F /tmp/.commit-msg.txt)
-          [[ $IS_PRERELEASE == yes ]] && args+=(--prerelease)
+          [[ "$IS_PRERELEASE" == yes ]] && args+=(--prerelease)
 
           gh release create ${args[@]} "$TARGET_TAG"
 
   deploy-rubygem:
     name: Deploy RubyGem Release
-    needs: [ releng-checks, create-github-release ]
+    needs:
+      - releng-checks
+      - create-github-release
     if: (github.repository_owner == 'simp') && (needs.create-github-release.outputs.prerelease != 'yes')
     runs-on: ubuntu-latest
     env:
