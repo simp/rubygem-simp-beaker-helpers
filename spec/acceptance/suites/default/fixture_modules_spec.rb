@@ -8,7 +8,8 @@ context 'after copy_fixture_modules_to( hosts )' do
 
   describe "fact_on(default,'root_home')" do
     it 'does not return value of `root_home`' do
-      pending "Conflicts with beaker_puppet_helpers" if Gem::Version.new(Puppet.version) >= Gem::Version.new('8')
+      puppet_version = fact_on(host, 'puppetversion')
+      pending 'Conflicts with beaker_puppet_helpers' unless puppet_version puppet_version =~ %r{ ^7\. }
       expect(Beaker::DSL::Helpers::FacterHelpers.fact_on(default, 'root_home').to_s).to eq ''
     end
   end
