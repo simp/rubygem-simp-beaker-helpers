@@ -1,3 +1,7 @@
+### 1.36.0 / 2025-06-23
+* Added
+  * Openvox support
+
 ### 1.35.1 / 2025-06-11
 * Fixed:
   * `TypeError: Rake is not a class` error (#231)
