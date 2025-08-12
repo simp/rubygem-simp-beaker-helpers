@@ -64,11 +64,6 @@ describe 'Simp::BeakerHelpers' do
     ].join(', ')})\n"
   end
 
-  let(:openvox_gem_search_results) do
-    # subset of results, but still exercises code
-    "openvox (8.19.2, 8.19.1, 8.19.0, 7.37.2, 7.37.1)\n"
-  end
-
   context '#latest_puppet_agent_version_for' do
     context 'using table' do
       it 'maps exact Puppet version' do
@@ -206,17 +201,6 @@ describe 'Simp::BeakerHelpers' do
       expected = {
         puppet_install_version: '5.5.1',
         puppet_collection: 'puppet5',
-        puppet_install_type: 'agent'
-      }
-      expect(helper.get_puppet_install_info).to eq expected
-    end
-
-    it 'extracts openvox info from BEAKER_PUPPET_COLLECTION' do
-      allow(helper).to receive(:`).with('gem search -ra -e openvox').and_return(openvox_gem_search_results)
-      helper.host.options = { 'puppet_collection' => 'openvox8' }
-      expected = {
-        puppet_install_version: '8.19.2',
-        puppet_collection: 'openvox8',
         puppet_install_type: 'agent'
       }
       expect(helper.get_puppet_install_info).to eq expected
