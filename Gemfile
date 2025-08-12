@@ -40,9 +40,10 @@ group :system_tests do
   gem 'beaker-windows'
   gem 'ed25519'
   gem 'net-ssh'
+  gem 'openvox', ENV.fetch('OPENVOX_VERSION', ENV.fetch('PUPPET_VERSION', ['>= 7.0.0', '< 9.0.0']))
   gem 'pry-byebug', '~> 3.10.0'
-  gem 'puppet', ENV.fetch('PUPPET_VERSION', ['>= 7.0.0', '< 9.0.0'])
   gem 'puppetlabs_spec_helper', '>= 4.0.0', '< 9.0.0'
+  gem 'syslog' # Required for Ruby >= 3.4
 end
 
 group :tests do
