@@ -1,3 +1,7 @@
+### 1.36.1 / 2025-08-12
+* Fixed:
+  * Reverted breaking change (#236)
+
 ### 1.36.0 / 2025-06-23
 * Added
   * Openvox support
