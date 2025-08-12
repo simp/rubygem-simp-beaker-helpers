@@ -22,7 +22,7 @@ Gem::Specification.new do |s|
 
   s.required_ruby_version = '>= 2.7.0'
 
-  s.add_runtime_dependency 'beaker',                ['>= 4.17.0', '< 8.0.0']
+  s.add_runtime_dependency 'beaker',                ['>= 4.28.1', '< 8.0.0']
   s.add_runtime_dependency 'beaker-docker',         ['>= 0.8.3', '< 4.0.0']
   s.add_runtime_dependency 'beaker-rspec',          ['>= 8.0', '< 10.0.0']
   s.add_runtime_dependency 'beaker-vagrant',        ['>= 0.6.4', '< 3.0.0']
