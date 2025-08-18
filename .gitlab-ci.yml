@@ -3,12 +3,10 @@
 #
 # https://puppet.com/docs/pe/2019.8/component_versions_in_recent_pe_releases.html
 # https://puppet.com/misc/puppet-enterprise-lifecycle
-# https://puppet.com/docs/pe/2018.1/overview/getting_support_for_pe.html
 # ------------------------------------------------------------------------------
 # Release       Puppet   Ruby    EOL
-# SIMP 6.4      5.5      2.4.10  TBD
-# PE 2018.1     5.5      2.4.10  2021-01 (LTS overlap)
-# PE 2019.8     6.18     2.5.7   2022-12 (LTS)
+# PE 2021.7     7.24     2.7.7   LTS EOS: 2024-08 EOL: 2025-02
+# PE 2023.Y     7.24     2.7.7   Biannual updates
 ---
 
 stages:
@@ -229,26 +227,20 @@ variables:
 # Puppet Versions
 #-----------------------------------------------------------------------
 
-.pup_6_x: &pup_6_x
-  image: 'ruby:2.5'
-  variables:
-    PUPPET_VERSION: '~> 6.0'
-    BEAKER_PUPPET_COLLECTION: 'puppet6'
-    MATRIX_RUBY_VERSION: '2.5'
-
-.pup_6_pe: &pup_6_pe
-  image: 'ruby:2.5'
-  variables:
-    PUPPET_VERSION: '6.22.1'
-    BEAKER_PUPPET_COLLECTION: 'puppet6'
-    MATRIX_RUBY_VERSION: '2.5'
-
 .pup_7_x: &pup_7_x
   image: 'ruby:2.7'
   variables:
     PUPPET_VERSION: '~> 7.0'
     BEAKER_PUPPET_COLLECTION: 'puppet7'
     MATRIX_RUBY_VERSION: '2.7'
+
+.pup_8_x: &pup_8_x
+  image: 'ruby:3.2'
+  variables:
+    PUPPET_VERSION: '~> 8.0'
+    BEAKER_PUPPET_COLLECTION: 'puppet8'
+    MATRIX_RUBY_VERSION: '3.2'
+
 
 # Testing Environments
 #-----------------------------------------------------------------------
@@ -271,7 +263,7 @@ variables:
     - 'bundle exec rake spec'
 
 .beaker: &beaker
-  image: ruby:2.7.2  # must be 2.7.2 if running in GCP
+  image: ruby:2.7.8  # must be 2.7.2 if running in GCP
   tags:
     - beaker
   before_script:
@@ -296,14 +288,13 @@ variables:
 # Unit Tests
 #-----------------------------------------------------------------------
 
-pup6.x-unit:
-  <<: *pup_6_x
-  <<: *unit_tests
-
 pup7.x-unit:
   <<: *pup_7_x
   <<: *unit_tests
 
+pup8.x-unit:
+  <<: *pup_8_x
+  <<: *unit_tests
 
 # Repo-specific content
 # ==============================================================================
@@ -311,14 +302,14 @@ pup7.x-unit:
 #=======================================================================
 # Packaging test
 
-pup6.x-pkg:
-  <<: *pup_6_x
+pup7.x-pkg:
+  <<: *pup_7_x
   <<: *unit_tests
   script:
     'bundle exec rake pkg:gem'
 
-pup7.x-pkg:
-  <<: *pup_7_x
+pup8.x-pkg:
+  <<: *pup_8_x
   <<: *unit_tests
   script:
     'bundle exec rake pkg:gem'
@@ -331,38 +322,38 @@ pup7.x-pkg:
 # and the bundle is configured with this version of simp-beaker-helpers)
 # than in an acceptance test with a build user.
 default-bad-nodeset:
-  <<: *pup_6_x
+  <<: *pup_8_x
   <<: *acceptance_base
   script:
     - 'RESULT=`bundle exec rake beaker:suites[default,oops] 1>/dev/null; echo $?`; (test $RESULT == "1")'
     - echo 'beaker:suites correctly failed with unknown nodeset'
 
 default:
-  <<: *pup_6_x
+  <<: *pup_8_x
   <<: *acceptance_base
   script:
     - bundle exec rake beaker:suites[default]
 
 default-amzn2:
-  <<: *pup_6_x
+  <<: *pup_8_x
   <<: *acceptance_base
   script:
     - bundle exec rake beaker:suites[default,amzn2]
 
 default-fips:
-  <<: *pup_6_x
+  <<: *pup_8_x
   <<: *acceptance_base
   script:
     - BEAKER_fips=yes bundle exec rake beaker:suites[default]
 
 fips_from_fixtures:
-  <<: *pup_6_x
+  <<: *pup_8_x
   <<: *acceptance_base
   script:
     - bundle exec rake beaker:suites[fips_from_fixtures]
 
-puppet6_collections:
-  <<: *pup_6_x
+puppet8_collections:
+  <<: *pup_8_x
   <<: *acceptance_base
   script:
     - bundle exec rake beaker:suites[puppet_collections]
@@ -374,20 +365,20 @@ puppet7_collections:
     - bundle exec rake beaker:suites[puppet_collections]
 
 oel_ssg:
-  <<: *pup_6_x
+  <<: *pup_8_x
   <<: *acceptance_base
   script:
     - bundle exec rake beaker:suites[ssg,oel]
 
 windows:
-  <<: *pup_6_x
+  <<: *pup_8_x
   <<: *acceptance_base
   allow_failure: true
   script:
     - bundle exec rake beaker:suites[windows]
 
 snapshot:
-  <<: *pup_6_x
+  <<: *pup_8_x
   <<: *acceptance_base
   # This is prone to breakage in the underlying system
   allow_failure: true
