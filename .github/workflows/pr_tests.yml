@@ -32,7 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: "Install Ruby 2.7"
         uses: ruby/setup-ruby@v1
         with:
@@ -59,7 +59,7 @@ jobs:
     env:
       PUPPET_VERSION: ${{matrix.puppet.puppet_version}}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v5
       - name: 'Install Ruby ${{matrix.puppet.ruby_version}}'
         uses: ruby/setup-ruby@v1
         with:
