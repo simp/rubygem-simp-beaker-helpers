@@ -45,7 +45,7 @@ jobs:
       PUPPET_VERSION: ${{matrix.puppet.puppet_version}}
     steps:
       - name: checkout repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v5
       - name: setup ruby
         uses: ruby/setup-ruby@v1
         with:
