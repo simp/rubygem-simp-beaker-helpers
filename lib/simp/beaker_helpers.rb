@@ -114,11 +114,13 @@ module Simp::BeakerHelpers
   end
 
   # We can't cache this because it may change during a run
-  def fips_enabled(sut)
+  def fips_enabled?(sut)
     on(sut,
               'cat /proc/sys/crypto/fips_enabled 2>/dev/null',
               accept_all_exit_codes: true).output.strip == '1'
   end
+
+  alias fips_enabled fips_enabled?
 
   def rsync_functional_on?(sut)
     # We have to check if rsync *still* works otherwise
