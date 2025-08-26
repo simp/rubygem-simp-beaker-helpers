@@ -1,3 +1,8 @@
+### 2.0.1 / 2025-08-28
+* Fixed:
+  * Rename `fips_enabled` method to `fips_enabled?`
+    to correct a rubocop complaint
+
 ### 2.0.0 / 2025-08-12
 * Added
   * Openvox support (re-publishing 1.36.0 as a breaking change)
