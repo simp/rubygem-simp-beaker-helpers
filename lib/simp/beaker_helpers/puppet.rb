@@ -8,7 +8,7 @@ module Simp::BeakerHelpers
   # The directories in the module directory that will not be scp-ed to the test system when using
   # `copy_module_to`
   PUPPET_MODULE_INSTALL_IGNORE = ['/.bundle', '/.git', '/.idea', '/.vagrant', '/.vendor', '/vendor', '/acceptance',
-                                  '/bundle', '/spec', '/tests', '/log', '/.svn', '/junit', '/pkg', '/example', '/tmp',].freeze
+                                  '/bundle', '/spec', '/tests', '/log', '/.svn', '/junit', '/pkg', '/example', '/tmp'].freeze
 
   # Here be the pathing and default values for AIO installs
   #
@@ -38,7 +38,12 @@ module Simp::BeakerHelpers
     },
     'pswindows' => { # pure windows
       'puppetbindir' => '"C:\\Program Files (x86)\\Puppet Labs\\Puppet\\bin";"C:\\Program Files\\Puppet Labs\\Puppet\\bin"',
-      'privatebindir' => '"C:\\Program Files (x86)\\Puppet Labs\\Puppet\\puppet\\bin";"C:\\Program Files\\Puppet Labs\\Puppet\\puppet\\bin";"C:\\Program Files (x86)\\Puppet Labs\\Puppet\\sys\\ruby\\bin";"C:\\Program Files\\Puppet Labs\\Puppet\\sys\\ruby\\bin"',
+      'privatebindir' => [
+        '"C:\\Program Files (x86)\\Puppet Labs\\Puppet\\puppet\\bin"',
+        '"C:\\Program Files\\Puppet Labs\\Puppet\\puppet\\bin"',
+        '"C:\\Program Files (x86)\\Puppet Labs\\Puppet\\sys\\ruby\\bin"',
+        '"C:\\Program Files\\Puppet Labs\\Puppet\\sys\\ruby\\bin"',
+      ].join(';'),
       'distmoduledir' => 'C:\\ProgramData\\PuppetLabs\\code\\modules',
     },
   }.freeze
@@ -46,7 +51,7 @@ module Simp::BeakerHelpers
   # Given a host construct a PATH that includes puppetbindir, facterbindir and hierabindir
   # @param [Host] host    A single host to construct pathing for
   def construct_puppet_path(host)
-    path = %w[puppetbindir facterbindir hierabindir privatebindir].compact.reject(&:empty?)
+    path = ['puppetbindir', 'facterbindir', 'hierabindir', 'privatebindir'].compact.reject(&:empty?)
     # get the PATH defaults
     path.map! { |val| host[val] }
     path = path.compact.reject(&:empty?)
@@ -76,7 +81,7 @@ module Simp::BeakerHelpers
       host[key] = val
     end
     # add group and type here for backwards compatability
-    host['group'] = if host['platform'] =~ /windows/
+    host['group'] = if host['platform'].include?('windows')
                       'Administrators'
                     else
                       'puppet'
@@ -90,13 +95,13 @@ module Simp::BeakerHelpers
     block_on hosts do |host|
       if host.is_powershell?
         platform = 'pswindows'
-      elsif host['platform'] =~ /windows/
+      elsif host['platform'].include?('windows')
         ruby_arch = if host[:ruby_arch] == 'x64'
-                      /-64/
+                      %r{-64}
                     else
-                      /-32/
+                      %r{-32}
                     end
-        platform = if host['platform'] =~ ruby_arch
+        platform = if host['platform']&.match?(ruby_arch)
                      'windows-64'
                    else
                      'windows'
@@ -123,11 +128,11 @@ module Simp::BeakerHelpers
   #    'foss'
   def normalize_type(type)
     case type
-    when /(\A|-)foss(\Z|-)/
+    when %r{(\A|-)foss(\Z|-)}
       'foss'
-    when /(\A|-)pe(\Z|-)/
+    when %r{(\A|-)pe(\Z|-)}
       'pe'
-    when /(\A|-)aio(\Z|-)/
+    when %r{(\A|-)aio(\Z|-)}
       'aio'
     end
   end
@@ -142,7 +147,7 @@ module Simp::BeakerHelpers
         # to correctly handle that
         # don't worry about aio, that happens in the aio_version? check
         host_type = normalize_type(host_type)
-        if host_type and host_type !~ /aio/
+        if host_type && !host_type.include?('aio')
           add_method = "add_#{host_type}_defaults_on"
           raise "cannot add defaults of type #{host_type} for host #{host.name} (#{add_method} not present)" unless respond_to?(
             add_method, host
