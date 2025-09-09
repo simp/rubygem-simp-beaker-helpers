@@ -43,13 +43,13 @@ hosts.each do |host|
       context 'existing snapshot' do
         let(:init_snapshot) { 'handoff' }
 
-        include_examples 'a snapshot test'
+        it_behaves_like 'a snapshot test'
       end
 
       context 'missing snapshot' do
         let(:init_snapshot) { 'missing' }
 
-        include_examples 'a snapshot test'
+        it_behaves_like 'a snapshot test'
       end
     end
   end
