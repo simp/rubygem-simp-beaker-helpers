@@ -1,3 +1,7 @@
+### 2.0.2 / 2025-08-12
+* Fixed:
+  * Updated dependencies to allow beaker >= 7.0.0 (#239)
+
 ### 2.0.1 / 2025-08-28
 * Fixed:
   * Rename `fips_enabled` method to `fips_enabled?`
