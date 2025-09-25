@@ -44,7 +44,7 @@ group :system_tests do
   gem 'pry-byebug', '~> 3.10.0'
   gem 'puppet', ENV.fetch('PUPPET_VERSION', ['>= 7.0.0', '< 9.0.0'])
   gem 'puppetlabs_spec_helper', '>= 4.0.0', '< 8.0.1'
-  gem 'rubocop', '~> 1.80.0'
+  gem 'rubocop', '~> 1.81.0'
   gem 'rubocop-performance', '~> 1.26.0'
   gem 'rubocop-rake', '~> 0.7.0'
   gem 'rubocop-rspec', '~> 3.7.0'
