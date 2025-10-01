@@ -73,9 +73,11 @@ jobs:
         run: |
           bundle config path vendor
           bundle install -j $(nproc)
+      - name: set BEAKER_PUPPET_COLLECTION
+        if: ${{matrix.puppet.collection}}
+        run: echo "BEAKER_PUPPET_COLLECTION=${{matrix.puppet.collection}}" >> $GITHUB_ENV
       - name: 'run beaker:suite "${{matrix.beaker.label}}"'
         continue-on-error: ${{matrix.puppet.experimental || matrix.beaker.allowed_to_fail}}
         env:
           BEAKER_SUITE: ${{matrix.beaker.suite}}
-          BEAKER_PUPPET_COLLECTION: ${{matrix.puppet.collection || null}}
         run: bundle exec rake beaker:suites[$BEAKER_SUITE,docker]
