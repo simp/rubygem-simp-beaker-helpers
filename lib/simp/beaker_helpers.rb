@@ -13,11 +13,13 @@ module Simp::BeakerHelpers
 
   require 'simp/beaker_helpers/constants'
   require 'simp/beaker_helpers/inspec'
-  require 'simp/beaker_helpers/puppet'
   require 'simp/beaker_helpers/snapshot'
   require 'simp/beaker_helpers/ssg'
   require 'simp/beaker_helpers/version'
   require 'find'
+
+  PUPPET_MODULE_INSTALL_IGNORE = ['/.bundle', '/.git', '/.idea', '/.vagrant', '/.vendor', '/vendor', '/acceptance',
+                                  '/bundle', '/spec', '/tests', '/log', '/.svn', '/junit', '/pkg', '/example', '/tmp'].freeze
 
   @run_in_parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
 
@@ -783,14 +785,6 @@ module Simp::BeakerHelpers
       # SIMP uses structured facts, therefore stringify_facts must be disabled
       unless ENV['BEAKER_stringify_facts'] == 'yes'
         on sut, 'puppet config set stringify_facts false'
-      end
-
-      # Occasionally we run across something similar to BKR-561, so to ensure we
-      # at least have the host defaults:
-      #
-      # :hieradatadir is used as a canary here; it isn't the only missing key
-      unless sut.host_hash.key? :hieradatadir
-        configure_type_defaults_on(sut)
       end
 
       if os_info['family'] == 'RedHat'
