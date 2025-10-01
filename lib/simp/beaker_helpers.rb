@@ -1505,10 +1505,8 @@ module Simp::BeakerHelpers
   def install_puppet
     install_info = get_puppet_install_info
 
-    # In case  Beaker needs this info internally
-    if install_info[:puppet_collection] && ENV['BEAKER_PUPPET_COLLECTION'].nil?
-      ENV['BEAKER_PUPPET_COLLECTION'] = install_info[:puppet_collection]
-    end
+    # In case Beaker needs this info internally
+    ENV['BEAKER_PUPPET_COLLECTION'] ||= install_info[:puppet_collection] if install_info.is_a?(Hash) && install_info.key?(:puppet_collection)
 
     require 'beaker_puppet_helpers'
     run_puppet_install_helper_on(hosts)
