@@ -1506,7 +1506,7 @@ module Simp::BeakerHelpers
     install_info = get_puppet_install_info
 
     # In case  Beaker needs this info internally
-    if install_info[:puppet_collection]
+    if install_info[:puppet_collection] && ENV['BEAKER_PUPPET_COLLECTION'].nil?
       ENV['BEAKER_PUPPET_COLLECTION'] = install_info[:puppet_collection]
     end
 
