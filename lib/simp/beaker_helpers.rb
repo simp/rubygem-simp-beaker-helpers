@@ -1,5 +1,6 @@
 require 'English'
 require 'beaker_puppet_helpers'
+require 'beaker_puppet_helpers/dsl'
 require 'bundler'
 
 # SIMP namespace
@@ -8,6 +9,7 @@ module Simp; end
 # SIMP Beaker helper methods for testing
 module Simp::BeakerHelpers
   include BeakerPuppetHelpers
+  include BeakerPuppetHelpers::DSL
 
   require 'simp/beaker_helpers/constants'
   require 'simp/beaker_helpers/inspec'
