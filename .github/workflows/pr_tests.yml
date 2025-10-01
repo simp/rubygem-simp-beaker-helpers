@@ -13,9 +13,9 @@
 #
 # https://docs.github.com/en/actions/reference/events-that-trigger-workflows
 #
-
+---
 name: PR Tests
-on:
+'on':
   push:
     branches:
       # A test branch for seeing if your tests will pass in your personal fork
@@ -24,7 +24,7 @@ on:
     types: [opened, reopened, synchronize]
 
 env:
-  PUPPET_VERSION: '~> 7'
+  PUPPET_VERSION: '~> 8'
 
 jobs:
   ruby-style:
@@ -33,10 +33,10 @@ jobs:
     continue-on-error: true
     steps:
       - uses: actions/checkout@v5
-      - name: "Install Ruby 2.7"
+      - name: "Install Ruby 3.2"
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 2.7
+          ruby-version: 3.2
           bundler-cache: true
       - run: |
           bundle show

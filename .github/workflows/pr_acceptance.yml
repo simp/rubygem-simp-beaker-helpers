@@ -1,6 +1,7 @@
 # Run all tests as GitHub Actions
+---
 name: Acceptance Tests
-on:
+'on':
   push:
     branches:
       # A test branch for seeing if your tests will pass in your personal fork
@@ -10,7 +11,7 @@ on:
 
 jobs:
   acceptance:
-    name: '${{matrix.beaker.suite}}, Puppet ${{matrix.puppet.puppet_version}}'
+    name: '${{matrix.beaker.suite}}, ${{matrix.puppet.label}}'
     runs-on:
       - ubuntu-latest
     strategy:
@@ -23,6 +24,11 @@ jobs:
           - label: 'Puppet 8.x'
             puppet_version: '~> 8.0'
             ruby_version: '3.2'
+            experimental: false
+          - label: 'OpenVox 8.x'
+            puppet_version: '~> 8.0'
+            ruby_version: '3.2'
+            collection: 'openvox8'
             experimental: false
         beaker:
           - label: beaker
@@ -67,6 +73,9 @@ jobs:
         run: |
           bundle config path vendor
           bundle install -j $(nproc)
+      - name: set BEAKER_PUPPET_COLLECTION
+        if: ${{matrix.puppet.collection}}
+        run: echo "BEAKER_PUPPET_COLLECTION=${{matrix.puppet.collection}}" >> $GITHUB_ENV
       - name: 'run beaker:suite "${{matrix.beaker.label}}"'
         continue-on-error: ${{matrix.puppet.experimental || matrix.beaker.allowed_to_fail}}
         env:

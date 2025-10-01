@@ -12,7 +12,7 @@ HOSTS:
 CONFIG:
   log_level: verbose
   type: aio
-  puppet_collection: "<%= ENV.fetch('BEAKER_PUPPET_COLLECTION', 'puppet8') %>"
+  puppet_collection: "<%= ENV.fetch('BEAKER_PUPPET_COLLECTION', 'openvox8') %>"
   ssh:
     password: root
     auth_methods:
