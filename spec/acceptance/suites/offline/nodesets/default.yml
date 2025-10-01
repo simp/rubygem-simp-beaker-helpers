@@ -13,7 +13,7 @@ HOSTS:
 CONFIG:
   log_level: verbose
   type: aio
-  puppet_collection: "<%= ENV.fetch('BEAKER_PUPPET_COLLECTION', 'puppet8') %>"
+  puppet_collection: "<%= ENV.fetch('BEAKER_PUPPET_COLLECTION', 'openvox8') %>"
   libvirt:
     # Ensure that we use the best option available
     'cpu_mode': 'host-passthrough'

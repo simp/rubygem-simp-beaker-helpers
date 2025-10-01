@@ -19,7 +19,7 @@ CONFIG:
   log_level: verbose
   type: aio
   vagrant_cpus: 2
-  puppet_collection: "<%= ENV.fetch('BEAKER_PUPPET_COLLECTION', 'puppet8') %>"
+  puppet_collection: "<%= ENV.fetch('BEAKER_PUPPET_COLLECTION', 'openvox8') %>"
   ssh:
     keepalive: true
     keepalive_interval: 10

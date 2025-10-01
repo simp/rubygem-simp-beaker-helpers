@@ -24,4 +24,4 @@ CONFIG:
       - <%= Net::SSH::Transport::Algorithms::ALGORITHMS[:encryption].join("\n#{' '*6}- ") %>
     hmac:
       - <%= Net::SSH::Transport::Algorithms::ALGORITHMS[:hmac].join("\n#{' '*6}- ") %>
-  puppet_collection: "<%= ENV.fetch('BEAKER_PUPPET_COLLECTION', 'puppet8') %>"
+  puppet_collection: "<%= ENV.fetch('BEAKER_PUPPET_COLLECTION', 'openvox8') %>"
