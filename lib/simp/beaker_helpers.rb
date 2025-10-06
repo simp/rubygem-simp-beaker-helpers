@@ -938,7 +938,7 @@ module Simp::BeakerHelpers
 
     unless windows_suts.empty?
       # There are currently no known Windows errata to apply
-      puts '== SKIPPING Windows errata (none known)'
+      STDERR.puts '== SKIPPING Windows errata (none known)' if ENV['BEAKER_helpers_verbose']
     end
 
     # Configure and reboot SUTs into FIPS mode
