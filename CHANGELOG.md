@@ -1,3 +1,7 @@
+### 2.0.3 / 2025-10-07
+* Fixed:
+  * Removed outdated/incorrect errata for Windows machines (#261)
+
 ### 2.0.2 / 2025-08-12
 * Fixed:
   * Updated dependencies to allow beaker >= 7.0.0 (#239)
