@@ -1,3 +1,7 @@
+### 2.0.4 / 2025-10-16
+* Fixed:
+  * `install_puppet` failure on Windows (#266)
+
 ### 2.0.3 / 2025-10-07
 * Fixed:
   * Removed outdated/incorrect errata for Windows machines (#261)

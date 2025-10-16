@@ -1459,9 +1459,14 @@ module Simp::BeakerHelpers
 
   def run_puppet_install_helper_on(hosts)
     block_on hosts, run_in_parallel: true do |host|
-      BeakerPuppetHelpers::InstallUtils.install_puppet_release_repo_on(host, ENV['BEAKER_PUPPET_COLLECTION'])
-      package_name = ENV.fetch('BEAKER_PUPPET_PACKAGE_NAME', BeakerPuppetHelpers::InstallUtils.collection2packagename(host, ENV['BEAKER_PUPPET_COLLECTION']))
-      host.install_package(package_name)
+      puppet_collection = ENV.fetch('BEAKER_PUPPET_COLLECTION', nil) || host.options['puppet_collection']
+      if is_windows?(host)
+        install_msi_on(host, puppet_collection)
+      else
+        BeakerPuppetHelpers::InstallUtils.install_puppet_release_repo_on(host, puppet_collection)
+        package_name = ENV.fetch('BEAKER_PUPPET_PACKAGE_NAME', BeakerPuppetHelpers::InstallUtils.collection2packagename(host, puppet_collection))
+        host.install_package(package_name)
+      end
     end
   end
 
