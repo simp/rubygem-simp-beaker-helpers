@@ -10,6 +10,9 @@
   * The `beaker:suites` task now depends on `fixtures:prep` (from
     `puppet_fixtures`) instead of `spec_prep`, and `ensure_fixture_modules` now
     runs `rake fixtures:prep`.
+* Removed (**Breaking**):
+  * Removed the unsupported `Simp::BeakerHelpers::SSG` helpers, the `ssg`
+    acceptance suite, and the `SSG_REPO_URL` constant (#268)
 * Added:
   * `puppet_fixtures` runtime dependency
   * OpenVox-named environment variables for `get_puppet_install_info`, taking
@@ -21,7 +24,6 @@
 ### 2.0.5 / 2026-06-06
 * Fixed:
   * Additional cleanup for rubocop
-
 ### 2.0.4 / 2025-10-16
 * Fixed:
   * `install_puppet` failure on Windows (#266)
