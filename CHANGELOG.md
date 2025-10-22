@@ -1,5 +1,5 @@
-### 2.0.5 / 2025-10-22
-* Fixed:
+### 3.0.0 / 2025-10-22
+* Removed:
   * Removed unsupported SSG files (#268)
 
 ### 2.0.4 / 2025-10-16
