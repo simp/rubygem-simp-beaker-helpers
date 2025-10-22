@@ -364,12 +364,6 @@ puppet7_collections:
   script:
     - bundle exec rake beaker:suites[puppet_collections]
 
-oel_ssg:
-  <<: *pup_8_x
-  <<: *acceptance_base
-  script:
-    - bundle exec rake beaker:suites[ssg,oel]
-
 windows:
   <<: *pup_8_x
   <<: *acceptance_base
