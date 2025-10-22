@@ -1,3 +1,7 @@
+### 2.0.5 / 2025-10-22
+* Fixed:
+  * Removed unsupported SSG files (#268)
+
 ### 2.0.4 / 2025-10-16
 * Fixed:
   * `install_puppet` failure on Windows (#266)
