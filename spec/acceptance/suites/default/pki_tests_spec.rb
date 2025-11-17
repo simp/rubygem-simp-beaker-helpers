@@ -24,8 +24,13 @@ context 'PKI operations' do
     end
 
     describe 'a Fake CA under /root' do
-      tmp_keydist_dir = Dir.mktmpdir 'simp-beaker-helpers__pki-tests'
-      run_fake_pki_ca_on(default, hosts, tmp_keydist_dir)
+      def tmp_keydist_dir
+        @tmp_keydist_dir ||= Dir.mktmpdir 'simp-beaker-helpers__pki-tests'
+      end
+
+      before(:all) do
+        run_fake_pki_ca_on(default, hosts, tmp_keydist_dir)
+      end
 
       it 'creates /root/pki' do
         on(default, 'test -d /root/pki')
@@ -35,15 +40,19 @@ context 'PKI operations' do
     end
 
     describe 'after copy_keydist_to' do
-      test_dir = '/etc/puppetlabs/code/environments/production/modules/pki/files/keydist'
-      copy_keydist_to(default)
-      it_behaves_like 'a correctly copied keydist/ tree', test_dir
+      before(:all) do
+        copy_keydist_to(default)
+      end
+
+      it_behaves_like 'a correctly copied keydist/ tree', '/etc/puppetlabs/code/environments/production/modules/pki/files/keydist'
     end
 
-    describe 'after copy_keydist_to(default,"/tmp/foo")' do
-      test_dir = '/tmp/foo'
-      copy_keydist_to(default, test_dir)
-      it_behaves_like 'a correctly copied keydist/ tree', test_dir
+    describe 'after copy_keydist_to(default, "/tmp/foo")' do
+      before(:all) do
+        copy_keydist_to(default, '/tmp/foo')
+      end
+
+      it_behaves_like 'a correctly copied keydist/ tree', '/tmp/foo'
     end
   end
 end

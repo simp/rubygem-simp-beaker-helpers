@@ -10,7 +10,11 @@ end
 require 'yaml'
 require 'tempfile'
 
-alt_fixtures = File.absolute_path('.fips_fixtures.yml')
+def alt_fixtures
+  return @alt_fixtures if @alt_fixtures
+
+  @alt_fixtures = File.absolute_path('.fips_fixtures.yml')
+end
 
 new_fixtures = {
   'fixtures' => {

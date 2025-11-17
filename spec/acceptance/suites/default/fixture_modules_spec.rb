@@ -32,7 +32,7 @@ context 'after copy_fixture_modules_to( hosts )' do
   end
 
   describe "pfact_on(default,'fips_enabled')" do
-    expected = (ENV['BEAKER_fips'] == 'yes')
+    let(:expected) { (ENV['BEAKER_fips'] == 'yes') }
 
     it 'returns false' do
       expect(pfact_on(default, 'fips_enabled')).to eq expected

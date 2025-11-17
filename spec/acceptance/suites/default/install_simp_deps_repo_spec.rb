@@ -1,11 +1,14 @@
 require 'spec_helper_acceptance'
 
-hosts.each do |host|
-  expect_failures = false
-  if hosts_with_role(hosts, 'el9').include?(host)
-    expect_failures = true
-  end
+def expect_failures?(host)
+  os = fact_on(host, 'os')
 
+  return true if os['family'] == 'RedHat' && os['release']['major'].to_i >= 9
+
+  false
+end
+
+hosts.each do |host|
   describe '#install_simp_repos' do
     it 'installs yum utils' do
       host.install_package('yum-utils')
@@ -15,12 +18,12 @@ hosts.each do |host|
       before(:all) do
         install_simp_repos(host)
       rescue => e
-        raise e unless expect_failures
+        raise e unless expect_failures?(host)
         warn e.message
       end
 
       it 'enables the correct repos' do
-        skip "#{host} is not supported yet" if expect_failures
+        skip "#{host} is not supported yet" if expect_failures?(host)
         on(host, 'yum -y list simp')
         on(host, 'yum -y list postgresql96')
       end
@@ -33,7 +36,7 @@ hosts.each do |host|
       end
 
       it 'lists the simp rpm' do
-        skip "#{host} is not supported yet" if expect_failures
+        skip "#{host} is not supported yet" if expect_failures?(host)
         on(host, 'yum list simp')
       end
     end
@@ -42,12 +45,12 @@ hosts.each do |host|
       before(:all) do
         install_simp_repos(host, ['simp-community-simp'])
       rescue => e
-        raise e unless expect_failures
+        raise e unless expect_failures?(host)
         warn e.message
       end
 
       it 'enables the correct repos' do
-        skip "#{host} is not supported yet" if expect_failures
+        skip "#{host} is not supported yet" if expect_failures?(host)
         on(host, 'yum -y list postgresql96')
       end
 
