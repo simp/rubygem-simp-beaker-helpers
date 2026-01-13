@@ -92,7 +92,7 @@ jobs:
           echo "release_command=$GEM_RELEASE_COMMAND" | tee -a "$GITHUB_OUTPUT"
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 4.0.0
+          ruby-version: 4.0.1
           bundler-cache: true
       - name: Test build the package
         run: "${{ steps.commands.outputs.build_command }}"
@@ -184,7 +184,7 @@ jobs:
           clean: true
       - uses: ruby/setup-ruby@v1
         with:
-          ruby-version: 4.0.0
+          ruby-version: 4.0.1
           bundler-cache: true
       - name: Build RubyGem
         run: |
