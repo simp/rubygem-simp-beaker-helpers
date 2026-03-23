@@ -42,7 +42,7 @@ group :system_tests do
   gem 'net-ssh'
   # renovate: datasource=rubygems versioning=ruby
   gem 'openvox', ENV.fetch('OPENVOX_VERSION', ENV.fetch('PUPPET_VERSION', ['>= 7.0.0', '< 9.0.0']))
-  gem 'pry-byebug', '~> 3.10.0'
+  gem 'pry-byebug', '~> 3.12.0'
   gem 'puppetlabs_spec_helper', '>= 4.0.0', '< 9.0.0'
   gem 'syslog' # Required for Ruby >= 3.4
 end
