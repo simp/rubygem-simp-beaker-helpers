@@ -9,8 +9,6 @@ module Simp::BeakerHelpers
   # oldest system that we support
   DEFAULT_PUPPET_AGENT_VERSION = '~> 8.0'.freeze
 
-  SSG_REPO_URL = ENV['BEAKER_ssg_repo'] || 'https://github.com/ComplianceAsCode/content.git'
-
   if ['true', 'yes'].include?(ENV['BEAKER_online'])
     ONLINE = true
   elsif ['false', 'no'].include?(ENV['BEAKER_online'])

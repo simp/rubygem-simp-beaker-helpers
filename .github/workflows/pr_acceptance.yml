@@ -37,9 +37,6 @@ jobs:
           - label: beaker puppet_collections
             suite: puppet_collections
             allowed_to_fail: false
-          - label: beaker ssg
-            suite: ssg
-            allowed_to_fail: false
           # The inspec suite fails for unclear reasons during an scp.
           # Sicura tests compliance at the framework level, so troubleshooting
           # inspec acceptance tests is not a priority at present.
