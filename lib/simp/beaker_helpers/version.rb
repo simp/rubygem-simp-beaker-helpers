@@ -3,6 +3,6 @@
 # SIMP namespace
 module Simp; end
 
-module Simp::BeakerHelpers
-  VERSION = '2.0.4'
+module Simp::BeakerHelpers # rubocop:disable Style/OneClassPerFile
+  VERSION = '2.0.5'
 end

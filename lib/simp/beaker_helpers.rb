@@ -7,7 +7,7 @@ require 'bundler'
 module Simp; end
 
 # SIMP Beaker helper methods for testing
-module Simp::BeakerHelpers
+module Simp::BeakerHelpers # rubocop:disable Style/OneClassPerFile
   include BeakerPuppetHelpers
   include BeakerPuppetHelpers::DSL
 
@@ -1235,13 +1235,13 @@ module Simp::BeakerHelpers
     data_dir = Dir.mktmpdir('hieradata')
     @temp_hieradata_dirs << data_dir
 
-    fh = File.open(File.join(data_dir, 'common.yaml'), 'w')
-    if hieradata.is_a?(String)
-      fh.puts(hieradata)
-    else
-      fh.puts(hieradata.to_yaml)
+    File.open(File.join(data_dir, 'common.yaml'), 'w') do |fh|
+      if hieradata.is_a?(String)
+        fh.puts(hieradata)
+      else
+        fh.puts(hieradata.to_yaml)
+      end
     end
-    fh.close
 
     copy_hiera_data_to sut, File.join(data_dir, 'common.yaml')
   end

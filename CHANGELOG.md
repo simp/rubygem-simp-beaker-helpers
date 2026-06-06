@@ -1,3 +1,7 @@
+### 2.0.5 / 2026-06-06
+* Fixed:
+  * Additional cleanup for rubocop
+
 ### 2.0.4 / 2025-10-16
 * Fixed:
   * `install_puppet` failure on Windows (#266)

@@ -2,7 +2,7 @@
 module Simp; end
 
 # SIMP Beaker helper methods for testing
-module Simp::BeakerHelpers
+module Simp::BeakerHelpers # rubocop:disable Style/OneClassPerFile
   # This is the *oldest* puppet-agent version that the latest release of SIMP supports
   #
   # This is done so that we know if some new thing that we're using breaks the
