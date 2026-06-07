@@ -1,10 +1,10 @@
 # SIMP namespace
 module Simp; end
 # SIMP Beaker helper methods for testing
-module Simp::BeakerHelpers; end
+module Simp::BeakerHelpers; end # rubocop:disable Style/OneClassPerFile
 
 # Windows-specific helper methods
-module Simp::BeakerHelpers::Windows
+module Simp::BeakerHelpers::Windows # rubocop:disable Style/OneClassPerFile
   begin
     require 'beaker-windows'
   rescue LoadError

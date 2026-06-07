@@ -9,10 +9,10 @@ require 'puppetlabs_spec_helper/tasks/fixtures'
 # Simp namespace
 module Simp; end
 # Simp::Rake namespace
-module Simp::Rake; end
+module Simp::Rake; end # rubocop:disable Style/OneClassPerFile
 
 # Rake tasks for SIMP Beaker testing
-class Simp::Rake::Beaker < ::Rake::TaskLib
+class Simp::Rake::Beaker < ::Rake::TaskLib # rubocop:disable Style/OneClassPerFile
   def initialize(base_dir) # rubocop:disable Lint/MissingSuper
     @base_dir   = base_dir
     @clean_list = []
