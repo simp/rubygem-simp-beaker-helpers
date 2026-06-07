@@ -42,7 +42,7 @@ describe 'run the SSG against an SCAP profile' do
 
       it 'has a report' do
         expect(ssg_report[:data][:report]).not_to be_nil
-        puts ssg_report[:data][:report]
+        puts ssg_report[:data][:report] # rubocop:disable RSpec/Output
       end
     end
   end

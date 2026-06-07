@@ -38,7 +38,7 @@ describe 'Inspec STIG Profile' do
 
             it 'has a report' do
               expect(inspec_report_data[:report]).not_to be_nil
-              puts inspec_report_data[:report]
+              puts inspec_report_data[:report] # rubocop:disable RSpec/Output
             end
           else
             # rubocop:disable RSpec/RepeatedDescription
