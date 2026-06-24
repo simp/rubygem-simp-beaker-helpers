@@ -17,14 +17,6 @@ jobs:
     strategy:
       matrix:
         puppet:
-          - label: 'Puppet 7.x [SIMP 6.6/PE 2021.7]'
-            puppet_version: '~> 7.0'
-            ruby_version: '2.7'
-            experimental: false
-          - label: 'Puppet 8.x'
-            puppet_version: '~> 8.0'
-            ruby_version: '3.2'
-            experimental: false
           - label: 'OpenVox 8.x'
             puppet_version: '~> 8.0'
             ruby_version: '3.2'

@@ -131,10 +131,15 @@ describe 'Simp::BeakerHelpers' do
 
   context '#get_puppet_install_info' do
     after(:each) do
+      ENV['BEAKER_OPENVOX_AGENT_VERSION'] = nil
       ENV['BEAKER_PUPPET_AGENT_VERSION'] = nil
+      ENV['OPENVOX_INSTALL_VERSION'] = nil
       ENV['PUPPET_INSTALL_VERSION'] = nil
+      ENV['OPENVOX_VERSION'] = nil
       ENV['PUPPET_VERSION'] = nil
+      ENV['BEAKER_OPENVOX_COLLECTION'] = nil
       ENV['BEAKER_PUPPET_COLLECTION'] = nil
+      ENV['OPENVOX_INSTALL_TYPE'] = nil
       ENV['PUPPET_INSTALL_TYPE'] = nil
     end
 
@@ -220,6 +225,46 @@ describe 'Simp::BeakerHelpers' do
         puppet_install_type: 'agent'
       }
       expect(helper.get_puppet_install_info).to eq expected
+    end
+
+    it 'extracts info from OPENVOX_VERSION' do
+      allow(helper).to receive(:`).with('gem search -ra -e puppet').and_return(gem_search_results)
+      ENV['OPENVOX_VERSION'] = '5.5.0'
+      expected = {
+        puppet_install_version: '5.5.0',
+        puppet_collection: 'puppet5',
+        puppet_install_type: 'agent'
+      }
+      expect(helper.get_puppet_install_info).to eq expected
+    end
+
+    it 'extracts openvox info from BEAKER_OPENVOX_COLLECTION' do
+      allow(helper).to receive(:`).with('gem search -ra -e openvox').and_return(openvox_gem_search_results)
+      ENV['BEAKER_OPENVOX_COLLECTION'] = 'openvox8'
+      expected = {
+        puppet_install_version: '8.19.2',
+        puppet_collection: 'openvox8',
+        puppet_install_type: 'agent'
+      }
+      expect(helper.get_puppet_install_info).to eq expected
+    end
+
+    it 'prefers BEAKER_OPENVOX_COLLECTION over BEAKER_PUPPET_COLLECTION' do
+      allow(helper).to receive(:`).with('gem search -ra -e openvox').and_return(openvox_gem_search_results)
+      ENV['BEAKER_OPENVOX_COLLECTION'] = 'openvox8'
+      ENV['BEAKER_PUPPET_COLLECTION'] = 'puppet5'
+      expected = {
+        puppet_install_version: '8.19.2',
+        puppet_collection: 'openvox8',
+        puppet_install_type: 'agent'
+      }
+      expect(helper.get_puppet_install_info).to eq expected
+    end
+
+    it 'extracts info from OPENVOX_INSTALL_TYPE' do
+      ENV['OPENVOX_INSTALL_TYPE'] = 'pe'
+
+      expect(helper.get_puppet_install_info[:puppet_install_type]).to eq('pe')
     end
 
     it 'extracts info from PUPPET_INSTALL_TYPE' do

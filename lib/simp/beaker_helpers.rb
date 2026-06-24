@@ -367,8 +367,8 @@ module Simp::BeakerHelpers # rubocop:disable Style/OneClassPerFile
       if missing_modules.empty?
         puts '  == all fixture modules present'
       else
-        cmd = 'bundle exec rake spec_prep'
-        puts "  -- running spec_prep: '#{cmd}'"
+        cmd = 'bundle exec rake fixtures:prep'
+        puts "  -- running fixtures:prep: '#{cmd}'"
         `#{cmd}`
       end
     end
@@ -1426,16 +1426,25 @@ module Simp::BeakerHelpers # rubocop:disable Style/OneClassPerFile
   #       install version and a puppet collection are specified. This is
   #       because the puppet install version can specify more precise
   #       version information than is available from a puppet collection.
+  #
+  #       Each Puppet-named environment variable has an OpenVox-named
+  #       equivalent (e.g. OPENVOX_VERSION, BEAKER_OPENVOX_COLLECTION) that
+  #       takes precedence; the Puppet-named variables are kept as fallbacks
+  #       for backwards compatibility.
   def get_puppet_install_info
-    # The first match is internal Beaker and the second is legacy SIMP
-    puppet_install_version = ENV['BEAKER_PUPPET_AGENT_VERSION'] || ENV['PUPPET_INSTALL_VERSION'] || ENV['PUPPET_VERSION']
+    # OpenVox-named variables win; the Puppet-named ones remain as fallbacks.
+    # Within each pair the first match is internal Beaker, the second legacy SIMP.
+    puppet_install_version =
+      ENV['BEAKER_OPENVOX_AGENT_VERSION'] || ENV['BEAKER_PUPPET_AGENT_VERSION'] ||
+      ENV['OPENVOX_INSTALL_VERSION'] || ENV['PUPPET_INSTALL_VERSION'] ||
+      ENV['OPENVOX_VERSION'] || ENV['PUPPET_VERSION']
 
     if puppet_install_version && !puppet_install_version.strip.empty?
       puppet_agent_version = latest_puppet_agent_version_for(puppet_install_version.strip)
     end
 
     if puppet_agent_version.nil?
-      if (puppet_collection = ENV['BEAKER_PUPPET_COLLECTION'] || host.options['puppet_collection'])
+      if (puppet_collection = ENV['BEAKER_OPENVOX_COLLECTION'] || ENV['BEAKER_PUPPET_COLLECTION'] || host.options['puppet_collection'])
         raise("Error: Puppet Collection '#{puppet_collection}' must match /(puppet|openvox)(\\d+)/") unless puppet_collection =~ %r{(puppet|openvox)(\d+)}
         puppet_collection_name = ::Regexp.last_match(1)
         puppet_install_version = "~> #{::Regexp.last_match(2)}"
@@ -1453,18 +1462,18 @@ module Simp::BeakerHelpers # rubocop:disable Style/OneClassPerFile
     {
       puppet_install_version: puppet_agent_version,
       puppet_collection: puppet_collection,
-      puppet_install_type: ENV.fetch('PUPPET_INSTALL_TYPE', 'agent')
+      puppet_install_type: ENV['OPENVOX_INSTALL_TYPE'] || ENV.fetch('PUPPET_INSTALL_TYPE', 'agent')
     }
   end
 
   def run_puppet_install_helper_on(hosts)
     block_on hosts, run_in_parallel: true do |host|
-      puppet_collection = ENV.fetch('BEAKER_PUPPET_COLLECTION', nil) || host.options['puppet_collection']
+      puppet_collection = ENV['BEAKER_OPENVOX_COLLECTION'] || ENV.fetch('BEAKER_PUPPET_COLLECTION', nil) || host.options['puppet_collection']
       if is_windows?(host)
         install_msi_on(host, puppet_collection)
       else
         BeakerPuppetHelpers::InstallUtils.install_puppet_release_repo_on(host, puppet_collection)
-        package_name = ENV.fetch('BEAKER_PUPPET_PACKAGE_NAME', BeakerPuppetHelpers::InstallUtils.collection2packagename(host, puppet_collection))
+        package_name = ENV['BEAKER_OPENVOX_PACKAGE_NAME'] || ENV.fetch('BEAKER_PUPPET_PACKAGE_NAME', BeakerPuppetHelpers::InstallUtils.collection2packagename(host, puppet_collection))
         host.install_package(package_name)
       end
     end

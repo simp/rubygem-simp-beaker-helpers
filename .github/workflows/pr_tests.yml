@@ -48,13 +48,15 @@ jobs:
     strategy:
       matrix:
         puppet:
-          - label: 'Puppet 7.x [SIMP 6.6/PE 2021.7]'
-            puppet_version: '~> 7.0'
-            ruby_version: '2.7'
-            experimental: false
-          - label: 'Puppet 8.x'
+          - label: 'OpenVox 8.x'
             puppet_version: '~> 8.0'
             ruby_version: '3.2'
+            experimental: false
+          # OpenVox 9 is unreleased; preview the future Ruby 4.0 / OpenVox 9
+          # combo by running the OpenVox 8 gem on Ruby 4.0.
+          - label: 'OpenVox 9.x preview (Ruby 4.0, OpenVox 8 gem)'
+            puppet_version: '~> 8.0'
+            ruby_version: '4.0'
             experimental: false
     env:
       PUPPET_VERSION: ${{matrix.puppet.puppet_version}}

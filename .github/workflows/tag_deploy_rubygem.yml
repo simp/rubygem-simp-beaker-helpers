@@ -48,7 +48,7 @@ on:
       - '[0-9]+\.[0-9]+\.[0-9]+\-[a-z]+[0-9]+'
 
 env:
-  PUPPET_VERSION: '~> 7'
+  PUPPET_VERSION: '~> 8'
   LOCAL_WORKFLOW_CONFIG_FILE: .github/workflows.local.json
 
 jobs:
