@@ -14,7 +14,6 @@ module Simp::BeakerHelpers # rubocop:disable Style/OneClassPerFile
   require 'simp/beaker_helpers/constants'
   require 'simp/beaker_helpers/inspec'
   require 'simp/beaker_helpers/snapshot'
-  require 'simp/beaker_helpers/ssg'
   require 'simp/beaker_helpers/version'
   require 'find'
 
