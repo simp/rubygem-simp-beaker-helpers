@@ -30,6 +30,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'docker-api',            ['>= 2.1.0', '< 3.0.0']
   s.add_runtime_dependency 'highline',              ['>= 2.0', '< 4.0.0']
   s.add_runtime_dependency 'nokogiri',              '~> 1.8'
+  s.add_runtime_dependency 'puppet_fixtures',       ['>= 0.1', '< 3.0.0']
 
   ### s.files = Dir['Rakefile', '{bin,lib,spec}/**/*', 'README*', 'LICENSE*'] & `git ls-files -z .`.split("\0")
   s.files       = %x(git ls-files).split("\n")

@@ -1,3 +1,23 @@
+### 3.0.0 / 2026-06-24
+* Changed (**Breaking**):
+  * Dropped support for Puppet 7 / Ruby 2.7. CI now tests Puppet/OpenVox 8 only,
+    and the default OpenVox gem floor is raised to `>= 8.0.0`.
+  * Replaced the `puppetlabs_spec_helper/tasks/fixtures` dependency with
+    `puppet_fixtures`, enabling Ruby 4.0 support. `puppetlabs_spec_helper` pulls
+    in `puppet-syntax` < 5, which depends on the `puppet` gem and its `facter`
+    dependency that does not support Ruby >= 4.0; `puppet_fixtures` is the
+    OpenVox-ecosystem replacement and supports Ruby 4.0.
+  * The `beaker:suites` task now depends on `fixtures:prep` (from
+    `puppet_fixtures`) instead of `spec_prep`, and `ensure_fixture_modules` now
+    runs `rake fixtures:prep`.
+* Added:
+  * `puppet_fixtures` runtime dependency
+  * OpenVox-named environment variables for `get_puppet_install_info`, taking
+    precedence over the Puppet-named equivalents (which remain as fallbacks):
+    `OPENVOX_VERSION`, `OPENVOX_INSTALL_VERSION`, `OPENVOX_INSTALL_TYPE`,
+    `BEAKER_OPENVOX_AGENT_VERSION`, `BEAKER_OPENVOX_COLLECTION`,
+    `BEAKER_OPENVOX_PACKAGE_NAME`
+
 ### 2.0.5 / 2026-06-06
 * Fixed:
   * Additional cleanup for rubocop

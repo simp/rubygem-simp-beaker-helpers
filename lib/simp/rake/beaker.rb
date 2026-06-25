@@ -4,7 +4,7 @@ require 'rake/tasklib'
 require 'fileutils'
 require 'beaker/tasks/rake_task'
 require 'beaker-rspec/rake_task'
-require 'puppetlabs_spec_helper/tasks/fixtures'
+require 'puppet_fixtures/tasks'
 
 # Simp namespace
 module Simp; end
@@ -111,7 +111,7 @@ class Simp::Rake::Beaker < ::Rake::TaskLib # rubocop:disable Style/OneClassPerFi
               'default_run' : <true|false> => Default: false
               ```
         EOM
-      task :suites, [:suite, :nodeset] => ['spec_prep'] do |_t, args|
+      task :suites, [:suite, :nodeset] => ['fixtures:prep'] do |_t, args|
         suite = args[:suite]
         nodeset = args[:nodeset]
 
