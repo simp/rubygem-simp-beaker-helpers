@@ -4,6 +4,7 @@ require 'simp/beaker_helpers'
 # redefine methods used in RSpec.configure withing Simp::BeakerHelpers
 def hosts; end
 def activate_interfaces(hosts); end
+def ensure_beaker_ip_on(hosts); end
 def clear_temp_hieradata; end
 
 class MyTestClass
