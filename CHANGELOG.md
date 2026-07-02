@@ -1,3 +1,13 @@
+### 3.1.0 / 2026-07-02
+* Added:
+  * `ensure_beaker_ip_on`: detect SUTs whose recorded `host[:ip]` was never
+    actually applied (e.g. EL10 under Vagrant, where the legacy ifcfg files
+    Vagrant writes for static private-network IPs are no longer supported and
+    the interface silently falls back to DHCP) and (re-)apply the expected
+    address via NetworkManager (reboot-safe), falling back to `ip addr add`.
+    Runs automatically alongside `activate_interfaces` in the global
+    `before(:all)` hook; disable with `BEAKER_no_fix_interfaces`.
+
 ### 3.0.0 / 2026-06-24
 * Changed (**Breaking**):
   * Dropped support for Puppet 7 / Ruby 2.7. CI now tests Puppet/OpenVox 8 only,
