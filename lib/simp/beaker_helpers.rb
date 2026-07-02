@@ -1138,6 +1138,64 @@ module Simp::BeakerHelpers # rubocop:disable Style/OneClassPerFile
     end
   end
 
+  # Ensure that the IP address that Beaker has recorded for each SUT is
+  # actually present on the system and (re-)apply it if it is not.
+  #
+  # Some OS/hypervisor combinations silently fail to configure the static IP
+  # for secondary (private) networks. In particular, Vagrant configures
+  # static IPs on RedHat-family guests by writing legacy ifcfg files, which
+  # EL10 no longer supports at all. The interface falls back to NetworkManager
+  # DHCP and receives an arbitrary address, so everything that targets the
+  # recorded `host[:ip]` (cross-SUT traffic, direct Net::SSH logins, etc.)
+  # fails with 'No route to host'.
+  #
+  # This detects the mismatch and applies the expected address to the
+  # interface that is attached to the same network, using NetworkManager so
+  # that the address survives reboots, and falling back to a runtime-only
+  # `ip addr add` when NetworkManager is not in use.
+  def ensure_beaker_ip_on(hosts)
+    return if ENV['BEAKER_no_fix_interfaces']
+
+    block_on(hosts, run_in_parallel: @run_in_parallel) do |host|
+      expected_ip = host[:ip]
+      next unless expected_ip
+      next if host[:platform].include?('windows')
+
+      # All currently assigned IPv4 addresses ('<iface> <address>/<prefix>')
+      addrs = on(host, %(ip -o -4 addr show), accept_all_exit_codes: true).stdout.lines.map { |line|
+        next unless line =~ %r{^\d+:\s+(\S+)\s+inet\s+(\S+)/(\d+)}
+        { iface: Regexp.last_match(1), ip: Regexp.last_match(2), prefix: Regexp.last_match(3) }
+      }.compact
+
+      next if addrs.any? { |a| a[:ip] == expected_ip }
+
+      require 'ipaddr'
+      target = addrs.find do |a|
+        IPAddr.new("#{a[:ip]}/#{a[:prefix]}").include?(expected_ip)
+      rescue IPAddr::Error
+        false
+      end
+
+      unless target
+        puts "  -- WARNING: #{host} does not have expected IP #{expected_ip} and no interface on that network could be found"
+        next
+      end
+
+      puts "  -- FIXING: #{host} expected IP #{expected_ip} but '#{target[:iface]}' has #{target[:ip]}"
+
+      nm_connection = on(host, %(nmcli -g GENERAL.CONNECTION device show #{target[:iface]}), accept_all_exit_codes: true).stdout.strip
+      if nm_connection.empty?
+        # Not NetworkManager-managed => runtime-only fallback
+        on(host, %(ip addr add #{expected_ip}/#{target[:prefix]} dev #{target[:iface]}), accept_all_exit_codes: true)
+      else
+        # Match Vagrant's static network behavior: fixed address, no gateway,
+        # and never a default route on the private interface
+        on(host, %(nmcli connection modify "#{nm_connection}" ipv4.method manual ipv4.addresses "#{expected_ip}/#{target[:prefix]}" ipv4.gateway "" ipv4.never-default yes))
+        on(host, %(nmcli connection up "#{nm_connection}"))
+      end
+    end
+  end
+
   ## Inline Hiera Helpers ##
   ## These will be integrated into core Beaker at some point ##
 
@@ -1152,6 +1210,10 @@ module Simp::BeakerHelpers # rubocop:disable Style/OneClassPerFile
 
       # We can't guarantee that the upstream vendor isn't disabling interfaces
       activate_interfaces(hosts)
+
+      # Some OS/hypervisor combinations (e.g. EL10 under Vagrant) fail to
+      # apply the static IP that Beaker expects for private networks
+      ensure_beaker_ip_on(hosts)
     end
 
     c.after(:all) do
