@@ -1,3 +1,12 @@
+### 3.1.1 / 2026-07-03
+* Fixed:
+  * `run_fake_pki_ca_on` now runs `ensure_beaker_ip_on` before collecting
+    the IP addresses embedded in certificate subjectAltNames, so certs match
+    the corrected (Beaker-recorded) addresses on SUTs where the static
+    private-network IP was never applied (e.g. EL10 under Vagrant). Without
+    this, IKE peer IDs no longer match the cert SANs after remediation and
+    strict validators (libreswan 5) reject authentication.
+
 ### 3.1.0 / 2026-07-02
 * Added:
   * `ensure_beaker_ip_on`: detect SUTs whose recorded `host[:ip]` was never

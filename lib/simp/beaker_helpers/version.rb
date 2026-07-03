@@ -4,5 +4,5 @@
 module Simp; end
 
 module Simp::BeakerHelpers # rubocop:disable Style/OneClassPerFile
-  VERSION = '3.1.0'
+  VERSION = '3.1.1'
 end

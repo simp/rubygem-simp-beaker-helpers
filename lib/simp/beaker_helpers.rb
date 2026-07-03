@@ -976,6 +976,13 @@ module Simp::BeakerHelpers # rubocop:disable Style/OneClassPerFile
       # Ensure that all interfaces are active prior to collecting data
       activate_interfaces(host)
 
+      # Ensure the Beaker-recorded IP is actually applied before it is
+      # embedded in certificate subjectAltNames (on EL10 under Vagrant the
+      # static private-network IP is silently never applied and the
+      # interface falls back to DHCP; certs cut from the DHCP address no
+      # longer match the peer IDs once the address is corrected)
+      ensure_beaker_ip_on(host)
+
       networking_fact = pfact_on(host, 'networking')
       if networking_fact && networking_fact['interfaces']
         networking_fact['interfaces'].each_value do |data|
