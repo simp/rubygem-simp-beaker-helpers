@@ -47,7 +47,7 @@ group :system_tests do
 end
 
 group :tests do
-  gem 'rubocop', '~> 1.89.0'
+  gem 'rubocop', '~> 1.91.0'
   gem 'rubocop-performance', '~> 1.27.0'
   gem 'rubocop-rake', '~> 0.7.0'
   gem 'rubocop-rspec', '~> 3.10.0'
