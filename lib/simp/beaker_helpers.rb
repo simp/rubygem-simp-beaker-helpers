@@ -1534,15 +1534,28 @@ module Simp::BeakerHelpers # rubocop:disable Style/OneClassPerFile
     }
   end
 
+  # The exact agent package version to install, taken from
+  # BEAKER_OPENVOX_PACKAGE_VERSION (or BEAKER_PUPPET_PACKAGE_VERSION), or nil to
+  # install the newest package in the collection.
+  #
+  # This is the package manager's version string (e.g. '8.26.2' or
+  # '9.0.0~rc1'), not a Gemfile-style requirement like PUPPET_VERSION.
+  def agent_package_version
+    version = ENV['BEAKER_OPENVOX_PACKAGE_VERSION'] || ENV.fetch('BEAKER_PUPPET_PACKAGE_VERSION', nil)
+    version = version&.strip
+    (version.nil? || version.empty?) ? nil : version
+  end
+
   def run_puppet_install_helper_on(hosts)
     block_on hosts, run_in_parallel: true do |host|
       puppet_collection = ENV['BEAKER_OPENVOX_COLLECTION'] || ENV.fetch('BEAKER_PUPPET_COLLECTION', nil) || host.options['puppet_collection']
       if is_windows?(host)
+        warn "BEAKER_OPENVOX_PACKAGE_VERSION is not supported on Windows; installing the latest '#{puppet_collection}' agent on #{host}" if agent_package_version
         install_msi_on(host, puppet_collection)
       else
         BeakerPuppetHelpers::InstallUtils.install_puppet_release_repo_on(host, puppet_collection)
         package_name = ENV['BEAKER_OPENVOX_PACKAGE_NAME'] || ENV.fetch('BEAKER_PUPPET_PACKAGE_NAME', BeakerPuppetHelpers::InstallUtils.collection2packagename(host, puppet_collection))
-        host.install_package(package_name)
+        host.install_package(package_name, '', agent_package_version)
       end
     end
   end

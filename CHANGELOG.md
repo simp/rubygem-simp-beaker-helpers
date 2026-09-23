@@ -1,3 +1,12 @@
+### 3.2.0 / 2026-09-23
+* Added:
+  * `BEAKER_OPENVOX_PACKAGE_VERSION` (fallback `BEAKER_PUPPET_PACKAGE_VERSION`)
+    installs an exact agent package version, e.g. `9.0.0~rc1`, instead of the
+    newest package in the collection. Previously there was no way to pin the
+    agent: `install_puppet` resolved a version from `PUPPET_VERSION` and its
+    synonyms but installed the newest package in the collection regardless.
+    Not supported on Windows (a warning is printed).
+
 ### 3.1.1 / 2026-07-03
 * Fixed:
   * `run_fake_pki_ca_on` now runs `ensure_beaker_ip_on` before collecting
