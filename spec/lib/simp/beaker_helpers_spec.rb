@@ -7,6 +7,14 @@ def activate_interfaces(hosts); end
 def ensure_beaker_ip_on(hosts); end
 def clear_temp_hieradata; end
 
+# Beaker DSL methods used by run_puppet_install_helper_on
+def block_on(hosts, _opts = {}, &block)
+  Array(hosts).each(&block)
+end
+
+def is_windows?(_host); end
+def install_msi_on(_host, _collection); end
+
 class MyTestClass
   class FakeHost
     attr_accessor :options
@@ -282,6 +290,60 @@ describe 'Simp::BeakerHelpers' do
     it 'fails when host options puppet_collection is invalid' do
       helper.host.options = { 'puppet_collection' => 'PUPPET5' }
       expect { helper.get_puppet_install_info }.to raise_error(%r{Error: Puppet Collection 'PUPPET5' must match})
+    end
+  end
+
+  context '#run_puppet_install_helper_on' do
+    let(:sut) { instance_double(Beaker::Host, to_s: 'sut') }
+
+    before(:each) do
+      require 'beaker_puppet_helpers'
+      allow(BeakerPuppetHelpers::InstallUtils).to receive(:install_puppet_release_repo_on)
+      allow(BeakerPuppetHelpers::InstallUtils).to receive(:collection2packagename).and_return('openvox-agent')
+      ENV['BEAKER_OPENVOX_COLLECTION'] = 'openvox9'
+    end
+
+    after(:each) do
+      ENV['BEAKER_OPENVOX_COLLECTION'] = nil
+      ENV['BEAKER_OPENVOX_PACKAGE_VERSION'] = nil
+      ENV['BEAKER_PUPPET_PACKAGE_VERSION'] = nil
+    end
+
+    context 'on Linux' do
+      before(:each) { allow(helper).to receive(:is_windows?).with(sut).and_return(false) }
+
+      it 'installs the newest agent package when no version is pinned' do
+        expect(sut).to receive(:install_package).with('openvox-agent', '', nil)
+        helper.run_puppet_install_helper_on([sut])
+      end
+
+      it 'installs the version in BEAKER_OPENVOX_PACKAGE_VERSION' do
+        ENV['BEAKER_OPENVOX_PACKAGE_VERSION'] = ' 9.0.0~rc1 '
+        expect(sut).to receive(:install_package).with('openvox-agent', '', '9.0.0~rc1')
+        helper.run_puppet_install_helper_on([sut])
+      end
+
+      it 'falls back to BEAKER_PUPPET_PACKAGE_VERSION' do
+        ENV['BEAKER_PUPPET_PACKAGE_VERSION'] = '8.26.2'
+        expect(sut).to receive(:install_package).with('openvox-agent', '', '8.26.2')
+        helper.run_puppet_install_helper_on([sut])
+      end
+
+      it 'ignores an empty version' do
+        ENV['BEAKER_OPENVOX_PACKAGE_VERSION'] = ''
+        expect(sut).to receive(:install_package).with('openvox-agent', '', nil)
+        helper.run_puppet_install_helper_on([sut])
+      end
+    end
+
+    context 'on Windows' do
+      before(:each) { allow(helper).to receive(:is_windows?).with(sut).and_return(true) }
+
+      it 'warns that a pinned version is not supported' do
+        ENV['BEAKER_OPENVOX_PACKAGE_VERSION'] = '9.0.0~rc1'
+        expect(helper).to receive(:install_msi_on).with(sut, 'openvox9')
+        expect { helper.run_puppet_install_helper_on([sut]) }.to output(%r{not supported on Windows}).to_stderr
+      end
     end
   end
 end

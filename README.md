@@ -445,6 +445,21 @@ The `PUPPET_VERSION` environment variable will install the latest
 `BEAKER_PUPPET_AGENT_VERSION` and `PUPPET_INSTALL_VERSION` are synonyms of
 `PUPPET_VERSION`.
 
+#### BEAKER_OPENVOX_PACKAGE_VERSION
+
+Installs this exact version of the agent package (`openvox-agent`, or
+`BEAKER_OPENVOX_PACKAGE_NAME` if set) instead of the newest one in the
+collection. The value is the package manager's version string, e.g. `8.26.2`
+or `9.0.0~rc1`, not a `Gemfile`-style requirement. Set
+`BEAKER_OPENVOX_COLLECTION` to the collection that contains that version.
+Not supported on Windows.
+
+`BEAKER_PUPPET_PACKAGE_VERSION` is a fallback synonym.
+
+**NOTE:** `PUPPET_VERSION` and its synonyms only choose the collection; the
+newest package in that collection is installed. Use
+`BEAKER_OPENVOX_PACKAGE_VERSION` to pin the agent.
+
 #### BEAKER_RHSM_USER
 
 The username to use with Red Hat Subscription Manager when dealing with a RHEL host.
