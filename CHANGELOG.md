@@ -1,3 +1,7 @@
+### 3.1.2 / 2026-09-29
+* Fixed:
+  * Minor changes for rubocop 1.91
+
 ### 3.1.1 / 2026-07-03
 * Fixed:
   * `run_fake_pki_ca_on` now runs `ensure_beaker_ip_on` before collecting

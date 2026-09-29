@@ -175,22 +175,20 @@ describe 'Offline mode' do
         on(host, %(#{build_user_cmd} "cd pupmod-simp-at; bundle update"))
       end
 
-      # rubocop:disable RSpec/RepeatedExample
+      # rubocop:disable-next RSpec/RepeatedExample
       it 'runs a network-connected test' do
         on(host, %(#{build_user_cmd} "cd pupmod-simp-at; rake beaker:suites"))
       end
-      # rubocop:enable RSpec/RepeatedExample
 
       it 'disables all internet network traffic via iptables' do
         on(host, %(iptables -I OUTPUT -d `ip route | awk '/default/ {print $3}'`/16 -j ACCEPT))
         on(host, 'iptables -A OUTPUT -j DROP')
       end
 
-      # rubocop:disable RSpec/RepeatedExample
+      # rubocop:disable-next RSpec/RepeatedExample
       xit 'runs a network-disconnected test' do
         on(host, %(#{build_user_cmd} "cd pupmod-simp-at; rake beaker:suites"))
       end
-      # rubocop:enable RSpec/RepeatedExample
     end
   end
 end
