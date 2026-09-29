@@ -24,7 +24,7 @@ module Simp::BeakerHelpers # rubocop:disable Style/OneClassPerFile
 
   # Stealing this from the Ruby 2.5 Dir::Tmpname workaround from Rails
   def self.tmpname
-    t = Time.new.strftime('%Y%m%d')
+    t = Time.now.strftime('%Y%m%d')
     "simp-beaker-helpers-#{t}-#{$PROCESS_ID}-#{rand(0x100000000).to_s(36)}.tmp"
   end
 

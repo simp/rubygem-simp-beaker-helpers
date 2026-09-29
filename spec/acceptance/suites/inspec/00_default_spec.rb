@@ -24,11 +24,10 @@ describe 'Inspec STIG Profile' do
 
             let(:inspec_report_data) { inspec.process_inspec_results }
 
-            # rubocop:disable RSpec/RepeatedDescription
+            # rubocop:disable-next RSpec/RepeatedDescription
             it 'runs inspec' do
               inspec.run
             end
-            # rubocop:enable RSpec/RepeatedDescription
 
             it 'has an inspec report' do
               expect(inspec_report_data).not_to be_nil
@@ -41,11 +40,10 @@ describe 'Inspec STIG Profile' do
               puts inspec_report_data[:report] # rubocop:disable RSpec/Output
             end
           else
-            # rubocop:disable RSpec/RepeatedDescription
+            # rubocop:disable-next RSpec/RepeatedDescription
             it 'runs inspec' do
               skip("No matching profile available at #{profile_path}")
             end
-            # rubocop:enable RSpec/RepeatedDescription
           end
         end
       end
