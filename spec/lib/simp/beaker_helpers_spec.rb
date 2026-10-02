@@ -145,16 +145,9 @@ describe 'Simp::BeakerHelpers' do
     end
 
     it 'uses defaults when no environment variables are set' do
-      # Prevent namespace pollution
-      pipe_out, pipe_in = IO.pipe
-      fork do
-        pipe_out.close
-        require 'puppet'
-        pipe_in.write(Puppet.version)
-      end
-      pipe_in.close
-
-      expected_major_version = pipe_out.gets.split('.').first
+      # The default collection follows DEFAULT_PUPPET_AGENT_VERSION, not the
+      # openvox gem the test suite happens to be running under
+      expected_major_version = Simp::BeakerHelpers::DEFAULT_PUPPET_AGENT_VERSION[%r{\d+}]
 
       expect(helper.get_puppet_install_info[:puppet_collection]).to eq("puppet#{expected_major_version}")
       expect(helper.get_puppet_install_info[:puppet_install_type]).to eq('agent')
