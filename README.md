@@ -262,8 +262,8 @@ copy_fixture_modules_to( suts = hosts, opts = {} )
   - **`opts`**   = _(Hash)_ Options passed on to `copy_module_to()` for each SUT
 
 By default, this will copy modules to the first path listed in each SUT's
-`modulepath` and simulate a pluginsync so the Beaker DSL's `facter_on` will
-still work.
+`modulepath` and simulate a pluginsync, which copies the modules' plugins (such
+as custom facts) into each SUT's `libdir`.
 
 If you need to use a non-default module path:
 ```ruby
@@ -275,7 +275,7 @@ copy_fixture_modules_to( hosts, {
 
 If you want to disable pluginsync:
 ```ruby
-# WARNING: `fact_on` will not see custom facts
+# `fact_on` and `pfact_on` still see the copied modules' facts
 copy_fixture_modules_to( hosts, {
    :pluginsync => false
 })

@@ -6,13 +6,6 @@ context 'after copy_fixture_modules_to( hosts )' do
     copy_fixture_modules_to(hosts)
   end
 
-  describe "fact_on(default,'root_home')" do
-    # fact_on in beaker_puppet_helpers is equivalent to pfact_on
-    xit 'does not return value of `root_home`' do
-      expect(fact_on(default, 'root_home').to_s).to eq ''
-    end
-  end
-
   describe "pfact_on(default,'root_home')" do
     it 'returns value of `root_home`' do
       expect(pfact_on(default, 'root_home')).to eq '/root'
