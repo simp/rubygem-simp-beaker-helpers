@@ -1,3 +1,8 @@
+### 3.2.0 / 2026-10-07
+* Deprecated:
+  * `Simp::BeakerHelpers::Inspec` now warns when used and will be removed in
+    the next major release
+
 ### 3.1.2 / 2026-09-29
 * Fixed:
   * Minor changes for rubocop 1.91

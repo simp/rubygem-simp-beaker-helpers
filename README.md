@@ -462,10 +462,11 @@ might try to install packages before subscription manager is configured.
 
 #### BEAKER_inspec_version
 
-The version of InSpec to use when running inspec tests. Currently hard-coded to
-`4.16.14` due to a bug introduced in `4.16.15`.
+**Deprecated:** `Simp::BeakerHelpers::Inspec` will be removed in the next
+major release.
 
-Set to 'latest' to use the latest available in the upstream repos.
+The version of InSpec that `Simp::BeakerHelpers::Inspec` installs. Defaults to
+`latest`, the newest version in the upstream repos.
 
 #### BEAKER_RHSM_UNSUBSCRIBE
 
