@@ -3,14 +3,26 @@ module Simp::BeakerHelpers
   require 'simp/beaker_helpers/constants'
 
   # Helpers for working with Inspec
+  #
+  # @deprecated Will be removed in the next major release.
   class Inspec
     require 'json'
+
+    # Warn once per process that this helper is deprecated
+    def self.deprecation_warning
+      return if @deprecation_warned
+
+      warn('DEPRECATION: Simp::BeakerHelpers::Inspec is deprecated and will be removed in the next major release of simp-beaker-helpers')
+      @deprecation_warned = true
+    end
 
     attr_reader :profile
     attr_reader :profile_dir
     attr_reader :deps_root
 
     def self.enable_repo_on(suts)
+      deprecation_warning
+
       parallel = (ENV['BEAKER_SIMP_parallel'] == 'yes')
       block_on(suts, run_in_parallel: parallel) do |sut|
         repo_manifest = create_yum_resource(
@@ -34,6 +46,8 @@ module Simp::BeakerHelpers
     #   The name of the profile against which to run
     #
     def initialize(sut, profile)
+      self.class.deprecation_warning
+
       @inspec_version = ENV['BEAKER_inspec_version'] || 'latest'
 
       @sut = sut
