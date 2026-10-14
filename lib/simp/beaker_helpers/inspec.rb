@@ -254,12 +254,10 @@ module Simp::BeakerHelpers
 
             if control['results'] && !control['results'].empty?
               status = :passed
-              color = 'green'
 
               control['results'].each do |_result|
                 if %r{^fail}.match?(results['status'])
                   status = :failed
-                  color = 'red'
                 end
               end
 
