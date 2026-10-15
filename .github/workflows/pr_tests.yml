@@ -69,6 +69,61 @@ jobs:
       - run: 'bundle exec rake spec'
         continue-on-error: ${{matrix.puppet.experimental}}
 
+  acceptance:
+    name: '${{matrix.beaker.suite}}, ${{matrix.puppet.label}}'
+    runs-on:
+      - ubuntu-latest
+    strategy:
+      matrix:
+        puppet:
+          - label: 'OpenVox 8.x'
+            puppet_version: '~> 8.0'
+            ruby_version: '3.2'
+            collection: 'openvox8'
+            experimental: false
+        beaker:
+          - label: beaker
+            suite: default
+            allowed_to_fail: false
+          - label: beaker puppet_collections
+            suite: puppet_collections
+            allowed_to_fail: false
+      fail-fast: false
+    env:
+      PUPPET_VERSION: ${{matrix.puppet.puppet_version}}
+    steps:
+      - name: checkout repo
+        uses: actions/checkout@v7
+      - name: setup ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.puppet.ruby_version }}
+      - name: ensure entropy
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y rng-tools
+          sudo systemctl start rng-tools
+      - name: install docker
+        run: |
+          set -x
+          sudo apt-get remove -y podman ||:
+          sudo apt-get install -y docker-ce docker docker-engine docker.io containerd runc ||:
+          sudo apt-get update
+          sudo apt autoremove -y
+          sudo systemctl start docker
+      - name: install bundle
+        run: |
+          bundle config path vendor
+          bundle install -j $(nproc)
+      - name: set BEAKER_PUPPET_COLLECTION
+        if: ${{matrix.puppet.collection}}
+        run: echo "BEAKER_PUPPET_COLLECTION=${{matrix.puppet.collection}}" >> $GITHUB_ENV
+      - name: 'run beaker:suite "${{matrix.beaker.label}}"'
+        continue-on-error: ${{matrix.puppet.experimental || matrix.beaker.allowed_to_fail}}
+        env:
+          BEAKER_SUITE: ${{matrix.beaker.suite}}
+        run: bundle exec rake beaker:suites[$BEAKER_SUITE,docker]
+
   # The one check for branch protection to require: GitHub only blocks a
   # merge on checks listed by name, and this job fails unless every job it
   # needs succeeded. Add any new job in this workflow to `needs:`.
@@ -78,6 +133,7 @@ jobs:
     needs:
       - ruby-style
       - spec-tests
+      - acceptance
     runs-on: ubuntu-latest
     steps:
       - name: 'Fail unless every needed job succeeded'
