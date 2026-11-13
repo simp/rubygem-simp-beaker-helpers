@@ -1,4 +1,7 @@
-### 3.2.0 / 2026-10-07
+### 3.2.0 / 2026-11-13
+* Added:
+  * Tested with OpenVox 9 (the gem itself does not constrain the openvox
+    version)
 * Deprecated:
   * `Simp::BeakerHelpers::Inspec` now warns when used and will be removed in
     the next major release
