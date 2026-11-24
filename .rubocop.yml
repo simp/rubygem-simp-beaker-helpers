@@ -389,8 +389,6 @@ Style/CommentedKeyword:
   Enabled: false
 Style/Dir:
   Enabled: false
-Style/DoubleCopDisableDirective:
-  Enabled: false
 Style/EmptyBlockParameter:
   Enabled: false
 Style/EmptyLambdaParameter:
